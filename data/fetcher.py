@@ -51,7 +51,16 @@ def get_market_data(symbol: str, timeframe: str = '15m', limit: int = 100) -> pd
             # Just pass directly if valid
             
             # Fetch Klines
-            klines = client.get_klines(symbol=symbol, interval=timeframe, limit=limit)
+            try:
+                klines = client.get_klines(symbol=symbol, interval=timeframe, limit=limit)
+            except Exception as e:
+                print(f"⚠️ Authenticated fetch failed for {symbol} ({e}). Retrying with Public Client...")
+                try:
+                    public_client = Client()
+                    klines = public_client.get_klines(symbol=symbol, interval=timeframe, limit=limit)
+                except Exception as e2:
+                     print(f"❌ Public fetch also failed for {symbol}: {e2}")
+                     return pd.DataFrame(columns=expected_cols)
             
             if not klines:
                 return pd.DataFrame(columns=expected_cols)
