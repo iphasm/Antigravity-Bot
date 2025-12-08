@@ -42,8 +42,9 @@ def get_market_data(symbol: str, timeframe: str = '15m', limit: int = 100) -> pd
     try:
         # --- CRYPTO (Binance) ---
         if 'USDT' in symbol.upper() or 'BUSD' in symbol.upper():
+            print(f"DEBUG: Fetching crypto for {symbol}...")
             if not client:
-                print("Binance client not ready for data fetch.")
+                print("DEBUG: Client is None!")
                 return pd.DataFrame(columns=expected_cols)
                 
             # Map timeframe
@@ -52,17 +53,21 @@ def get_market_data(symbol: str, timeframe: str = '15m', limit: int = 100) -> pd
             
             # Fetch Klines
             try:
+                print(f"DEBUG: Attempting client.get_klines for {symbol}")
                 klines = client.get_klines(symbol=symbol, interval=timeframe, limit=limit)
+                print(f"DEBUG: Auth fetch result: {len(klines) if klines else 'None/Empty'}")
             except Exception as e:
                 print(f"⚠️ Authenticated fetch failed for {symbol} ({e}). Retrying with Public Client...")
                 try:
                     public_client = Client()
                     klines = public_client.get_klines(symbol=symbol, interval=timeframe, limit=limit)
+                    print(f"DEBUG: Public fetch result: {len(klines) if klines else 'None/Empty'}")
                 except Exception as e2:
                      print(f"❌ Public fetch also failed for {symbol}: {e2}")
                      return pd.DataFrame(columns=expected_cols)
             
             if not klines:
+                print(f"DEBUG: klines is empty for {symbol}")
                 return pd.DataFrame(columns=expected_cols)
             
             # Binance Klines: 
