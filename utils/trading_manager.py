@@ -15,10 +15,15 @@ class BinanceManager:
         self.stop_loss_pct = float(os.getenv('STOP_LOSS_PCT', 0.02)) # 2% default
         self.max_capital_pct = float(os.getenv('MAX_CAPITAL_PCT', 0.10)) # 10% default
         
+        # Proxy Config
+        self.proxy_url = os.getenv('PROXY_URL')
+        self.request_params = {'proxies': {'https': self.proxy_url}} if self.proxy_url else None
+
         if self.api_key and self.api_secret:
             try:
-                self.client = Client(self.api_key, self.api_secret, tld='com')
-                print("✅ Binance Client initialized [International API].")
+                self.client = Client(self.api_key, self.api_secret, tld='com', requests_params=self.request_params)
+                proxy_msg = " [Proxy Enabled]" if self.proxy_url else ""
+                print(f"✅ Binance Client initialized [International API]{proxy_msg}.")
             except Exception as e:
                 print(f"❌ Failed to init Binance Client: {e}")
         else:

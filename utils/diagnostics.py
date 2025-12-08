@@ -23,10 +23,28 @@ def run_diagnostics():
     
     # 3. IP Check (Crucial for Geo-blocking)
     report.append("\n**🌍 Network / IP Check:**")
+    
+    # Proxy Check
+    proxy_url = os.getenv('PROXY_URL')
+    proxies = {'https': proxy_url} if proxy_url else None
+    
+    if proxy_url:
+        report.append(f"🔄 Proxy Configured: `Yes`")
+    else:
+        report.append(f"🔄 Proxy Configured: `No`")
+
     try:
-        ip_data = requests.get("https://api.ipify.org?format=json", timeout=10).json()
+        # Check Direct IP
+        try:
+            direct_ip = requests.get("https://api.ipify.org?format=json", timeout=5).json().get('ip', 'Unknown')
+            report.append(f"- Direct IP (Server): `{direct_ip}`")
+        except:
+            report.append(f"- Direct IP: Failed to resolve")
+
+        # Check Proxy IP (what Binance sees)
+        ip_data = requests.get("https://api.ipify.org?format=json", proxies=proxies, timeout=10).json()
         ip_addr = ip_data.get('ip', 'Unknown')
-        report.append(f"- Outgoing IP: `{ip_addr}`")
+        report.append(f"- Effective IP (Outgoing): `{ip_addr}`")
         
         # Optional: Get Geolocation attempt
         try:
@@ -36,7 +54,9 @@ def run_diagnostics():
             report.append(f"- Location: {country} ({region})")
             
             if country == "United States":
-                report.append("\n⚠️ **WARNING: IP is in US. Binance International may block this.**")
+                report.append("\n⚠️ **WARNING: Effective IP is in US. Binance International may block this.**")
+            else:
+                report.append("\n✅ **Location looks good (Not US).**")
         except:
             report.append("- Location: Could not determine")
             
@@ -46,7 +66,8 @@ def run_diagnostics():
     # 4. Binance Public Connectivity
     report.append("\n**📡 Binance Public API (api.binance.com):**")
     try:
-        client = Client(tld='com')
+        request_params = {'proxies': proxies} if proxies else None
+        client = Client(tld='com', requests_params=request_params)
         # Test Ping
         client.ping()
         report.append("✅ Ping: Success")
@@ -65,7 +86,8 @@ def run_diagnostics():
     if api_key and api_secret:
         report.append("\n**🔐 Binance Authenticated API:**")
         try:
-            auth_client = Client(api_key, api_secret, tld='com')
+            request_params = {'proxies': proxies} if proxies else None
+            auth_client = Client(api_key, api_secret, tld='com', requests_params=request_params)
             account = auth_client.get_account()
             can_trade = account.get('canTrade', False)
             report.append(f"✅ Auth Success!")

@@ -8,3 +8,4 @@ requests
 pycoingecko
 pyTelegramBotAPI
 python-binance
+PySocks

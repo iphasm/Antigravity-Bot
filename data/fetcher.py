@@ -8,19 +8,25 @@ from binance.client import Client
 api_key = os.getenv('BINANCE_API_KEY')
 api_secret = os.getenv('BINANCE_SECRET')
 
+# Proxy Configuration
+proxy_url = os.getenv('PROXY_URL')
+request_params = {'proxies': {'https': proxy_url}} if proxy_url else None
+
 client = None
 try:
     if api_key and api_secret:
-        client = Client(api_key, api_secret, tld='com')
-        print("✅ Binance Client (Authenticated) initialized for data [International API].")
+        client = Client(api_key, api_secret, tld='com', requests_params=request_params)
+        proxy_msg = f" [Proxy: {'Enabled' if proxy_url else 'Disabled'}]"
+        print(f"✅ Binance Client (Authenticated) initialized for data [International API]{proxy_msg}.")
     else:
-        client = Client(tld='com')
-        print("⚠️ Binance Client (Public Only) initialized [International API]. Trading will fail, but data fetching works.")
+        client = Client(tld='com', requests_params=request_params)
+        proxy_msg = f" [Proxy: {'Enabled' if proxy_url else 'Disabled'}]"
+        print(f"⚠️ Binance Client (Public Only) initialized [International API]{proxy_msg}. Trading will fail, but data fetching works.")
 except Exception as e:
     print(f"❌ Warning: Binance Client init failed in fetcher: {e}")
     # Fallback to public
     try:
-        client = Client(tld='com')
+        client = Client(tld='com', requests_params=request_params)
     except:
         pass
 
@@ -59,7 +65,8 @@ def get_market_data(symbol: str, timeframe: str = '15m', limit: int = 100) -> pd
             except Exception as e:
                 print(f"⚠️ Authenticated fetch failed for {symbol} ({e}). Retrying with Public Client...")
                 try:
-                    public_client = Client(tld='com')
+                    # Reuse proxy config (request_params is globally defined above)
+                    public_client = Client(tld='com', requests_params=request_params)
                     klines = public_client.get_klines(symbol=symbol, interval=timeframe, limit=limit)
                     print(f"DEBUG: Public fetch result: {len(klines) if klines else 'None/Empty'}")
                 except Exception as e2:
