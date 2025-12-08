@@ -87,6 +87,7 @@ def send_welcome(message):
 def trading_loop():
     print("🚀 Trading Loop Started (60s interval)...")
     cycle_count = 0
+    alert_history = {} # Key: asset, Value: list of timestamps
     
     while True:
         cycle_count += 1
@@ -109,12 +110,27 @@ def trading_loop():
                 
                 # 3. Alert
                 if buy_signal:
-                    price = metrics.get('close', 0)
-                    rsi = metrics.get('rsi', 0)
-                    print(f"🚨 BUY SIGNAL: {asset} | Price: {price:.2f} | RSI: {rsi:.2f}")
+                    current_time = time.time()
                     
-                    msg = f"🚀 *SEÑAL DE COMPRA DETECTADA* \n\n💎 Activo: {asset}\n💰 Precio: {price:.2f}\n📉 RSI: {rsi:.2f}"
-                    send_alert(msg)
+                    # Initialize history for asset if not present
+                    if asset not in alert_history:
+                        alert_history[asset] = []
+                    
+                    # Keep only alerts from the last 5 minutes (300 seconds)
+                    alert_history[asset] = [t for t in alert_history[asset] if current_time - t < 300]
+                    
+                    if len(alert_history[asset]) < 3:
+                        price = metrics.get('close', 0)
+                        rsi = metrics.get('rsi', 0)
+                        print(f"🚨 BUY SIGNAL: {asset} | Price: {price:.2f} | RSI: {rsi:.2f}")
+                        
+                        msg = f"🚀 *SEÑAL DE COMPRA DETECTADA* \n\n💎 Activo: {asset}\n💰 Precio: {price:.2f}\n📉 RSI: {rsi:.2f}"
+                        send_alert(msg)
+                        
+                        # Record this alert
+                        alert_history[asset].append(current_time)
+                    else:
+                        print(f"⚠️ Rate limit hit for {asset}: {len(alert_history[asset])}/3 alerts in 5m. Skipping.")
             
             except Exception as e:
                 print(f"Error processing {asset}: {e}")
