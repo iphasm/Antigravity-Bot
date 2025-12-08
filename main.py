@@ -12,7 +12,10 @@ from strategies.analyzer import analyze_market
 load_dotenv()
 
 # --- CONFIGURATION ---
-WATCHLIST = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XRP/USDT', 'MSFT', 'TSLA', 'GC=F']
+WATCHLIST = [
+    'BTC-USD', 'ETH-USD', 'SOL-USD', 'XRP-USD', 
+    'ADA-USD', 'SUI-USD', 'PEPE-USD', 
+    'MSFT', 'TSLA', 'GC=F']
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
