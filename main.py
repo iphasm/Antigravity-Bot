@@ -14,7 +14,7 @@ load_dotenv()
 # --- CONFIGURATION ---
 WATCHLIST = [
     'BTC-USD', 'ETH-USD', 'SOL-USD', 'XRP-USD', 
-    'ADA-USD', 
+    'ADA-USD', 'ZEC-USD', 
     'MSFT', 'TSLA', 'NVDA', 'GC=F', 'CL=F']
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
