@@ -3,15 +3,26 @@ import yfinance as yf
 import pandas as pd
 from binance.client import Client
 
-# Initialize Binance Client (Public data doesn't strictly require keys, but we use them if available)
+# Initialize Binance Client
+# Use environment variables if present, otherwise default to public mode
 api_key = os.getenv('BINANCE_API_KEY')
 api_secret = os.getenv('BINANCE_SECRET')
 
 client = None
 try:
-    client = Client(api_key, api_secret)
+    if api_key and api_secret:
+        client = Client(api_key, api_secret)
+        print("✅ Binance Client (Authenticated) initialized for data.")
+    else:
+        client = Client()
+        print("⚠️ Binance Client (Public Only) initialized. Trading will fail, but data fetching works.")
 except Exception as e:
-    print(f"Warning: Binance Client init failed in fetcher: {e}")
+    print(f"❌ Warning: Binance Client init failed in fetcher: {e}")
+    # Fallback to public
+    try:
+        client = Client()
+    except:
+        pass
 
 def get_market_data(symbol: str, timeframe: str = '15m', limit: int = 100) -> pd.DataFrame:
     """
