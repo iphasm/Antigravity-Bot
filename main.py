@@ -14,9 +14,9 @@ load_dotenv()
 
 # --- CONFIGURATION ---
 WATCHLIST = [
-    'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 
-    'ADAUSDT', 'ZECUSDT',
-    'MSFT', 'TSLA', 'NVDA', 'GC=F', 'CL=F']
+    'BTCUSDT', 'ETHUSDT', 'XRPUSDT', 'SOLUSDT', 'SUIUSDT', 'PEPEUSDT', 'ZECUSDT',
+    'TSLA', 'NVDA', 'MSFT',
+    'GC=F', 'CL=F']
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
 # Note: TELEGRAM_CHAT_IDS is less relevant for commands now, but still useful for broadcasts?
@@ -142,11 +142,14 @@ def handle_price_request(message):
         'CL=F': 'Petróleo (Oil)',
         'BTCUSDT': 'Bitcoin',
         'ETHUSDT': 'Ethereum',
-        'SOLUSDT': 'Solana',
         'XRPUSDT': 'Ripple',
-        'MSFT': 'Microsoft',
+        'SOLUSDT': 'Solana',
+        'SUIUSDT': 'Sui',
+        'PEPEUSDT': 'Pepe',
+        'ZECUSDT': 'Zcash',
         'TSLA': 'Tesla',
-        'NVDA': 'Nvidia'
+        'NVDA': 'Nvidia',
+        'MSFT': 'Microsoft'
     }
 
     for asset in WATCHLIST:
