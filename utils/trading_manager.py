@@ -1,174 +1,210 @@
 import os
-import math
+import json
+import threading
 from binance.client import Client
 from binance.enums import *
 from binance.exceptions import BinanceAPIException
 
-class BinanceManager:
-    def __init__(self):
-        self.api_key = os.getenv('BINANCE_API_KEY')
-        self.api_secret = os.getenv('BINANCE_SECRET')
+class TradingSession:
+    """
+    Represents a single trading session for a specific chat_id.
+    Holds its own API keys and risk configuration.
+    """
+    def __init__(self, chat_id, api_key, api_secret, config=None):
+        self.chat_id = chat_id
+        self.api_key = api_key
+        self.api_secret = api_secret
         self.client = None
         
-        # Configuration
-        self.leverage = int(os.getenv('LEVERAGE', 5))
-        self.stop_loss_pct = float(os.getenv('STOP_LOSS_PCT', 0.02)) # 2% default
-        self.max_capital_pct = float(os.getenv('MAX_CAPITAL_PCT', 0.10)) # 10% default
+        # Default Config
+        self.config = {
+            "leverage": 5,
+            "max_capital_pct": 0.10,
+            "stop_loss_pct": 0.02,
+            "proxy_url": None
+        }
         
-        # Proxy Config
-        self.proxy_url = os.getenv('PROXY_URL')
-        self.request_params = {'proxies': {'https': self.proxy_url}} if self.proxy_url else None
+        if config:
+            self.config.update(config)
 
+        # Proxy Setup from Config or Global Env (Optional fallback for proxy only)
+        # Note: We prioritize session config for proxy if set
+        self.request_params = None
+        if self.config.get('proxy_url'):
+             self.request_params = {'proxies': {'https': self.config['proxy_url']}}
+
+        # Initialize Client
+        self._init_client()
+
+    def _init_client(self):
         if self.api_key and self.api_secret:
             try:
                 self.client = Client(self.api_key, self.api_secret, tld='com', requests_params=self.request_params)
-                proxy_msg = " [Proxy Enabled]" if self.proxy_url else ""
-                print(f"✅ Binance Client initialized [International API]{proxy_msg}.")
+                print(f"✅ [Chat {self.chat_id}] Binance Client Initialized.")
             except Exception as e:
-                print(f"❌ Failed to init Binance Client: {e}")
+                print(f"❌ [Chat {self.chat_id}] Failed to init Client: {e}")
+                self.client = None
         else:
-            print("⚠️ Binance API Keys missing in environment.")
+            print(f"⚠️ [Chat {self.chat_id}] Missing API Keys.")
 
     # --- CONFIGURATION METHODS ---
-    def set_leverage(self, value: int):
-        self.leverage = value
-        return self.leverage
-
-    def set_capital_pct(self, value: float):
-        self.max_capital_pct = value
-        return self.max_capital_pct
-
-    def set_risk_params(self, stop_loss_pct: float):
-        self.stop_loss_pct = stop_loss_pct
-        return self.stop_loss_pct
+    def update_config(self, key, value):
+        self.config[key] = value
+        # If proxy changed, re-init might be needed, but usually leverage/risk doesn't need re-init
+        return self.config[key]
 
     def get_configuration(self):
         return {
-            "leverage": self.leverage,
-            "max_capital_pct": self.max_capital_pct,
-            "stop_loss_pct": self.stop_loss_pct,
-            "proxy_enabled": bool(self.proxy_url)
+            "leverage": self.config['leverage'],
+            "max_capital_pct": self.config['max_capital_pct'],
+            "stop_loss_pct": self.config['stop_loss_pct'],
+            "proxy_enabled": bool(self.config.get('proxy_url')),
+            "has_keys": bool(self.client) # Status check
         }
 
     def get_symbol_precision(self, symbol):
-        """Get quantity and price precision for a symbol"""
+        if not self.client: return 2, 2
         try:
             info = self.client.futures_exchange_info()
             for s in info['symbols']:
                 if s['symbol'] == symbol:
-                    qty_precision = s['quantityPrecision']
-                    price_precision = s['pricePrecision']
-                    return qty_precision, price_precision
+                    return s['quantityPrecision'], s['pricePrecision']
         except Exception as e:
             print(f"Error getting precision for {symbol}: {e}")
-            return 2, 2
+        return 2, 2
 
     def execute_long_position(self, symbol):
         if not self.client:
-            print("❌ Execution skipped: No Binance Client.")
-            return False, "Execution skipped: No Binance Client configured."
+            return False, "No valid API Keys provided for this chat."
             
         try:
+            leverage = self.config['leverage']
+            max_capital_pct = self.config['max_capital_pct']
+            stop_loss_pct = self.config['stop_loss_pct']
+
             # 1. Update Leverage
-            self.client.futures_change_leverage(symbol=symbol, leverage=self.leverage)
+            self.client.futures_change_leverage(symbol=symbol, leverage=leverage)
 
             # 2. Calculate Position Size
-            # Get USDT Balance (Use availableBalance to avoid -2019 error)
             account = self.client.futures_account_balance()
             usdt_balance = next((float(a['availableBalance']) for a in account if a['asset'] == 'USDT'), 0)
             
             if usdt_balance <= 0:
-                print("❌ Insufficient USDT Balance.")
                 return False, f"Insufficient USDT Balance: ${usdt_balance:.2f}"
 
-            # Max amount to risk (Margin) = 10% of Balance
-            margin_assignment = usdt_balance * self.max_capital_pct
+            margin_assignment = usdt_balance * max_capital_pct
             
-            # Get Current Price
             ticker = self.client.futures_symbol_ticker(symbol=symbol)
             current_price = float(ticker['price'])
             
-            # Calculate Quantity (Margin * Leverage / Price)
-            # Example: $100 Margin * 5x = $500 Position. $500 / $50/coin = 10 coins.
-            raw_quantity = (margin_assignment * self.leverage) / current_price
+            raw_quantity = (margin_assignment * leverage) / current_price
             
-            # Adjust precision
             qty_precision, price_precision = self.get_symbol_precision(symbol)
             quantity = float(round(raw_quantity, qty_precision))
             
-            # --- VALIDATION CHECK ---
             if quantity <= 0:
-                msg = f"Position size too small ({raw_quantity:.6f} -> 0). Sizing requires ~${(current_price * (10**-qty_precision))/self.leverage:.2f} margin."
-                print(f"❌ {msg}")
-                return False, msg
-            # ------------------------
-            
-            print(f"⚖️ Sizing: Bal=${usdt_balance:.2f} | Margin=${margin_assignment:.2f} | Qty={quantity} {symbol}")
+                return False, f"Position too small for ${margin_assignment:.2f} margin."
 
             # 3. Execute Market Buy
             order = self.client.futures_create_order(
-                symbol=symbol,
-                side='BUY',
-                type='MARKET',
-                quantity=quantity
+                symbol=symbol, side='BUY', type='MARKET', quantity=quantity
             )
-            entry_price = float(order.get('avgPrice', 0))
-            if entry_price == 0:
-                 # Fallback if market order doesn't return avgPrice immediately
-                 entry_price = current_price
-                 print(f"⚠️ Warning: avgPrice 0, using current_price {current_price}")
-            print(f"✅ BUY Executed: {symbol} @ {entry_price}")
+            entry_price = float(order.get('avgPrice', current_price))
+            if entry_price == 0: entry_price = current_price
 
-            # 4. Place Stop Loss (SL) & Take Profit (TP)
-            # SL = Entry * (1 - SL_PCT)
-            # TP = Entry * (1 + (SL_PCT * 3))
-            
-            sl_price = entry_price * (1 - self.stop_loss_pct)
-            tp_price = entry_price * (1 + (self.stop_loss_pct * 3))
-            
-            # Round prices
-            sl_price = round(sl_price, price_precision)
-            tp_price = round(tp_price, price_precision)
-            
-            print(f"🔍 Pricing Debug: Entry={entry_price}, SL_Pct={self.stop_loss_pct}, Calc_SL={sl_price}")
+            # 4. Stop Loss & Take Profit
+            sl_price = round(entry_price * (1 - stop_loss_pct), price_precision)
+            tp_price = round(entry_price * (1 + (stop_loss_pct * 3)), price_precision)
             
             if sl_price <= 0:
-                print(f"❌ Error: Calculated SL is {sl_price} (<=0). Entry: {entry_price}, SL%: {self.stop_loss_pct}")
-                return True, f"Long Executed, but SL Failed (Price {sl_price})"
+                return True, "Executed, but SL calculation failed (<=0)."
 
-            # Send Orders
-            # Stop Loss
-            # Send Orders
-            # Stop Loss
             self.client.futures_create_order(
-                symbol=symbol,
-                side='SELL',
-                type='STOP_MARKET',
-                stopPrice=sl_price,
-                closePosition=True
+                symbol=symbol, side='SELL', type='STOP_MARKET', stopPrice=sl_price, closePosition=True
+            )
+            self.client.futures_create_order(
+                symbol=symbol, side='SELL', type='TAKE_PROFIT_MARKET', stopPrice=tp_price, closePosition=True
             )
             
-            # Take Profit
-            self.client.futures_create_order(
-                symbol=symbol,
-                side='SELL',
-                type='TAKE_PROFIT_MARKET',
-                stopPrice=tp_price,
-                closePosition=True
-            )
-            
-            print(f"🛡️ SL @ {sl_price} | 🎯 TP @ {tp_price}")
-            print(f"🛡️ SL @ {sl_price} | 🎯 TP @ {tp_price}")
-            return True, f"Long {symbol} Executed @ {entry_price}"
+            return True, f"Long {symbol} @ {entry_price} (SL: {sl_price}, TP: {tp_price})"
 
         except BinanceAPIException as e:
-            if e.code == -2019:
-                msg = f"Margin Insufficient. Available: ${usdt_balance:.2f}. Reduce Margin % (currently {self.max_capital_pct*100:.1f}%) or Leverage."
-            else:
-                msg = f"Binance API Error: {e.message} (Code: {e.code})"
-            print(f"❌ {msg}")
-            return False, msg
+            return False, f"Binance Error: {e.message}"
         except Exception as e:
-            msg = f"Error executing trade: {str(e)}"
-            print(f"❌ {msg}")
-            return False, msg
+            return False, f"Error: {str(e)}"
+
+
+class SessionManager:
+    """
+    Manages multiple TradingSessions backed by a JSON file.
+    """
+    def __init__(self, data_file='data/sessions.json'):
+        self.data_file = data_file
+        self.sessions = {} # chat_id -> TradingSession
+        self._load_sessions()
+
+    def _load_sessions(self):
+        if not os.path.exists(self.data_file):
+            # Create data dir if not exists
+            os.makedirs(os.path.dirname(self.data_file), exist_ok=True)
+            with open(self.data_file, 'w') as f:
+                json.dump({}, f)
+            return
+
+        try:
+            with open(self.data_file, 'r') as f:
+                data = json.load(f)
+                for chat_id, s_data in data.items():
+                    self.sessions[chat_id] = TradingSession(
+                        chat_id=chat_id,
+                        api_key=s_data.get('api_key'),
+                        api_secret=s_data.get('api_secret'),
+                        config=s_data.get('config')
+                    )
+            print(f"📚 Loaded {len(self.sessions)} trading sessions.")
+        except Exception as e:
+            print(f"❌ Failed to load sessions: {e}")
+
+    def save_sessions(self):
+        data = {}
+        for chat_id, session in self.sessions.items():
+            data[chat_id] = {
+                "api_key": session.api_key,
+                "api_secret": session.api_secret,
+                "config": session.config
+            }
+        
+        try:
+            with open(self.data_file, 'w') as f:
+                json.dump(data, f, indent=4)
+        except Exception as e:
+            print(f"❌ Failed to save sessions: {e}")
+
+    def get_session(self, chat_id):
+        return self.sessions.get(str(chat_id))
+
+    def create_or_update_session(self, chat_id, api_key, api_secret):
+        chat_id = str(chat_id)
+        if chat_id in self.sessions:
+            # Update Keys
+            self.sessions[chat_id].api_key = api_key
+            self.sessions[chat_id].api_secret = api_secret
+            self.sessions[chat_id]._init_client() # Re-init client
+        else:
+            # Create New
+            self.sessions[chat_id] = TradingSession(chat_id, api_key, api_secret)
+        
+        self.save_sessions()
+        return self.sessions[chat_id]
+    
+    def delete_session(self, chat_id):
+        chat_id = str(chat_id)
+        if chat_id in self.sessions:
+            del self.sessions[chat_id]
+            self.save_sessions()
+            return True
+        return False
+    
+    def get_all_sessions(self):
+        return list(self.sessions.values())
+

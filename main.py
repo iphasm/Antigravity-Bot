@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 # Import internal modules
 from data.fetcher import get_market_data
 from strategies.analyzer import analyze_market
+from utils.trading_manager import SessionManager # CHANGED
 
 # Load environment variables
 load_dotenv()
@@ -17,23 +18,32 @@ WATCHLIST = [
     'ADAUSDT', 'ZECUSDT',
     'MSFT', 'TSLA', 'NVDA', 'GC=F', 'CL=F']
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
+# Note: TELEGRAM_CHAT_IDS is less relevant for commands now, but still useful for broadcasts?
+# We will use valid sessions for broadcasts potentially, or keep the env var for admin alerts.
 TELEGRAM_CHAT_IDS = [id.strip() for id in os.getenv('TELEGRAM_CHAT_ID', '').split(',') if id.strip()]
 
 # Initialize Bot
 bot = None
-trader = None # Global trader instance
+session_manager = None # Global session manager
 
 if TELEGRAM_TOKEN:
     bot = telebot.TeleBot(TELEGRAM_TOKEN)
 else:
     print("WARNING: TELEGRAM_TOKEN not found.")
 
-TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
-
 def send_alert(message):
-    """Wrapper to send messages using TeleBot instance"""
-    if bot and TELEGRAM_CHAT_IDS:
-        for chat_id in TELEGRAM_CHAT_IDS:
+    """Broadcasts message to all registered sessions + Env Chat IDs"""
+    # 1. Env Chat IDs
+    targets = set(TELEGRAM_CHAT_IDS)
+    
+    # 2. Add Active Sessions
+    if session_manager:
+        for s in session_manager.get_all_sessions():
+            targets.add(s.chat_id)
+            
+    if bot and targets:
+        for chat_id in targets:
             try:
                 bot.send_message(chat_id, message, parse_mode='Markdown')
             except Exception as e:
@@ -43,14 +53,48 @@ def send_alert(message):
 
 # --- BOT COMMAND HANDLERS ---
 
+@bot.message_handler(commands=['set_keys'])
+def handle_set_keys(message):
+    """
+    Usage: /set_keys <API_KEY> <API_SECRET>
+    """
+    chat_id = str(message.chat.id)
+    try:
+        args = message.text.split()
+        if len(args) < 3:
+            bot.reply_to(message, "⚠️ Usage: `/set_keys <API_KEY> <API_SECRET>`\n\n_We recommend deleting this message after sending._", parse_mode='Markdown')
+            return
+        
+        api_key = args[1]
+        api_secret = args[2]
+        
+        # Create or Update Session
+        session = session_manager.create_or_update_session(chat_id, api_key, api_secret)
+        
+        if session.client:
+            bot.reply_to(message, "✅ **API Keys Registered!**\nYou can now trade. Default settings: Leverage 5x, Margin 10%. Use /config to view.")
+        else:
+            bot.reply_to(message, "❌ Keys saved, but **Binance Connection Failed**. Please check your keys and permissions.")
+            
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error: {e}")
+
+@bot.message_handler(commands=['delete_keys'])
+def handle_delete_keys(message):
+    chat_id = str(message.chat.id)
+    if session_manager.delete_session(chat_id):
+        bot.reply_to(message, "🗑️ **Session Deleted.** Your keys have been removed from this bot.")
+    else:
+        bot.reply_to(message, "⚠️ No session found to delete.")
+
 @bot.message_handler(commands=['long'])
 def handle_long_position(message):
-    """Manually trigger a LONG position with calculated risk management"""
-    user_id = str(message.chat.id)
+    """Manually trigger a LONG position for the current chat session"""
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
     
-    # 🔒 Security Check
-    if not TELEGRAM_ADMIN_ID or user_id != TELEGRAM_ADMIN_ID:
-        bot.reply_to(message, "⛔ Access Denied. You are not the administrator.")
+    if not session or not session.client:
+        bot.reply_to(message, "⛔ **No Active Session.**\nPlease register your Binance API keys first using:\n`/set_keys <API_KEY> <API_SECRET>`", parse_mode='Markdown')
         return
 
     # Parse message: /long BTC
@@ -61,21 +105,17 @@ def handle_long_position(message):
             return
             
         symbol = args[1].upper()
-        # Normalization
         if 'USDT' not in symbol:
             symbol += 'USDT'
             
         bot.reply_to(message, f"⚡ Executing LONG for **{symbol}**...", parse_mode='Markdown')
         
-        # Execute
-        if trader:
-            success, msg = trader.execute_long_position(symbol)
-            if success:
-                bot.reply_to(message, f"✅ {msg}")
-            else:
-                bot.reply_to(message, f"❌ Trade Failed: {msg}")
+        # Execute on specific session
+        success, msg = session.execute_long_position(symbol)
+        if success:
+            bot.reply_to(message, f"✅ {msg}")
         else:
-             bot.reply_to(message, "❌ Trading System not initialized.")
+            bot.reply_to(message, f"❌ Trade Failed: {msg}")
 
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {e}")
@@ -83,32 +123,25 @@ def handle_long_position(message):
 @bot.message_handler(commands=['price', 'precios'])
 def handle_price_request(message):
     """Handles /price command to show current status of all assets"""
-    user_id = str(message.chat.id)
+    # Public command, accessible to anyone or restricted?
+    # Let's keep it open or restrict to known sessions/admin?
+    # For now, open.
     
-    # Optional: Security check to only reply to owner
-    if TELEGRAM_CHAT_IDS and user_id not in TELEGRAM_CHAT_IDS:
-        bot.reply_to(message, "⛔ Unauthorized.")
-        return
-
     bot.reply_to(message, "⏳ Fetching prices... please wait.")
     
     report = "📊 **MARKET REPORT**\n\n"
     
     for asset in WATCHLIST:
         try:
-            # Fetch sufficient data for RSI (limit=100) instead of just 5
             df = get_market_data(asset, timeframe='15m', limit=100)
             
             if df.empty:
                 report += f"❌ {asset}: No data\n"
                 continue
                 
-            # Get latest close
             latest = df.iloc[-1]
             price = latest['close']
             
-            # Simple RSI calculation for context (optional, reuse analyzer if inexpensive)
-            # Re-running full analysis might be heavy, but let's do it for consistency
             _, metrics = analyze_market(df)
             rsi = metrics.get('rsi', 0)
             
@@ -121,27 +154,21 @@ def handle_price_request(message):
 
 @bot.message_handler(commands=['debug'])
 def handle_debug(message):
-    """Runs system diagnostics and sends report"""
+    """Runs system diagnostics"""
     user_id = str(message.chat.id)
-    
-    # Security: Only Admin
     if TELEGRAM_ADMIN_ID and user_id != TELEGRAM_ADMIN_ID:
         bot.reply_to(message, "⛔ Access Denied.")
         return
 
-    bot.reply_to(message, "🕵️ Running diagnostics... please wait.")
-    
+    bot.reply_to(message, "🕵️ Running diagnostics...")
     try:
         from utils.diagnostics import run_diagnostics
         report = run_diagnostics()
-        
-        # Telegram has a 4096 char limit, split if needed
         if len(report) > 4000:
             for x in range(0, len(report), 4000):
                 bot.send_message(message.chat.id, report[x:x+4000], parse_mode='Markdown')
         else:
             bot.send_message(message.chat.id, report, parse_mode='Markdown')
-            
     except Exception as e:
         bot.reply_to(message, f"❌ diagnostic failed: {e}")
 
@@ -149,20 +176,18 @@ def handle_debug(message):
 
 @bot.message_handler(commands=['config'])
 def handle_config(message):
-    """Shows current bot configuration"""
-    user_id = str(message.chat.id)
-    if TELEGRAM_ADMIN_ID and user_id != TELEGRAM_ADMIN_ID:
-        bot.reply_to(message, "⛔ Access Denied.")
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    
+    if not session:
+        bot.reply_to(message, "❌ No session found. Use `/set_keys` first.")
         return
 
-    if not trader:
-        bot.reply_to(message, "❌ Trading System not initialized.")
-        return
-
-    cfg = trader.get_configuration()
+    cfg = session.get_configuration()
     
     msg = (
-        "⚙️ **CURRENT CONFIGURATION**\n\n"
+        "⚙️ **YOUR CONFIGURATION**\n\n"
+        f"🔑 **API Access:** {'✅ Ready' if cfg['has_keys'] else '❌ Missing/Invalid'}\n"
         f"🕹️ **Leverage:** {cfg['leverage']}x\n"
         f"💰 **Max Margin:** {cfg['max_capital_pct']*100:.1f}% of balance\n"
         f"🛡️ **Stop Loss:** {cfg['stop_loss_pct']*100:.1f}%\n"
@@ -176,8 +201,9 @@ def handle_config(message):
 
 @bot.message_handler(commands=['set_leverage'])
 def handle_set_leverage(message):
-    user_id = str(message.chat.id)
-    if TELEGRAM_ADMIN_ID and user_id != TELEGRAM_ADMIN_ID: return
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session: return
 
     try:
         args = message.text.split()
@@ -187,7 +213,8 @@ def handle_set_leverage(message):
             
         val = int(args[1])
         if 1 <= val <= 125:
-            new_val = trader.set_leverage(val)
+            new_val = session.update_config('leverage', val)
+            session_manager.save_sessions()
             bot.reply_to(message, f"✅ Leverage set to **{new_val}x**")
         else:
             bot.reply_to(message, "❌ Invalid value. Must be 1-125.")
@@ -196,8 +223,9 @@ def handle_set_leverage(message):
 
 @bot.message_handler(commands=['set_margin'])
 def handle_set_margin(message):
-    user_id = str(message.chat.id)
-    if TELEGRAM_ADMIN_ID and user_id != TELEGRAM_ADMIN_ID: return
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session: return
 
     try:
         args = message.text.split()
@@ -207,7 +235,8 @@ def handle_set_margin(message):
             
         val = float(args[1])
         if 0.01 <= val <= 1.0:
-            new_val = trader.set_capital_pct(val)
+            new_val = session.update_config('max_capital_pct', val)
+            session_manager.save_sessions()
             bot.reply_to(message, f"✅ Max Margin set to **{new_val*100:.1f}%**")
         else:
             bot.reply_to(message, "❌ Invalid value. Must be 0.01 - 1.0")
@@ -216,8 +245,9 @@ def handle_set_margin(message):
 
 @bot.message_handler(commands=['set_sl'])
 def handle_set_sl(message):
-    user_id = str(message.chat.id)
-    if TELEGRAM_ADMIN_ID and user_id != TELEGRAM_ADMIN_ID: return
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session: return
 
     try:
         args = message.text.split()
@@ -227,7 +257,8 @@ def handle_set_sl(message):
             
         val = float(args[1])
         if 0.001 <= val <= 0.5:
-            new_val = trader.set_risk_params(val)
+            new_val = session.update_config('stop_loss_pct', val)
+            session_manager.save_sessions()
             bot.reply_to(message, f"✅ Stop Loss set to **{new_val*100:.2f}%**")
         else:
             bot.reply_to(message, "❌ Invalid value. Must be 0.001 - 0.5")
@@ -236,23 +267,16 @@ def handle_set_sl(message):
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "🤖 **Trading Bot Active**\n\nCommands:\n/price - Get current market prices")
-
-# --- MAIN TRADING LOOP ---
-
-
-
-# --- ENTRY POINT ---
+    bot.reply_to(message, "🤖 **Trading Bot Active**\n\n1️⃣ Use `/set_keys <KEY> <SECRET>` to start.\n2️⃣ Use `/config` to see settings.\n3️⃣ Use `/price` for market data.")
 
 # --- ENTRY POINT ---
 
 def start_bot():
-    global trader
-    # 1. Initialize Binance Manager
-    from utils.trading_manager import BinanceManager
-    trader = BinanceManager()
+    global session_manager
+    # 1. Initialize Session Manager
+    session_manager = SessionManager()
     
-    # 2. Start Telegram Polling in a separate thread
+    # 2. Start Telegram Polling
     if bot:
         print("📡 Starting Telegram Polling...")
         t = threading.Thread(target=bot.infinity_polling, kwargs={'interval': 1, 'timeout': 20}) 
@@ -262,23 +286,20 @@ def start_bot():
     # 3. Run Trading Loop
     print("🚀 Trading Loop Started (60s interval)...")
     cycle_count = 0
-    alert_history = {} # Key: asset, Value: list of timestamps
+    alert_history = {} 
     
     while True:
         cycle_count += 1
         
         # Heartbeat
         if cycle_count % 60 == 0:
-            send_alert(f"🟢 **STATUS REPORT**\nBot online. Scan cycle: {cycle_count}")
+            print(f"🟢 Cycle {cycle_count}: Bot online.")
         
         for asset in WATCHLIST:
             try:
                 # 1. Fetch Data
                 df = get_market_data(asset, timeframe='15m', limit=100)
-                
-                if df.empty:
-                    print(f"Skipping {asset}: No data.")
-                    continue
+                if df.empty: continue
 
                 # 2. Analyze
                 buy_signal, metrics = analyze_market(df)
@@ -286,30 +307,41 @@ def start_bot():
                 # 3. Alert & Trade
                 if buy_signal:
                     current_time = time.time()
-                    
-                    if asset not in alert_history:
-                        alert_history[asset] = []
-                    
-                    # Rate Limit
+                    if asset not in alert_history: alert_history[asset] = []
                     alert_history[asset] = [t for t in alert_history[asset] if current_time - t < 300]
                     
                     if len(alert_history[asset]) < 3:
                         price = metrics.get('close', 0)
                         rsi = metrics.get('rsi', 0)
-                        print(f"🚨 BUY SIGNAL: {asset} | Price: {price:.2f} | RSI: {rsi:.2f}")
                         
-                        msg = f"🚀 *SEÑAL DE COMPRA DETECTADA* \n\n💎 Activo: {asset}\n💰 Precio: {price:.2f}\n📉 RSI: {rsi:.2f}"
+                        msg = f"🚀 *SEÑAL DE COMPRA* \n\n💎 {asset}\n💰 ${price:.2f}\n📉 RSI: {rsi:.2f}"
+                        # Broadcast
                         send_alert(msg)
                         
                         alert_history[asset].append(current_time)
                         
-                        # --- BINANCE EXECUTION (Crypto Only) ---
+                        # --- BINANCE EXECUTION (Multi-Tenant) ---
                         if asset.endswith('USDT'): 
-                            print(f"⚡ Attempting Trade on {asset}...")
-                            trader.execute_long_position(asset)
+                            sessions = session_manager.get_all_sessions()
+                            if not sessions:
+                                print(f"⚠️ Signal for {asset}, but no active sessions.")
                             
+                            for session in sessions:
+                                if session.client: # Only execute if client is valid
+                                    print(f"⚡ [Chat {session.chat_id}] Auto-Trading {asset}...")
+                                    success, trade_msg = session.execute_long_position(asset)
+                                    if success:
+                                        bot.send_message(session.chat_id, f"✅ **Auto-Trade Executed:**\n{trade_msg}", parse_mode='Markdown')
+                                    else:
+                                        # Only notify user of failure if it was attempted (e.g. balance issues), 
+                                        # silence connection errors to avoid spam?
+                                        if "Insufficient" in trade_msg:
+                                            bot.send_message(session.chat_id, f"⚠️ Auto-Trade Failed: {trade_msg}", parse_mode='Markdown')
+                                        else:
+                                            print(f"❌ [Chat {session.chat_id}] User Trade Failed: {trade_msg}")
+
                     else:
-                        print(f"⚠️ Rate limit hit for {asset}. Skipping.")
+                        print(f"⚠️ Rate limit hit for {asset}.")
             
             except Exception as e:
                 print(f"Error processing {asset}: {e}")
