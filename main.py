@@ -145,6 +145,95 @@ def handle_debug(message):
     except Exception as e:
         bot.reply_to(message, f"❌ diagnostic failed: {e}")
 
+# --- CONFIGURATION COMMANDS ---
+
+@bot.message_handler(commands=['config'])
+def handle_config(message):
+    """Shows current bot configuration"""
+    user_id = str(message.chat.id)
+    if TELEGRAM_ADMIN_ID and user_id != TELEGRAM_ADMIN_ID:
+        bot.reply_to(message, "⛔ Access Denied.")
+        return
+
+    if not trader:
+        bot.reply_to(message, "❌ Trading System not initialized.")
+        return
+
+    cfg = trader.get_configuration()
+    
+    msg = (
+        "⚙️ **CURRENT CONFIGURATION**\n\n"
+        f"🕹️ **Leverage:** {cfg['leverage']}x\n"
+        f"💰 **Max Margin:** {cfg['max_capital_pct']*100:.1f}% of balance\n"
+        f"🛡️ **Stop Loss:** {cfg['stop_loss_pct']*100:.1f}%\n"
+        f"🌍 **Proxy:** {'Enabled' if cfg['proxy_enabled'] else 'Disabled'}\n\n"
+        "To change:\n"
+        "`/set_leverage 10`\n"
+        "`/set_margin 0.1`\n"
+        "`/set_sl 0.02`"
+    )
+    bot.reply_to(message, msg, parse_mode='Markdown')
+
+@bot.message_handler(commands=['set_leverage'])
+def handle_set_leverage(message):
+    user_id = str(message.chat.id)
+    if TELEGRAM_ADMIN_ID and user_id != TELEGRAM_ADMIN_ID: return
+
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            bot.reply_to(message, "⚠️ Usage: `/set_leverage 10` (Integer 1-125)")
+            return
+            
+        val = int(args[1])
+        if 1 <= val <= 125:
+            new_val = trader.set_leverage(val)
+            bot.reply_to(message, f"✅ Leverage set to **{new_val}x**")
+        else:
+            bot.reply_to(message, "❌ Invalid value. Must be 1-125.")
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error: {e}")
+
+@bot.message_handler(commands=['set_margin'])
+def handle_set_margin(message):
+    user_id = str(message.chat.id)
+    if TELEGRAM_ADMIN_ID and user_id != TELEGRAM_ADMIN_ID: return
+
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            bot.reply_to(message, "⚠️ Usage: `/set_margin 0.1` (Float 0.01-1.0)")
+            return
+            
+        val = float(args[1])
+        if 0.01 <= val <= 1.0:
+            new_val = trader.set_capital_pct(val)
+            bot.reply_to(message, f"✅ Max Margin set to **{new_val*100:.1f}%**")
+        else:
+            bot.reply_to(message, "❌ Invalid value. Must be 0.01 - 1.0")
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error: {e}")
+
+@bot.message_handler(commands=['set_sl'])
+def handle_set_sl(message):
+    user_id = str(message.chat.id)
+    if TELEGRAM_ADMIN_ID and user_id != TELEGRAM_ADMIN_ID: return
+
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            bot.reply_to(message, "⚠️ Usage: `/set_sl 0.02` (Float 0.005-0.5)")
+            return
+            
+        val = float(args[1])
+        if 0.001 <= val <= 0.5:
+            new_val = trader.set_risk_params(val)
+            bot.reply_to(message, f"✅ Stop Loss set to **{new_val*100:.2f}%**")
+        else:
+            bot.reply_to(message, "❌ Invalid value. Must be 0.001 - 0.5")
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error: {e}")
+
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     bot.reply_to(message, "🤖 **Trading Bot Active**\n\nCommands:\n/price - Get current market prices")

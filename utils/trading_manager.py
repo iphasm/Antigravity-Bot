@@ -29,6 +29,27 @@ class BinanceManager:
         else:
             print("⚠️ Binance API Keys missing in environment.")
 
+    # --- CONFIGURATION METHODS ---
+    def set_leverage(self, value: int):
+        self.leverage = value
+        return self.leverage
+
+    def set_capital_pct(self, value: float):
+        self.max_capital_pct = value
+        return self.max_capital_pct
+
+    def set_risk_params(self, stop_loss_pct: float):
+        self.stop_loss_pct = stop_loss_pct
+        return self.stop_loss_pct
+
+    def get_configuration(self):
+        return {
+            "leverage": self.leverage,
+            "max_capital_pct": self.max_capital_pct,
+            "stop_loss_pct": self.stop_loss_pct,
+            "proxy_enabled": bool(self.proxy_url)
+        }
+
     def get_symbol_precision(self, symbol):
         """Get quantity and price precision for a symbol"""
         try:
