@@ -125,3 +125,79 @@ def calculate_ema(series: pd.Series, period: int = 200) -> pd.Series:
     Calculates Exponential Moving Average (EMA).
     """
     return series.ewm(span=period, adjust=False).mean()
+
+def calculate_wma(series: pd.Series, period: int) -> pd.Series:
+    """
+    Calculates Weighted Moving Average (WMA).
+    weights: [1, 2, ..., period]
+    """
+    return series.rolling(period).apply(lambda x: ((x * np.arange(1, period + 1)).sum()) / (np.arange(1, period + 1).sum()), raw=True)
+
+def calculate_hma(series: pd.Series, period: int = 55) -> pd.Series:
+    """
+    Calculates Hull Moving Average (HMA).
+    Formula: WMA(2 * WMA(n/2) - WMA(n), sqrt(n))
+    """
+    half_period = int(period / 2)
+    sqrt_period = int(np.sqrt(period))
+    
+    wma_half = calculate_wma(series, half_period)
+    wma_full = calculate_wma(series, period)
+    
+    raw_hma = (2 * wma_half) - wma_full
+    hma = calculate_wma(raw_hma, sqrt_period)
+    return hma
+
+def calculate_adx(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
+    """
+    Calculates ADX, DI+, DI-.
+    Returns DataFrame with columns: ['adx', 'plus_di', 'minus_di']
+    """
+    # 1. True Range
+    high = df['high']
+    low = df['low']
+    close = df['close']
+    
+    tr1 = high - low
+    tr2 = abs(high - close.shift(1))
+    tr3 = abs(low - close.shift(1))
+    
+    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+    
+    # 2. Directional Movement
+    up_move = high - high.shift(1)
+    down_move = low.shift(1) - low
+    
+    plus_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0.0)
+    minus_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0)
+    
+    # 3. Smoothed TR and DM (Wilder's Smoothing)
+    # Note: ewm(alpha=1/period) is equivalent to Wilder's
+    alpha = 1 / period
+    
+    tr_smooth = tr.ewm(alpha=alpha, adjust=False).mean()
+    plus_dm_smooth = pd.Series(plus_dm, index=df.index).ewm(alpha=alpha, adjust=False).mean()
+    minus_dm_smooth = pd.Series(minus_dm, index=df.index).ewm(alpha=alpha, adjust=False).mean()
+    
+    # 4. DI+ and DI-
+    plus_di = 100 * (plus_dm_smooth / tr_smooth)
+    minus_di = 100 * (minus_dm_smooth / tr_smooth)
+    
+    # 5. DX
+    dx = 100 * abs(plus_di - minus_di) / (plus_di + minus_di)
+    
+    # 6. ADX (Smoothed DX)
+    # Standard ADX uses the same smoothing on DX
+    adx = dx.ewm(alpha=alpha, adjust=False).mean()
+    
+    return pd.DataFrame({
+        'adx': adx,
+        'plus_di': plus_di,
+        'minus_di': minus_di
+    }).fillna(0)
+
+def calculate_adx_slope(adx_series: pd.Series) -> pd.Series:
+    """
+    Returns boolean series: True if ADX is rising (current > prev).
+    """
+    return adx_series > adx_series.shift(1)
