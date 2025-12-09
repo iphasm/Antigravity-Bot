@@ -126,6 +126,19 @@ def handle_price_request(message):
     # Public command, accessible to anyone or restricted?
     # Let's keep it open or restrict to known sessions/admin?
     # For now, open.
+    
+    bot.reply_to(message, "⏳ Fetching prices... please wait.")
+    
+    report = "📊 **MARKET REPORT**\n\n"
+    
+    for asset in WATCHLIST:
+        try:
+            df = get_market_data(asset, timeframe='15m', limit=300)
+            
+            if df.empty:
+                report += f"❌ {asset}: No data\n"
+                continue
+                
             latest = df.iloc[-1]
             price = latest['close']
             
