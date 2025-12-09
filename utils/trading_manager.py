@@ -112,7 +112,11 @@ class BinanceManager:
                 type='MARKET',
                 quantity=quantity
             )
-            entry_price = float(order.get('avgPrice', current_price))
+            entry_price = float(order.get('avgPrice', 0))
+            if entry_price == 0:
+                 # Fallback if market order doesn't return avgPrice immediately
+                 entry_price = current_price
+                 print(f"⚠️ Warning: avgPrice 0, using current_price {current_price}")
             print(f"✅ BUY Executed: {symbol} @ {entry_price}")
 
             # 4. Place Stop Loss (SL) & Take Profit (TP)
@@ -125,6 +129,12 @@ class BinanceManager:
             # Round prices
             sl_price = round(sl_price, price_precision)
             tp_price = round(tp_price, price_precision)
+            
+            print(f"🔍 Pricing Debug: Entry={entry_price}, SL_Pct={self.stop_loss_pct}, Calc_SL={sl_price}")
+            
+            if sl_price <= 0:
+                print(f"❌ Error: Calculated SL is {sl_price} (<=0). Entry: {entry_price}, SL%: {self.stop_loss_pct}")
+                return True, f"Long Executed, but SL Failed (Price {sl_price})"
 
             # Send Orders
             # Stop Loss
