@@ -126,26 +126,25 @@ def handle_price_request(message):
     # Public command, accessible to anyone or restricted?
     # Let's keep it open or restrict to known sessions/admin?
     # For now, open.
-    
-    bot.reply_to(message, "⏳ Fetching prices... please wait.")
-    
-    report = "📊 **MARKET REPORT**\n\n"
-    
-    for asset in WATCHLIST:
-        try:
-            df = get_market_data(asset, timeframe='15m', limit=100)
-            
-            if df.empty:
-                report += f"❌ {asset}: No data\n"
-                continue
-                
             latest = df.iloc[-1]
             price = latest['close']
             
             _, metrics = analyze_market(df)
             rsi = metrics.get('rsi', 0)
+            stoch_k = metrics.get('stoch_k', 0)
+            stoch_d = metrics.get('stoch_d', 0)
+            vol_ratio = metrics.get('vol_ratio', 0)
+            ema_200 = metrics.get('ema_200', 0)
             
-            report += f"💎 **{asset}**\n💰 ${price:.2f} | 📉 RSI: {rsi:.1f}\n\n"
+            # Trend Icon
+            trend_icon = "📈" if price > ema_200 else "🐻"
+            
+            report += (
+                f"💎 **{asset}**\n"
+                f"💰 ${price:.2f} {trend_icon}\n"
+                f"📉 RSI: {rsi:.1f} | 🌊 Vol: {vol_ratio}x\n"
+                f"📊 Stoch: {stoch_k:.1f}/{stoch_d:.1f}\n\n"
+            )
             
         except Exception as e:
             report += f"⚠️ {asset}: Error ({str(e)[:20]}...)\n"
@@ -292,19 +291,6 @@ def start_bot():
         cycle_count += 1
         
         # Heartbeat
-        if cycle_count % 60 == 0:
-            print(f"🟢 Cycle {cycle_count}: Bot online.")
-        
-        for asset in WATCHLIST:
-            try:
-                # 1. Fetch Data
-                df = get_market_data(asset, timeframe='15m', limit=100)
-                if df.empty: continue
-
-                # 2. Analyze
-                buy_signal, metrics = analyze_market(df)
-                
-                # 3. Alert & Trade
                 if buy_signal:
                     current_time = time.time()
                     if asset not in alert_history: alert_history[asset] = []

@@ -119,3 +119,9 @@ def calculate_bollinger_bands(series: pd.Series, period: int = 20, std_dev: int 
         'middle': middle,
         'lower': lower
     })
+
+def calculate_ema(series: pd.Series, period: int = 200) -> pd.Series:
+    """
+    Calculates Exponential Moving Average (EMA).
+    """
+    return series.ewm(span=period, adjust=False).mean()
