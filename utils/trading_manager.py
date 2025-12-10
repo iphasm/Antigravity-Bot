@@ -542,8 +542,10 @@ class SessionManager:
         Prioritizes environment variables for the Admin ID.
         """
         admin_id = os.getenv('TELEGRAM_ADMIN_ID')
-        api_key = os.getenv('BINANCE_API_KEY')
-        api_secret = os.getenv('BINANCE_SECRET')
+        
+        # Support multiple naming conventions
+        api_key = os.getenv('BINANCE_API_KEY') or os.getenv('BINANCE_KEY') or os.getenv('API_KEY')
+        api_secret = os.getenv('BINANCE_SECRET') or os.getenv('BINANCE_API_SECRET') or os.getenv('SECRET_KEY')
         
         if admin_id and api_key and api_secret:
             print(f"👑 Admin ID {admin_id} detected in Env. Auto-configuring session...")
