@@ -352,6 +352,14 @@ def handle_config(message):
     
     msg = (
         "⚙️ **CONFIGURACIÓN PERSONAL**\n\n"
+        f"🔑 **API Binance:** {'✅ Conectado' if cfg['has_keys'] else '❌ Desconectado'}\n"
+        f"🌍 **Proxy:** {'✅ Activado' if cfg['proxy_enabled'] else '🔴 Apagado'}\n"
+        f"🕹️ **Apalancamiento:** {cfg['leverage']}x\n"
+        f"💰 **Margen Máx:** {cfg['max_capital_pct']*100:.1f}%\n"
+        f"🛡️ **Stop Loss:** {cfg['stop_loss_pct']*100:.1f}%\n\n"
+        "Para editar: `/set_leverage`, `/set_margin`, `/set_proxy`."
+    )
+    bot.reply_to(message, msg, parse_mode='Markdown')
 
 def handle_set_leverage(message):
     chat_id = str(message.chat.id)
