@@ -78,8 +78,24 @@ else:
     print("ADVERTENCIA: No se encontró TELEGRAM_TOKEN.")
 
 def resolve_symbol(text):
-    """Clean and standardize input symbol"""
-    return text.strip().upper()
+    """Clean and standardize input symbol. Auto-appends USDT if needed."""
+    s = text.strip().upper()
+    
+    # 1. Exact Match Check (Groups or Map keys)
+    known_assets = []
+    for g in ASSET_GROUPS.values():
+        known_assets.extend(g)
+    
+    if s in known_assets or s in TICKER_MAP:
+        return s
+        
+    # 2. Try Appending USDT (Common Crypto case)
+    # If user types "BTC", checking "BTCUSDT"
+    s_usdt = s + "USDT"
+    if s_usdt in ASSET_GROUPS.get('CRYPTO', []) or s_usdt in TICKER_MAP:
+        return s_usdt
+        
+    return s
 
 def process_asset(asset):
     """
