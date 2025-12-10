@@ -18,6 +18,15 @@ load_dotenv()
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
+# Configuración de Proxy para Telegram (Si existe en el sistema)
+# Prioridad: PROXY_URL (Railway) > HTTPS_PROXY > HTTP_PROXY
+sys_proxy = os.getenv('PROXY_URL') or os.getenv('HTTPS_PROXY') or os.getenv('HTTP_PROXY')
+if sys_proxy:
+    from telebot import apihelper
+    apihelper.proxy = {'https': sys_proxy}
+    print(f"🌍 Proxy detectado para Telegram: {sys_proxy}")
+
+
 # --- CONFIGURACIÓN DE ACTIVOS Y GRUPOS ---
 ASSET_GROUPS = {
     'CRYPTO': ['BTCUSDT', 'ETHUSDT', 'XRPUSDT', 'SOLUSDT', 'SUIUSDT', 'ZECUSDT'],

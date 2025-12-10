@@ -40,5 +40,6 @@ Una vez desplegado, ve a la pestaña **Variables** en Railway y AGREGA las sigui
 | `LEVERAGE` | Apalancamiento para operaciones (x). | `5` |
 | `STOP_LOSS_PCT` | Porcentaje de Stop Loss (0.02 = 2%). | `0.02` |
 | `MAX_CAPITAL_PCT` | Máximo % de balance a arriesgar por trade. | `0.10` |
+| `PROXY_URL` | **(Requerido para IP Estática)** Proxy HTTP. | `http://user:pass@ip:port` |
 
 > **Nota de Seguridad**: Railway encripta estas variables. Para el bot, solo tu `TELEGRAM_ADMIN_ID` tendrá permisos para ejecutar operaciones de compra/venta.
