@@ -44,37 +44,151 @@ GROUP_CONFIG = {
 # Configuración de Señales
 SIGNAL_COOLDOWN = 900 # 15 Minutos por defecto
 last_alert_times = {} # {asset: timestamp}
+pos_state = {} # {asset: 'NEUTRAL' | 'LONG'} - Para evitar spam de salidas
 
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
 TELEGRAM_CHAT_IDS = [id.strip() for id in os.getenv('TELEGRAM_CHAT_ID', '').split(',') if id.strip()]
 
-# Inicializar Bot
-bot = None
-session_manager = None 
+# ... (Bot init remains) ...
 
-if TELEGRAM_TOKEN:
-    bot = telebot.TeleBot(TELEGRAM_TOKEN)
-else:
-    print("ADVERTENCIA: No se encontró TELEGRAM_TOKEN.")
+def handle_price(message):
+    try:
+        sent = bot.reply_to(message, "⏳ Escaneando mercado con Motores Híbridos...")
+        
+        report = "📡 **RADAR DE MERCADO (SPOT + FUTUROS)**\n\n"
+        
+        # Check Groups
+        active_groups = [g for g, active in GROUP_CONFIG.items() if active]
+        if not active_groups:
+            bot.edit_message_text("⚠️ Todos los grupos están desactivados. Usa `/toggle_group`.", chat_id=sent.chat.id, message_id=sent.message_id)
+            return
 
-def send_alert(message):
-    """Transmite el mensaje a todos los destinos configurados"""
-    targets = set(TELEGRAM_CHAT_IDS)
-    if session_manager:
-        for s in session_manager.get_all_sessions():
-            targets.add(s.chat_id)
+        for group_name in active_groups:
+            assets = ASSET_GROUPS.get(group_name, [])
+            report += f"**{group_name}**\n"
             
-    if bot and targets:
-        for chat_id in targets:
-            try:
-                bot.send_message(chat_id, message, parse_mode='Markdown')
-            except Exception as e:
-                print(f"Error enviando alerta a {chat_id}: {e}")
-    else:
-        print(f"ALERTA (Log): {message}")
+            for asset in assets:
+                try:
+                    df = get_market_data(asset, timeframe='15m', limit=200)
+                    if df.empty: 
+                        report += f"• {asset}: ⚠️ No data\n"
+                        continue
+                    
+                    # Ejecutar Motor Híbrido solo para métricas
+                    # 1. Spot (Mean Reversion)
+                    is_mr, mr_metrics = analyze_mean_reversion(df)
+                    
+                    # 2. Futuros (Strategy Engine)
+                    engine = StrategyEngine(df)
+                    fut_res = engine.analyze()
+                    
+                    price = df.iloc[-1]['close']
+                    rsi = df.iloc[-1]['rsi']
+                    
+                    # Iconos de señal
+                    sig_icon = ""
+                    if is_mr: sig_icon += "💎 SPOT BUY "
+                    if fut_res['signal'] == 'BUY': sig_icon += "🚀 FUT LONG"
+                    elif fut_res['signal'] == 'CLOSE_LONG': sig_icon += "📉 CLOSE"
+                    
+                    entry = f"• {asset}: ${price:,.2f} | RSI: {rsi:.1f} {sig_icon}\n"
+                    report += entry
+                    
+                except Exception as e:
+                    report += f"• {asset}: ❌ Err: {str(e)}\n"
+                    continue
+            report += "\n"
+            
+        bot.edit_message_text(report, chat_id=sent.chat.id, message_id=sent.message_id, parse_mode='Markdown')
+    except Exception as e:
+        print(f"Error crítico en /price: {e}")
+        bot.reply_to(message, f"❌ Error generando reporte: {e}")
 
-# --- HANDLERS (SIN DECORADORES, LLAMADOS POR MASTER) ---
+# ... (Handlers remain) ...
+
+# --- TRADING LOOP ---
+
+def run_trading_loop():
+    """Bucle de Trading en Background"""
+    print("🚀 Bucle de Trading Híbrido Iniciado (Background)...")
+    
+    while True:
+        try:
+            # Iterar Grupos Activos
+            for group_name, assets in ASSET_GROUPS.items():
+                if not GROUP_CONFIG.get(group_name, False):
+                    continue
+                    
+                for asset in assets:
+                    try:
+                        # 1. Obtener Datos
+                        df = get_market_data(asset, timeframe='15m', limit=200)
+                        if df.empty: continue
+                        
+                        current_time = time.time()
+                        last_alert = last_alert_times.get(asset, 0)
+                        
+                        # Cooldown check
+                        if (current_time - last_alert) < SIGNAL_COOLDOWN:
+                            continue
+                            
+                        # 2. Análisis Híbrido
+                        is_spot_buy, spot_metrics = analyze_mean_reversion(df)
+                        
+                        engine = StrategyEngine(df)
+                        fut_result = engine.analyze()
+                        fut_signal = fut_result['signal']
+                        
+                        # 3. Alertas y Estado
+                        
+                        # SPOT (Independiente de Futuros, siempre avisa si hay señal fuerte)
+                        if is_spot_buy:
+                            msg = (
+                                f"💎 **SEÑAL SPOT: {asset}**\n"
+                                f"Estrategia: Reversión a la Media\n"
+                                f"Precio: ${spot_metrics['close']:,.2f}\n"
+                                f"Razón: {spot_metrics['reason']}"
+                            )
+                            send_alert(msg)
+                            last_alert_times[asset] = current_time
+                            # No afectamos pos_state de futuros
+                            continue 
+                            
+                        # FUTUROS (Con Estado para evitar spam de salidas)
+                        curr_state = pos_state.get(asset, 'NEUTRAL')
+                        
+                        if fut_signal == 'BUY':
+                            msg = (
+                                f"🚀 **SEÑAL FUTUROS: {asset}**\n"
+                                f"Estrategia: Squeeze & Velocity\n"
+                                f"Precio: ${fut_result['metrics']['close']:,.2f}\n"
+                                f"Razón: {fut_result['reason']}\n"
+                                f"ADX: {fut_result['metrics']['adx']:.1f} | Squeeze: {'ON' if fut_result['metrics']['squeeze_on'] else 'OFF'}"
+                            )
+                            send_alert(msg)
+                            last_alert_times[asset] = current_time
+                            pos_state[asset] = 'LONG' # Actualizar estado
+                        
+                        elif fut_signal == 'CLOSE_LONG':
+                             # SOLO avisar salida si estábamos en LONG (o si no sabemos, una vez)
+                             # Para ser seguros: Si estado es NEUTRAL, NO avisar salida (asumimos que ya salimos o nunca entramos)
+                             if curr_state == 'LONG':
+                                 msg = (
+                                    f"📉 **SALIDA FUTUROS: {asset}**\n"
+                                    f"Razón: {fut_result['reason']}"
+                                 )
+                                 send_alert(msg)
+                                 last_alert_times[asset] = current_time
+                                 pos_state[asset] = 'NEUTRAL' # Resetear estado
+
+                    except Exception as e:
+                        print(f"⚠️ Error procesando {asset}: {e}")
+                        
+        except Exception as e:
+            print(f"❌ Error CRÍTICO en bucle de trading: {e}")
+            
+        time.sleep(60)
 
 def send_welcome(message):
     help_text = (
@@ -203,49 +317,57 @@ def handle_config(message):
     bot.reply_to(message, msg, parse_mode='Markdown')
 
 def handle_price(message):
-    bot.reply_to(message, "⏳ Escaneando mercado con Motores Híbridos...")
-    
-    report = "📡 **RADAR DE MERCADO (SPOT + FUTUROS)**\n\n"
-    
-    # Check Groups
-    active_groups = [g for g, active in GROUP_CONFIG.items() if active]
-    if not active_groups:
-        bot.reply_to(message, "⚠️ Todos los grupos están desactivados. Usa `/toggle_group`.")
-        return
+    try:
+        sent = bot.reply_to(message, "⏳ Escaneando mercado con Motores Híbridos...")
+        
+        report = "📡 **RADAR DE MERCADO (SPOT + FUTUROS)**\n\n"
+        
+        # Check Groups
+        active_groups = [g for g, active in GROUP_CONFIG.items() if active]
+        if not active_groups:
+            bot.edit_message_text("⚠️ Todos los grupos están desactivados. Usa `/toggle_group`.", chat_id=sent.chat.id, message_id=sent.message_id)
+            return
 
-    for group_name in active_groups:
-        assets = ASSET_GROUPS.get(group_name, [])
-        report += f"**{group_name}**\n"
-        
-        for asset in assets:
-            try:
-                df = get_market_data(asset, timeframe='15m', limit=200)
-                if df.empty: continue
-                
-                # Ejecutar Motor Híbrido solo para métricas
-                # 1. Spot (Mean Reversion)
-                is_mr, mr_metrics = analyze_mean_reversion(df)
-                
-                # 2. Futuros (Strategy Engine)
-                engine = StrategyEngine(df)
-                fut_res = engine.analyze()
-                
-                price = df.iloc[-1]['close']
-                rsi = df.iloc[-1]['rsi']
-                
-                # Iconos de señal
-                sig_icon = ""
-                if is_mr: sig_icon += "💎 SPOT BUY "
-                if fut_res['signal'] == 'BUY': sig_icon += "🚀 FUT LONG"
-                
-                entry = f"• {asset}: ${price:,.2f} | RSI: {rsi:.1f} {sig_icon}\n"
-                report += entry
-                
-            except Exception:
-                continue
-        report += "\n"
-        
-    bot.send_message(message.chat.id, report, parse_mode='Markdown')
+        for group_name in active_groups:
+            assets = ASSET_GROUPS.get(group_name, [])
+            report += f"**{group_name}**\n"
+            
+            for asset in assets:
+                try:
+                    df = get_market_data(asset, timeframe='15m', limit=200)
+                    if df.empty: 
+                        report += f"• {asset}: ⚠️ No data\n"
+                        continue
+                    
+                    # Ejecutar Motor Híbrido solo para métricas
+                    # 1. Spot (Mean Reversion)
+                    is_mr, mr_metrics = analyze_mean_reversion(df)
+                    
+                    # 2. Futuros (Strategy Engine)
+                    engine = StrategyEngine(df)
+                    fut_res = engine.analyze()
+                    
+                    price = df.iloc[-1]['close']
+                    rsi = df.iloc[-1]['rsi']
+                    
+                    # Iconos de señal
+                    sig_icon = ""
+                    if is_mr: sig_icon += "💎 SPOT BUY "
+                    if fut_res['signal'] == 'BUY': sig_icon += "🚀 FUT LONG"
+                    elif fut_res['signal'] == 'CLOSE_LONG': sig_icon += "📉 CLOSE"
+                    
+                    entry = f"• {asset}: ${price:,.2f} | RSI: {rsi:.1f} {sig_icon}\n"
+                    report += entry
+                    
+                except Exception as e:
+                    report += f"• {asset}: ❌ Err: {str(e)}\n"
+                    continue
+            report += "\n"
+            
+        bot.edit_message_text(report, chat_id=sent.chat.id, message_id=sent.message_id, parse_mode='Markdown')
+    except Exception as e:
+        print(f"Error crítico en /price: {e}")
+        bot.reply_to(message, f"❌ Error generando reporte: {e}")
 
 def handle_set_keys(message):
     chat_id = str(message.chat.id)
@@ -370,7 +492,9 @@ def run_trading_loop():
                         fut_result = engine.analyze()
                         fut_signal = fut_result['signal']
                         
-                        # 3. Alertas
+                        # 3. Alertas y Estado
+                        
+                        # SPOT (Independiente de Futuros, siempre avisa si hay señal fuerte)
                         if is_spot_buy:
                             msg = (
                                 f"💎 **SEÑAL SPOT: {asset}**\n"
@@ -380,8 +504,12 @@ def run_trading_loop():
                             )
                             send_alert(msg)
                             last_alert_times[asset] = current_time
+                            # No afectamos pos_state de futuros
                             continue 
                             
+                        # FUTUROS (Con Estado para evitar spam de salidas)
+                        curr_state = pos_state.get(asset, 'NEUTRAL')
+                        
                         if fut_signal == 'BUY':
                             msg = (
                                 f"🚀 **SEÑAL FUTUROS: {asset}**\n"
@@ -392,14 +520,19 @@ def run_trading_loop():
                             )
                             send_alert(msg)
                             last_alert_times[asset] = current_time
+                            pos_state[asset] = 'LONG' # Actualizar estado
                         
                         elif fut_signal == 'CLOSE_LONG':
-                             msg = (
-                                f"📉 **SALIDA FUTUROS: {asset}**\n"
-                                f"Razón: {fut_result['reason']}"
-                             )
-                             send_alert(msg)
-                             last_alert_times[asset] = current_time
+                             # SOLO avisar salida si estábamos en LONG (o si no sabemos, una vez)
+                             # Para ser seguros: Si estado es NEUTRAL, NO avisar salida (asumimos que ya salimos o nunca entramos)
+                             if curr_state == 'LONG':
+                                 msg = (
+                                    f"📉 **SALIDA FUTUROS: {asset}**\n"
+                                    f"Razón: {fut_result['reason']}"
+                                 )
+                                 send_alert(msg)
+                                 last_alert_times[asset] = current_time
+                                 pos_state[asset] = 'NEUTRAL' # Resetear estado
 
                     except Exception as e:
                         print(f"⚠️ Error procesando {asset}: {e}")
