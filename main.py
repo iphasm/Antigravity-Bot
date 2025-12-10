@@ -2,6 +2,7 @@ import time
 import os
 import threading
 import telebot
+import logging
 from dotenv import load_dotenv
 
 # Importar módulos internos
@@ -12,6 +13,10 @@ from utils.trading_manager import SessionManager
 
 # Cargar variables de entorno
 load_dotenv()
+
+# Logger de Telebot
+logger = telebot.logger
+telebot.logger.setLevel(logging.INFO)
 
 # --- CONFIGURACIÓN DE ACTIVOS Y GRUPOS ---
 ASSET_GROUPS = {
@@ -60,9 +65,8 @@ def send_alert(message):
     else:
         print(f"ALERTA (Log): {message}")
 
-# --- COMANDOS: CONTROL Y MONITORIZACIÓN ---
+# --- HANDLERS (SIN DECORADORES, LLAMADOS POR MASTER) ---
 
-@bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     help_text = (
         "🤖 **ANTIGRAVITY BOT v3.0 - ARQUITECTURA HÍBRIDA**\n\n"
@@ -88,7 +92,6 @@ def send_welcome(message):
     )
     bot.reply_to(message, help_text, parse_mode='Markdown')
 
-@bot.message_handler(commands=['status'])
 def handle_status(message):
     """Muestra estado de grupos y configuración"""
     status = "🕹️ **ESTADO DEL SISTEMA**\n\n"
@@ -104,7 +107,6 @@ def handle_status(message):
     
     bot.reply_to(message, status, parse_mode='Markdown')
 
-@bot.message_handler(commands=['toggle_group'])
 def handle_toggle_group(message):
     """Ej: /toggle_group CRYPTO"""
     try:
@@ -123,7 +125,6 @@ def handle_toggle_group(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {e}")
 
-@bot.message_handler(commands=['set_interval', 'set_cooldown'])
 def handle_set_interval(message):
     """Ajusta el cooldown global en minutos"""
     global SIGNAL_COOLDOWN
@@ -143,7 +144,6 @@ def handle_set_interval(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {e}")
 
-@bot.message_handler(commands=['set_proxy'])
 def handle_set_proxy(message):
     """Configura el proxy para la sesión"""
     chat_id = str(message.chat.id)
@@ -166,16 +166,12 @@ def handle_set_proxy(message):
             session.update_config('proxy_url', url)
             bot.reply_to(message, "🌍 Proxy **CONFIGURADO**. Reiniciando cliente...")
         
-        # Guardar y Re-iniciar cliente para aplicar proxy
         session_manager.save_sessions()
         session._init_client()
         
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {e}")
 
-# --- COMANDOS PREEXISTENTES (Mantenidos y actualizados) ---
-
-@bot.message_handler(commands=['config'])
 def handle_config(message):
     chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
@@ -197,16 +193,19 @@ def handle_config(message):
     )
     bot.reply_to(message, msg, parse_mode='Markdown')
 
-@bot.message_handler(commands=['price'])
 def handle_price(message):
     bot.reply_to(message, "⏳ Escaneando mercado con Motores Híbridos...")
     
     report = "📡 **RADAR DE MERCADO (SPOT + FUTUROS)**\n\n"
     
-    for group_name, assets in ASSET_GROUPS.items():
-        if not GROUP_CONFIG.get(group_name, False):
-            continue
-            
+    # Check Groups
+    active_groups = [g for g, active in GROUP_CONFIG.items() if active]
+    if not active_groups:
+        bot.reply_to(message, "⚠️ Todos los grupos están desactivados. Usa `/toggle_group`.")
+        return
+
+    for group_name in active_groups:
+        assets = ASSET_GROUPS.get(group_name, [])
         report += f"**{group_name}**\n"
         
         for asset in assets:
@@ -239,10 +238,6 @@ def handle_price(message):
         
     bot.send_message(message.chat.id, report, parse_mode='Markdown')
 
-# Manejadores set_leverage, set_margin, etc... (Se mantienen igual, simplificados aquí por brevedad del rewrite pero deben estar)
-# Re-implementamos para asegurar que estén presentes en el archivo final.
-
-@bot.message_handler(commands=['set_keys'])
 def handle_set_keys(message):
     chat_id = str(message.chat.id)
     try:
@@ -256,7 +251,6 @@ def handle_set_keys(message):
     except Exception as e:
         bot.reply_to(message, f"Error: {e}")
 
-@bot.message_handler(commands=['set_leverage'])
 def handle_set_leverage(message):
     chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
@@ -268,7 +262,6 @@ def handle_set_leverage(message):
         bot.reply_to(message, f"✅ Leverage: {val}x")
     except: bot.reply_to(message, "Error.")
 
-@bot.message_handler(commands=['set_margin'])
 def handle_set_margin(message):
     chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
@@ -280,7 +273,6 @@ def handle_set_margin(message):
         bot.reply_to(message, f"✅ Margen: {val*100}%")
     except: bot.reply_to(message, "Error.")
 
-@bot.message_handler(commands=['pnl'])
 def handle_pnlrequest(message):
     chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
@@ -293,10 +285,53 @@ def handle_pnlrequest(message):
     bot.reply_to(message, f"💰 **PnL (24h):** ${pnl:.2f}\n💳 **Balance:** ${avail:.2f} / ${total:.2f}", parse_mode='Markdown')
 
 
-# --- BUCLE PRINCIPAL DE TRADING ---
+# --- MASTER LISTENER ---
+@bot.message_handler(func=lambda m: True)
+def master_listener(message):
+    """Recibe TODO y despacha"""
+    try:
+        text = message.text
+        if not text: return
+        
+        print(f"📨 DEBUG: Recibido '{text}' de {message.chat.id}")
+        
+        if text.startswith('/'):
+            cmd_part = text.split()[0].lower()
+            
+            # Mapa de comandos
+            if cmd_part in ['/start', '/help']:
+                send_welcome(message)
+            elif cmd_part == '/status':
+                handle_status(message)
+            elif cmd_part == '/toggle_group':
+                handle_toggle_group(message)
+            elif cmd_part in ['/set_interval', '/set_cooldown']:
+                handle_set_interval(message)
+            elif cmd_part == '/set_proxy':
+                handle_set_proxy(message)
+            elif cmd_part == '/config':
+                handle_config(message)
+            elif cmd_part == '/price':
+                handle_price(message)
+            elif cmd_part == '/set_keys':
+                handle_set_keys(message)
+            elif cmd_part == '/set_leverage':
+                handle_set_leverage(message)
+            elif cmd_part == '/set_margin':
+                handle_set_margin(message)
+            elif cmd_part == '/pnl':
+                handle_pnlrequest(message)
+            else:
+               bot.reply_to(message, "🤷‍♂️ Comando desconocido.")
+
+    except Exception as e:
+        print(f"❌ Error en dispatcher: {e}")
+
+
+# --- TRADING LOOP ---
 
 def run_trading_loop():
-    """Bucle de Trading que corre en un hilo secundario"""
+    """Bucle de Trading en Background"""
     print("🚀 Bucle de Trading Híbrido Iniciado (Background)...")
     
     while True:
@@ -320,17 +355,13 @@ def run_trading_loop():
                             continue
                             
                         # 2. Análisis Híbrido
-                        
-                        # A. Estrategia SPOT
                         is_spot_buy, spot_metrics = analyze_mean_reversion(df)
                         
-                        # B. Estrategia FUTUROS
                         engine = StrategyEngine(df)
                         fut_result = engine.analyze()
                         fut_signal = fut_result['signal']
                         
-                        # 3. Decisiones y Alertas
-                        
+                        # 3. Alertas
                         if is_spot_buy:
                             msg = (
                                 f"💎 **SEÑAL SPOT: {asset}**\n"
@@ -367,37 +398,33 @@ def run_trading_loop():
         except Exception as e:
             print(f"❌ Error CRÍTICO en bucle de trading: {e}")
             
-        time.sleep(60) # Intervalo de pulso
+        time.sleep(60)
 
 def start_bot():
     global session_manager
     session_manager = SessionManager()
     
-    # 1. Iniciar Bucle de Trading en Hilo Secundario (Daemon)
-    # Esto asegura que el trading corra de fondo y no bloquee
+    # Iniciar Trading Thread
     t_trading = threading.Thread(target=run_trading_loop)
     t_trading.daemon = True
     t_trading.start()
     
-    # 2. Iniciar Polling de Telegram en Hilo Principal
+    # Iniciar Polling
     if bot:
         print("📡 Iniciando Telegram Polling (Main Thread)...")
         try:
-            # Enviar mensaje de INICIO para confirmar que ESTA instancia está viva
-            send_alert("⚡ **ANTIGRAVITY BOT REINICIADO**\nSistema v3.0 en línea. Esperando comandos...")
+            send_alert("✅ **SISTEMA DEPURADO Y LISTO (MANUAL DISPATCH)**\nEnvía /start o /help para probar.")
             
-            # Polling Loop
-            bot.delete_webhook(drop_pending_updates=True) # Eliminar Webhook si existiera y purgar pendientes
-            bot.infinity_polling(timeout=10, long_polling_timeout=10, allowed_updates=['message', 'callback_query'])
+            bot.delete_webhook(drop_pending_updates=True)
+            bot.infinity_polling(timeout=10, long_polling_timeout=10, allowed_updates=['message'])
             
         except Exception as e:
-            print(f"❌ Polling detenido por error: {e}")
+            print(f"❌ Polling Error: {e}")
             time.sleep(5)
     else:
-        print("❌ No se pudo iniciar Polling (Bot no inicializado)")
+        print("❌ Bot no inicializado.")
         while True:
             time.sleep(10)
 
 if __name__ == "__main__":
     start_bot()
-
