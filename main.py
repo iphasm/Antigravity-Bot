@@ -3,6 +3,9 @@ import os
 import threading
 import telebot
 import logging
+import platform
+import sys
+import requests
 from dotenv import load_dotenv
 
 # Importar módulos internos
@@ -250,11 +253,10 @@ def send_welcome(message):
         "2. Squeeze & Velocity (FUTUROS): Rupturas de volatilidad explosivas.\n\n"
         
         "⚙️ Configuracion & Riesgo\n"
-        "/config - Ver parametros actuales (incluyendo Proxy).\n"
-        "/set_proxy <url> - Configurar HTTP Proxy para Binance.\n"
+        "/config - Ver parametros actuales.\n"
         "/set_leverage <x> - Apalancamiento (Futuros).\n"
         "/set_margin <%> - % de Capital por operacion.\n"
-        "/set_keys - Registrar API Keys.\n\n"
+        "/set_keys <k> <s> - Registrar API Keys.\n\n"
         
         "📡 Inteligencia\n"
         "/price - Radar de Mercado en Tiempo Real.\n"
@@ -315,29 +317,30 @@ def handle_set_interval(message):
         bot.reply_to(message, f"❌ Error: {e}")
 
 def handle_set_proxy(message):
-    """Configura el proxy para la sesión"""
-    chat_id = str(message.chat.id)
-    session = session_manager.get_session(chat_id)
-    if not session:
-        bot.reply_to(message, "⛔ Sin sesión. Usa `/set_keys` primero.")
-        return
+    bot.reply_to(message, "❌ El proxy se gestiona automáticamente desde Railway (Variables de Entorno).")
 
+def handle_set_keys(message):
+    """Configura API Keys: /set_keys <KEY> <SECRET>"""
+    chat_id = str(message.chat.id)
     try:
         args = message.text.split()
-        if len(args) < 2:
-            bot.reply_to(message, "⚠️ Uso: `/set_proxy <http://user:pass@ip:port>` o `/set_proxy off`")
+        if len(args) != 3:
+            bot.reply_to(message, "⚠️ Uso: `/set_keys <API_KEY> <API_SECRET>`\n(Te recomendamos borrar el mensaje después)", parse_mode='Markdown')
             return
             
-        url = args[1]
-        if url.lower() == 'off':
-            session.update_config('proxy_url', None)
-            bot.reply_to(message, "🌍 Proxy **DESACTIVADO**.")
-        else:
-            session.update_config('proxy_url', url)
-            bot.reply_to(message, "🌍 Proxy **CONFIGURADO**. Reiniciando cliente...")
+        key = args[1]
+        secret = args[2]
         
-        session_manager.save_sessions()
-        session._init_client()
+        # Guardar en SessionManager
+        session = session_manager.create_or_update_session(chat_id, key, secret)
+        
+        status = "✅ *API Keys Configuradas Correctamente.*\n"
+        if session.client:
+            status += "🔌 Conexión con Binance: *ESTABLE*"
+        else:
+            status += "⚠️ Keys guardadas pero *falló la conexión* (Revisa si son correctas)."
+            
+        bot.reply_to(message, status, parse_mode='Markdown')
         
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {e}")
@@ -347,19 +350,23 @@ def handle_config(message):
     session = session_manager.get_session(chat_id)
     
     if not session:
-        bot.reply_to(message, "❌ Sesión no encontrada.")
+        bot.reply_to(message, "❌ Sesión no encontrada. Usa `/set_keys`.")
         return
 
     cfg = session.get_configuration()
     
+    # Global Proxy Check
+    sys_proxy = os.getenv('PROXY_URL')
+    proxy_status = "✅ Activado (Global)" if sys_proxy else "🔴 Apagado"
+    
     msg = (
         "⚙️ *CONFIGURACIÓN PERSONAL*\n\n"
         f"🔑 *API Binance:* {'✅ Conectado' if cfg['has_keys'] else '❌ Desconectado'}\n"
-        f"🌍 *Proxy:* {'✅ Activado' if cfg['proxy_enabled'] else '🔴 Apagado'}\n"
+        f"🌍 *Proxy:* {proxy_status}\n"
         f"🕹️ *Apalancamiento:* {cfg['leverage']}x\n"
         f"💰 *Margen Máx:* {cfg['max_capital_pct']*100:.1f}%\n"
         f"🛡️ *Stop Loss:* {cfg['stop_loss_pct']*100:.1f}%\n\n"
-        "Para editar: `/set_leverage`, `/set_margin`, `/set_proxy`."
+        "Para editar: `/set_leverage`, `/set_margin`, `/set_keys`."
     )
     bot.reply_to(message, msg, parse_mode='Markdown')
 
@@ -373,6 +380,101 @@ def handle_set_leverage(message):
         session_manager.save_sessions()
         bot.reply_to(message, f"✅ Leverage: {val}x")
     except: bot.reply_to(message, "Error.")
+
+def handle_debug(message):
+    """Generates a System Diagnostics Report"""
+    sent = bot.reply_to(message, "🔍 Ejecutando diagnóstico de sistema...")
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    
+    # 1. System Info
+    py_ver = platform.python_version()
+    os_plat = platform.system()
+    
+    # 2. Credentials
+    has_key = "✅" if session and session.api_key else "❌"
+    has_sec = "✅" if session and session.api_secret else "❌"
+    masked_key = f"{session.api_key[:4]}...{session.api_key[-4:]}" if session and session.api_key else "N/A"
+    
+    # 3. Network / IP
+    proxy_conf = "Yes" if os.getenv('PROXY_URL') else "No"
+    
+    try:
+        # Effective IP (Outgoing)
+        ip_info = requests.get('http://ip-api.com/json', timeout=5).json()
+        eff_ip = ip_info.get('query', 'Unknown')
+        loc = f"{ip_info.get('country', 'Unknown')} ({ip_info.get('regionName', 'Unknown')})"
+    except Exception as e:
+        eff_ip = f"Error: {str(e)}"
+        loc = "Unknown"
+
+    loc_check = "✅" if "US" not in loc else "❌ RESTRICTED (US)"
+    
+    # 4. Binance Public
+    try:
+        t0 = time.time()
+        btc_data = get_market_data('BTCUSDT', limit=1)
+        ping_ms = int((time.time() - t0) * 1000)
+        
+        if not btc_data.empty:
+            btc_price = btc_data.iloc[-1]['close']
+            pub_status = f"✅ Success (BTC: {btc_price:.2f})"
+        else:
+            pub_status = "⚠️ Data Empty"
+            
+        ping_status = f"✅ Success ({ping_ms}ms)"
+    except Exception as e:
+        pub_status = f"❌ Failed: {str(e)}"
+        ping_status = "❌ Failed"
+        
+    # 5. Binance Private
+    auth_status = "❌ No Session"
+    can_trade = "Unknown"
+    acc_type = "Unknown"
+    bal_usdt = "0.00"
+    
+    if session and session.client:
+        try:
+            # Simple auth check
+            acc = session.client.futures_account()
+            auth_status = "✅ Auth Success!"
+            can_trade = str(acc.get('canTrade', False))
+            acc_type = "FUTURES" # We are using futures client
+            bal_usdt = next((float(a['availableBalance']) for a in acc.get('assets', []) if a['asset']=='USDT'), 0.0)
+            bal_usdt = f"{bal_usdt:.2f}"
+        except Exception as e:
+            auth_status = "❌ Auth Failed"
+            can_trade = f"Error: {str(e)}"
+    
+    report = (
+        "🔍 *SYSTEM DIAGNOSTICS REPORT* 🔍\n\n"
+        f"Python Version: {py_ver}\n"
+        f"Platform: {os_plat}\n\n"
+        
+        "🔑 *Credentials Check:*\n"
+        f"- API Key Present: {has_key}\n"
+        f"- API Key Masked: {masked_key}\n"
+        f"- Secret Present: {has_sec}\n\n"
+        
+        "🌍 *Network / IP Check:*\n"
+        f"🔄 Proxy Configured: {proxy_conf}\n"
+        f"- Effective IP: {eff_ip}\n"
+        f"- Location: {loc}\n\n"
+        
+        f"{loc_check} Location looks good (Not US).\n\n"
+        
+        "📡 *Binance Public API:*\n"
+        f"{ping_status}\n"
+        f"Data Fetch: {pub_status}\n\n"
+        
+        "🔐 *Binance Authenticated API:*\n"
+        f"{auth_status}\n"
+        f"- Can Trade: {can_trade}\n"
+        f"- Account Type: {acc_type}\n"
+        f"- Futures USDT Balance: {bal_usdt}"
+    )
+    
+    bot.edit_message_text(report, chat_id=sent.chat.id, message_id=sent.message_id, parse_mode='Markdown')
 
 def handle_set_margin(message):
     chat_id = str(message.chat.id)
@@ -427,6 +529,8 @@ def master_listener(message):
                 handle_price(message)
             elif cmd_part == '/set_keys':
                 handle_set_keys(message)
+            elif cmd_part == '/debug':
+                handle_debug(message)
             elif cmd_part == '/set_leverage':
                 handle_set_leverage(message)
             elif cmd_part == '/set_margin':
@@ -529,7 +633,7 @@ def start_bot():
     if bot:
         print("📡 Iniciando Telegram Polling (Main Thread)...")
         try:
-            send_alert("✅ **SISTEMA DEPURADO Y LISTO (MANUAL DISPATCH)**\nEnvía /start o /help para probar.")
+            send_alert("✅ *SISTEMA DEPURADO Y LISTO (MANUAL DISPATCH)*\nEnvía /start o /help para probar.")
             
             bot.delete_webhook(drop_pending_updates=True)
             bot.infinity_polling(timeout=10, long_polling_timeout=10, allowed_updates=['message'])

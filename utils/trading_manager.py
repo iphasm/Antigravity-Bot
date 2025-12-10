@@ -21,18 +21,21 @@ class TradingSession:
         self.config = {
             "leverage": 5,
             "max_capital_pct": 0.10,
-            "stop_loss_pct": 0.02,
-            "proxy_url": None
+            "stop_loss_pct": 0.02
         }
         
         if config:
             self.config.update(config)
 
-        # Proxy Setup from Config or Global Env (Optional fallback for proxy only)
-        # Note: We prioritize session config for proxy if set
+        # Proxy Setup: GLOBAL ONLY (Railway / Env)
+        # We ignore session-specific proxy_url and enforce system proxy.
         self.request_params = None
-        if self.config.get('proxy_url'):
-             self.request_params = {'proxies': {'https': self.config['proxy_url']}}
+        sys_proxy = os.getenv('PROXY_URL') or os.getenv('HTTPS_PROXY') or os.getenv('HTTP_PROXY')
+        
+        if sys_proxy:
+             self.request_params = {'proxies': {'https': sys_proxy}}
+             # Optional: Log only once or verbose
+             # print(f"🌍 Using Global Proxy for Chat {self.chat_id}")
 
         # Initialize Client
         self._init_client()
@@ -51,7 +54,6 @@ class TradingSession:
     # --- CONFIGURATION METHODS ---
     def update_config(self, key, value):
         self.config[key] = value
-        # If proxy changed, re-init might be needed, but usually leverage/risk doesn't need re-init
         return self.config[key]
 
     def get_configuration(self):
@@ -59,7 +61,6 @@ class TradingSession:
             "leverage": self.config['leverage'],
             "max_capital_pct": self.config['max_capital_pct'],
             "stop_loss_pct": self.config['stop_loss_pct'],
-            "proxy_enabled": bool(self.config.get('proxy_url')),
             "has_keys": bool(self.client) # Status check
         }
 
