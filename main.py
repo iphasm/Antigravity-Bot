@@ -318,7 +318,6 @@ def handle_manual_closeall(message):
 def send_welcome(message):
     # Texto en plano para evitar errores de parseo (Markdown legacy es estricto con _)
     help_text = (
-    help_text = (
         "🤖 ANTIGRAVITY BOT v3.2 - COMMAND LIST\n\n"
         "🎮 *MODOS DE OPERACIÓN*\n"
         "• /watcher - Modo Vigilante (Alertas de texto, sin ejecución).\n"
