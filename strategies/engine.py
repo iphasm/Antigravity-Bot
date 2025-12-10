@@ -10,7 +10,8 @@ from strategies.indicators import (
     calculate_rsi,
     calculate_adx_slope,
     calculate_ema,
-    calculate_stoch_rsi
+    calculate_stoch_rsi,
+    calculate_atr
 )
 
 class StrategyEngine:
@@ -53,17 +54,20 @@ class StrategyEngine:
         
         # 5. RSI (14)
         self.df['rsi'] = calculate_rsi(self.df['close'], period=14)
+        
+        # 6. ATR (14) - Para Stop Loss Dinámico
+        self.df['atr'] = calculate_atr(self.df, period=14)
 
         # --- INDICADORES EXTRA PARA SPOT ---
-        # 6. EMA (200)
+        # 7. EMA (200)
         self.df['ema_200'] = calculate_ema(self.df['close'], period=200)
 
-        # 7. StochRSI (14, 3, 3)
+        # 8. StochRSI (14, 3, 3)
         stoch = calculate_stoch_rsi(self.df['rsi'], period=14, k_period=3, d_period=3)
         self.df['stoch_k'] = stoch['k']
         self.df['stoch_d'] = stoch['d']
 
-        # 8. Volumen SMA (20)
+        # 9. Volumen SMA (20)
         self.df['vol_sma'] = self.df['volume'].rolling(20).mean()
 
     def analyze(self) -> dict:
@@ -147,7 +151,8 @@ class StrategyEngine:
             "squeeze_on": bool(is_squeeze or recent_squeeze),
             "stoch_k": float(curr['stoch_k']),
             "bb_lower": float(curr['bb_lower']),
-            "hma_55": float(curr['hma_55'])
+            "hma_55": float(curr['hma_55']),
+            "atr": float(curr['atr'])
         }
 
         return {

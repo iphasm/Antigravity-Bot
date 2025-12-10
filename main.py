@@ -193,9 +193,16 @@ def handle_manual_long(message):
             return
             
         symbol = resolve_symbol(parts[1])
-        bot.reply_to(message, f"⏳ Ejecutando LONG en {symbol}...")
+        bot.reply_to(message, f"⏳ Analizando {symbol} (ATR) y Ejecutando LONG...")
         
-        success, msg = session.execute_long_position(symbol)
+        # 1. Get ATR
+        atr_val = None
+        success, res = process_asset(symbol)
+        if success and 'metrics' in res:
+            atr_val = res['metrics'].get('atr', None)
+        
+        # 2. Execute
+        success, msg = session.execute_long_position(symbol, atr=atr_val)
         
         if success:
             bot.reply_to(message, f"✅ *LONG EJECUTADO*\n{msg}", parse_mode='Markdown')
@@ -236,8 +243,16 @@ def handle_manual_sell(message):
             success, msg = session.execute_close_position(symbol)
             bot.reply_to(message, f"{msg}")
         else:
-            bot.reply_to(message, f"⏳ Ejecutando SHORT en {symbol}...")
-            success, msg = session.execute_short_position(symbol)
+            bot.reply_to(message, f"⏳ Analizando {symbol} (ATR) y Ejecutando SHORT...")
+            
+            # 1. Get ATR
+            atr_val = None
+            success, res = process_asset(symbol)
+            if success and 'metrics' in res:
+                atr_val = res['metrics'].get('atr', None)
+
+            # 2. Execute
+            success, msg = session.execute_short_position(symbol, atr=atr_val)
             if success:
                 bot.reply_to(message, f"✅ *SHORT EJECUTADO*\n{msg}", parse_mode='Markdown')
             else:

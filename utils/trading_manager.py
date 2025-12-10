@@ -75,7 +75,7 @@ class TradingSession:
             print(f"Error getting precision for {symbol}: {e}")
         return 2, 2
 
-    def execute_long_position(self, symbol):
+    def execute_long_position(self, symbol, atr=None):
         if not self.client:
             return False, "No valid API Keys provided for this chat."
             
@@ -103,21 +103,39 @@ class TradingSession:
             account = self.client.futures_account_balance()
             usdt_balance = next((float(a['availableBalance']) for a in account if a['asset'] == 'USDT'), 0)
             
-            if usdt_balance <= 0:
-                return False, f"Insufficient USDT Balance: ${usdt_balance:.2f}"
-
-            margin_assignment = usdt_balance * max_capital_pct
-            
             ticker = self.client.futures_symbol_ticker(symbol=symbol)
             current_price = float(ticker['price'])
-            
-            raw_quantity = (margin_assignment * leverage) / current_price
-            
             qty_precision, price_precision = self.get_symbol_precision(symbol)
+
+            # --- DYNAMIC CALCULATION ---
+            if atr and atr > 0:
+                # Rule: SL = 2.0 * ATR
+                sl_dist = 2.0 * atr
+                sl_price = round(current_price - sl_dist, price_precision)
+                
+                # Rule: Risk Amount = 2% of Equity
+                risk_amount = usdt_balance * 0.02 
+                
+                raw_quantity = risk_amount / sl_dist
+                
+                # Check absolute margin limit
+                notional = raw_quantity * current_price
+                margin_req = notional / leverage
+                
+                if margin_req > (usdt_balance * max_capital_pct):
+                     raw_quantity = (usdt_balance * max_capital_pct * leverage) / current_price
+                
+                tp1_price = round(current_price + (1.5 * sl_dist), price_precision)
+                
+            else:
+                # --- FALLBACK (FIXED %) ---
+                margin_assignment = usdt_balance * max_capital_pct
+                raw_quantity = (margin_assignment * leverage) / current_price
+                sl_price = round(current_price * (1 - stop_loss_pct), price_precision)
+                tp1_price = round(current_price * (1 + (stop_loss_pct * 3)), price_precision) 
+
             quantity = float(round(raw_quantity, qty_precision))
-            
-            if quantity <= 0:
-                return False, f"Position too small for ${margin_assignment:.2f} margin."
+            if quantity <= 0: return False, "Position too small."
 
             # 3. Execute Market Buy
             order = self.client.futures_create_order(
@@ -126,30 +144,40 @@ class TradingSession:
             entry_price = float(order.get('avgPrice', current_price))
             if entry_price == 0: entry_price = current_price
 
-            # 4. Stop Loss & Take Profit
-            sl_price = round(entry_price * (1 - stop_loss_pct), price_precision)
-            tp_price = round(entry_price * (1 + (stop_loss_pct * 3)), price_precision)
+            # 4. Orders
+            # SL (Full Size)
+            if sl_price > 0:
+                self.client.futures_create_order(
+                    symbol=symbol, side='SELL', type='STOP_MARKET', stopPrice=sl_price, closePosition=True
+                )
             
-            if sl_price <= 0:
-                return True, "Executed, but SL calculation failed (<=0)."
+            # TP1 (Half Size)
+            qty_tp1 = float(round(quantity / 2, qty_precision))
+            if qty_tp1 > 0:
+                self.client.futures_create_order(
+                   symbol=symbol, side='SELL', type='TAKE_PROFIT_MARKET', stopPrice=tp1_price, quantity=qty_tp1
+                )
+                
+            # TP2 (Trailing - Remainder)
+            qty_tp2 = float(round(quantity - qty_tp1, qty_precision))
+            if qty_tp2 > 0:
+                 self.client.futures_create_order(
+                    symbol=symbol, 
+                    side='SELL', 
+                    type='TRAILING_STOP_MARKET', 
+                    callbackRate=1.5, 
+                    quantity=qty_tp2
+                )
 
-            self.client.futures_create_order(
-                symbol=symbol, side='SELL', type='STOP_MARKET', stopPrice=sl_price, closePosition=True
-            )
-            self.client.futures_create_order(
-                symbol=symbol, side='SELL', type='TAKE_PROFIT_MARKET', stopPrice=tp_price, closePosition=True
-            )
-            
-            
-            self._log_trade(symbol, entry_price, quantity, sl_price, tp_price)
-            return True, f"Long {symbol} @ {entry_price} (SL: {sl_price}, TP: {tp_price})"
+            self._log_trade(symbol, entry_price, quantity, sl_price, tp1_price)
+            return True, f"Long {symbol} (x{leverage})\nEntry: {entry_price}\nQty: {quantity}\nSL: {sl_price}\nTP1: {tp1_price} (50%)\nTP2: Trailing 1.5%"
 
         except BinanceAPIException as e:
             return False, f"Binance Error: {e.message}"
         except Exception as e:
             return False, f"Error: {str(e)}"
 
-    def execute_short_position(self, symbol):
+    def execute_short_position(self, symbol, atr=None):
         if not self.client:
             return False, "No valid API Keys provided for this chat."
             
@@ -158,67 +186,86 @@ class TradingSession:
             max_capital_pct = self.config['max_capital_pct']
             stop_loss_pct = self.config['stop_loss_pct']
 
-            # 0. Safety Check: Existing Position
+            # 0. Safety Check
             positions = self.client.futures_position_information(symbol=symbol)
-            net_qty = 0.0
-            for p in positions:
-                net_qty += float(p['positionAmt'])
-            
+            net_qty = sum(float(p['positionAmt']) for p in positions)
             if net_qty != 0:
                 return False, f"⚠️ Position already open ({net_qty} {symbol})."
 
             # 1. Update Leverage
             self.client.futures_change_leverage(symbol=symbol, leverage=leverage)
 
-            # 2. Calculate Position Size
+            # 2. Calculate Size & Params
             account = self.client.futures_account_balance()
             usdt_balance = next((float(a['availableBalance']) for a in account if a['asset'] == 'USDT'), 0)
             
-            if usdt_balance <= 0:
-                return False, f"Insufficient USDT Balance: ${usdt_balance:.2f}"
-
-            margin_assignment = usdt_balance * max_capital_pct
-            
             ticker = self.client.futures_symbol_ticker(symbol=symbol)
             current_price = float(ticker['price'])
-            
-            raw_quantity = (margin_assignment * leverage) / current_price
-            
             qty_precision, price_precision = self.get_symbol_precision(symbol)
-            quantity = float(round(raw_quantity, qty_precision))
-            
-            if quantity <= 0:
-                return False, f"Position too small for ${margin_assignment:.2f} margin."
 
-            # 3. Execute Market SELL (Short)
+            # --- DYNAMIC CALCULATION ---
+            if atr and atr > 0:
+                sl_dist = 2.0 * atr
+                sl_price = round(current_price + sl_dist, price_precision) # Short SL is above
+                
+                risk_amount = usdt_balance * 0.02
+                raw_quantity = risk_amount / sl_dist
+                
+                notional = raw_quantity * current_price
+                margin_req = notional / leverage
+                
+                if margin_req > (usdt_balance * max_capital_pct):
+                     raw_quantity = (usdt_balance * max_capital_pct * leverage) / current_price
+                
+                tp1_price = round(current_price - (1.5 * sl_dist), price_precision) # Short TP is below
+                
+            else:
+                margin_assignment = usdt_balance * max_capital_pct
+                raw_quantity = (margin_assignment * leverage) / current_price
+                sl_price = round(current_price * (1 + stop_loss_pct), price_precision)
+                tp1_price = round(current_price * (1 - (stop_loss_pct * 3)), price_precision)
+
+            quantity = float(round(raw_quantity, qty_precision))
+            if quantity <= 0: return False, "Position too small."
+
+            # 3. Execute Market SELL
             order = self.client.futures_create_order(
                 symbol=symbol, side='SELL', type='MARKET', quantity=quantity
             )
             entry_price = float(order.get('avgPrice', current_price))
-            if entry_price == 0: entry_price = current_price
 
-            # 4. Stop Loss & Take Profit (BUY to Close)
-            # Short: Stop Loss is ABOVE entry, TP is BELOW entry
-            sl_price = round(entry_price * (1 + stop_loss_pct), price_precision)
-            tp_price = round(entry_price * (1 - (stop_loss_pct * 3)), price_precision)
+            # 4. Orders
+            # SL (Full Size)
+            if sl_price > 0:
+                 self.client.futures_create_order(
+                    symbol=symbol, side='BUY', type='STOP_MARKET', stopPrice=sl_price, closePosition=True
+                )
             
-            if sl_price <= 0 or tp_price <= 0:
-                 return True, "Executed Short, but SL/TP calc failed."
+            # TP1 (Half Size)
+            qty_tp1 = float(round(quantity / 2, qty_precision))
+            if qty_tp1 > 0:
+                self.client.futures_create_order(
+                   symbol=symbol, side='BUY', type='TAKE_PROFIT_MARKET', stopPrice=tp1_price, quantity=qty_tp1
+                )
+            
+            # TP2 (Trailing)
+            qty_tp2 = float(round(quantity - qty_tp1, qty_precision))
+            if qty_tp2 > 0:
+                 self.client.futures_create_order(
+                    symbol=symbol, 
+                    side='BUY', 
+                    type='TRAILING_STOP_MARKET', 
+                    callbackRate=1.5, 
+                    quantity=qty_tp2
+                )
 
-            self.client.futures_create_order(
-                symbol=symbol, side='BUY', type='STOP_MARKET', stopPrice=sl_price, closePosition=True
-            )
-            self.client.futures_create_order(
-                symbol=symbol, side='BUY', type='TAKE_PROFIT_MARKET', stopPrice=tp_price, closePosition=True
-            )
-            
-            self._log_trade(symbol, entry_price, quantity, sl_price, tp_price, side='SHORT')
-            return True, f"📉 Short {symbol} @ {entry_price} (SL: {sl_price}, TP: {tp_price})"
+            self._log_trade(symbol, entry_price, quantity, sl_price, tp1_price, side='SHORT')
+            return True, f"Short {symbol} (x{leverage})\nEntry: {entry_price}\nQty: {quantity}\nSL: {sl_price}\nTP1: {tp1_price} (50%)\nTP2: Trailing 1.5%"
 
         except BinanceAPIException as e:
             return False, f"Binance Error: {e.message}"
         except Exception as e:
-            return False, f"Error: {str(e)}"
+            return False, f"Error: {e}"
 
     def execute_close_all(self):
         """Closes ALL active positions"""
