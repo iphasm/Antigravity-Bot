@@ -50,7 +50,30 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
 TELEGRAM_CHAT_IDS = [id.strip() for id in os.getenv('TELEGRAM_CHAT_ID', '').split(',') if id.strip()]
 
-# ... (Bot init remains) ...
+# Inicializar Bot
+bot = None
+session_manager = None 
+
+if TELEGRAM_TOKEN:
+    bot = telebot.TeleBot(TELEGRAM_TOKEN)
+else:
+    print("ADVERTENCIA: No se encontró TELEGRAM_TOKEN.")
+
+def send_alert(message):
+    """Transmite el mensaje a todos los destinos configurados"""
+    targets = set(TELEGRAM_CHAT_IDS)
+    if session_manager:
+        for s in session_manager.get_all_sessions():
+            targets.add(s.chat_id)
+            
+    if bot and targets:
+        for chat_id in targets:
+            try:
+                bot.send_message(chat_id, message, parse_mode='Markdown')
+            except Exception as e:
+                print(f"Error enviando alerta a {chat_id}: {e}")
+    else:
+        print(f"ALERTA (Log): {message}")
 
 def handle_price(message):
     try:
