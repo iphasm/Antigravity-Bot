@@ -804,6 +804,10 @@ def handle_trade_callback(call):
     except Exception as e:
         print(f"Callback Error: {e}")
         bot.answer_callback_query(call.id, "❌ Error procesando.")
+
+# --- MASTER LISTENER ---
+@bot.message_handler(func=lambda m: True)
+def master_listener(message):
     """Recibe TODO y despacha"""
     try:
         text = message.text
