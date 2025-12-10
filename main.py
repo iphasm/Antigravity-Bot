@@ -91,7 +91,13 @@ def resolve_symbol(text):
     if s in known_assets or s in TICKER_MAP:
         return s
         
-    # 2. Try Appending USDT (Common Crypto case)
+    # 2. Reverse Lookup (Name -> Ticker)
+    # Checks if input matches a friendly name in TICKER_MAP (e.g. "TESLA" -> "TSLA")
+    for ticker, name in TICKER_MAP.items():
+        if s == name.upper():
+            return ticker
+            
+    # 3. Try Appending USDT (Common Crypto case)
     # If user types "BTC", checking "BTCUSDT"
     s_usdt = s + "USDT"
     if s_usdt in ASSET_GROUPS.get('CRYPTO', []) or s_usdt in TICKER_MAP:
