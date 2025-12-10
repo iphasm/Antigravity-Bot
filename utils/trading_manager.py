@@ -31,6 +31,9 @@ class TradingSession:
         if config:
             self.config.update(config)
 
+        # Automation Mode: WATCHER (Default), COPILOT, PILOT
+        self.mode = self.config.get('mode', 'WATCHER')
+
         # Proxy Setup: GLOBAL ONLY (Railway / Env)
         # We ignore session-specific proxy_url and enforce system proxy.
         self.request_params = None
@@ -85,12 +88,20 @@ class TradingSession:
                 print(f"❌ [Chat {self.chat_id}] Failed to init Alpaca: {e}")
 
     # --- CONFIGURATION METHODS ---
+    def set_mode(self, mode):
+        if mode in ['WATCHER', 'COPILOT', 'PILOT']:
+            self.mode = mode
+            self.config['mode'] = mode
+            return True
+        return False
+
     def update_config(self, key, value):
         self.config[key] = value
         return self.config[key]
 
     def get_configuration(self):
         return {
+            "mode": self.mode,
             "leverage": self.config['leverage'],
             "max_capital_pct": self.config['max_capital_pct'],
             "stop_loss_pct": self.config['stop_loss_pct'],

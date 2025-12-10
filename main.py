@@ -2,6 +2,7 @@ import time
 import os
 import threading
 import telebot
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import logging
 import platform
 import sys
@@ -317,8 +318,15 @@ def handle_manual_closeall(message):
 def send_welcome(message):
     # Texto en plano para evitar errores de parseo (Markdown legacy es estricto con _)
     help_text = (
+    help_text = (
         "🤖 ANTIGRAVITY BOT v3.2 - COMMAND LIST\n\n"
-        "🎮 *CONTROL GENERAL*\n"
+        "🎮 *MODOS DE OPERACIÓN*\n"
+        "• /watcher - Modo Vigilante (Alertas de texto, sin ejecución).\n"
+        "• /copilot - Modo Copiloto (Propone operaciones, tú decides).\n"
+        "• /pilot - Modo Piloto (Automático - Bajo tu riesgo).\n"
+        "• /mode - Ver modo actual.\n\n"
+
+        "⚙️ *CONTROL GENERAL*\n"
         "• /start - Verificar Estado y Conexión.\n"
         "• /status - Ver estado del sistema y modo de riesgo.\n"
         "• /toggle_group <GRUPO> - Activar/Desactivar (CRYPTO, STOCKS, COMMODITY).\n"
@@ -412,8 +420,12 @@ def handle_start(message):
 
 def handle_status(message):
     """Muestra estado de grupos y configuración"""
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    mode = session.mode if session else "WATCHER (Default)"
+
     status = "🕹️ *ESTADO DEL SISTEMA*\n\n"
-    
+    status += f"🎮 *Modo Operativo:* {mode}\n"
     status += f"*Activos Vigilados:* {sum(len(v) for k,v in ASSET_GROUPS.items() if GROUP_CONFIG[k])}\n"
     status += f"*Cooldown de Señal:* {SIGNAL_COOLDOWN/60:.0f} minutos\n"
     status += f"*Threads Activos:* {threading.active_count()}\n"
@@ -503,6 +515,7 @@ def handle_config(message):
     
     msg = (
         "⚙️ *CONFIGURACIÓN PERSONAL*\n\n"
+        f"🎮 *Modo:* {cfg.get('mode', 'WATCHER')}\n"
         f"🔑 *API:* {'✅ Vinculada' if cfg['has_keys'] else '❌ Sin Vincular'}\n"
         "〰️〰️〰️〰️〰️〰️\n"
         "📡 *Grupos Activos (Scanner):*\n"
@@ -606,7 +619,8 @@ def handle_debug(message):
         f"Python Version: {py_ver}\n"
         f"Platform: {os_plat}\n\n"
         
-        "🔑 *Credentials Check:*\n"
+        "🔑 *Credentials & Mode:*\n"
+        f"- Operation Mode: {session.mode if session else 'WATCHER'}\n"
         f"- API Key Present: {has_key}\n"
         f"- API Key Masked: {masked_key}\n"
         f"- Secret Present: {has_sec}\n\n"
@@ -716,10 +730,81 @@ def handle_wallet(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {e}")
 
+# --- AUTOMATION CONTROLS ---
+
+def handle_mode_switch(message, mode):
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session:
+        bot.reply_to(message, "⚠️ Sin sesión activa. Usa /set_keys primero.")
+        return
+        
+    if session.set_mode(mode):
+        session_manager.save_sessions()
+        descriptions = {
+            'WATCHER': "👀 **WATCHER ACTIVADO**: Solo recibirás alertas de texto.",
+            'COPILOT': "🤝 **COPILOT ACTIVADO**: Recibirás propuestas de operación para Aceptar/Rechazar.",
+            'PILOT': "🤖 **PILOT ACTIVADO**: El bot operará automáticamente (Bajo tu riesgo)."
+        }
+        bot.reply_to(message, descriptions.get(mode, "Modo Actualizado."), parse_mode='Markdown')
+    else:
+        bot.reply_to(message, "❌ Error cambiando modo.")
+
+def handle_get_mode(message):
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session: return
+    
+    mode = session.config.get('mode', 'WATCHER')
+    bot.reply_to(message, f"🎮 Modo Actual: **{mode}**", parse_mode='Markdown')
 
 # --- MASTER LISTENER ---
-@bot.message_handler(func=lambda m: True)
-def master_listener(message):
+    mode = session.config.get('mode', 'WATCHER')
+    bot.reply_to(message, f"🎮 Modo Actual: **{mode}**", parse_mode='Markdown')
+
+# --- CALLBACK HANDLER (COPILOT) ---
+@bot.callback_query_handler(func=lambda call: True)
+def handle_trade_callback(call):
+    chat_id = str(call.message.chat.id)
+    session = session_manager.get_session(chat_id)
+    
+    if not session:
+        bot.answer_callback_query(call.id, "⚠️ Sesión no encontrada.")
+        return
+
+    try:
+        # Data format: ACTION|SYMBOL|SIDE (e.g., BUY|BTCUSDT|LONG)
+        data = call.data.split('|')
+        action = data[0]
+        
+        if action == 'IGNORE':
+            bot.edit_message_text(f"❌ Operación Rechazada par {data[1]}.", chat_id=chat_id, message_id=call.message.message_id)
+            return
+
+        symbol = data[1]
+        side = data[2]
+        
+        bot.answer_callback_query(call.id, f"⏳ Ejecutando {action} {symbol}...")
+        
+        success = False
+        msg = ""
+        
+        if action == 'BUY' and side == 'LONG':
+            # Need ATR? Ideally passed in data, but limited space. Re-calc or pass 'None' (Fallback).
+            # For simplicity, we re-calc or just use fallback.
+            # Let's try to pass current price or something? No, just run execute.
+            success, msg = session.execute_long_position(symbol)
+            
+        elif action == 'CLOSE':
+             success, msg = session.execute_close_position(symbol)
+             
+        # Update Message
+        new_text = f"{call.message.text}\n\n{'✅' if success else '❌'} **RESULTADO:**\n{msg}"
+        bot.edit_message_text(new_text, chat_id=chat_id, message_id=call.message.message_id, parse_mode='Markdown')
+        
+    except Exception as e:
+        print(f"Callback Error: {e}")
+        bot.answer_callback_query(call.id, "❌ Error procesando.")
     """Recibe TODO y despacha"""
     try:
         text = message.text
@@ -792,6 +877,16 @@ def master_listener(message):
             elif cmd_part == '/set_proxy':
                 handle_set_proxy(message)
             
+            # --- AUTOMATION FLOW ---
+            elif cmd_part == '/watcher':
+                handle_mode_switch(message, 'WATCHER')
+            elif cmd_part == '/copilot':
+                handle_mode_switch(message, 'COPILOT')
+            elif cmd_part == '/pilot':
+                handle_mode_switch(message, 'PILOT')
+            elif cmd_part == '/mode':
+                handle_get_mode(message)
+            
             # Manual Trading
             elif cmd_part == '/long':
                 handle_manual_long(message)
@@ -854,27 +949,78 @@ def run_trading_loop():
                         curr_state = pos_state.get(asset, 'NEUTRAL')
                         fut_sig = res['signal_futures']
                         
-                        if fut_sig == 'BUY':
-                            msg = (
-                                f"🚀 *SEÑAL FUTUROS: {asset}*\n"
-                                f"Estrategia: Squeeze & Velocity\n"
-                                f"Precio: ${m['close']:,.2f}\n"
-                                f"Razón: {res['reason_futures']}\n"
-                                f"ADX: {m['adx']:.1f} | Squeeze: {'ON' if m['squeeze_on'] else 'OFF'}"
-                            )
-                            send_alert(msg)
-                            last_alert_times[asset] = current_time
-                            pos_state[asset] = 'LONG'
+                        # --- DISPATCH SIGNAL TO SESSIONS ---
+                        # We iterate all sessions to respect their individual modes
+                        all_sessions = session_manager.get_all_sessions()
                         
-                        elif fut_sig == 'CLOSE_LONG':
-                             if curr_state == 'LONG':
-                                 msg = (
+                        # Also include Non-Session Chat IDs (Env Var) as WATCHERS
+                        env_chats = set(TELEGRAM_CHAT_IDS)
+                        session_chats = set(s.chat_id for s in all_sessions)
+                        
+                        # 1. PROCESS SESSIONS (Watcher/Copilot/Pilot)
+                        if fut_sig == 'BUY' or (fut_sig == 'CLOSE_LONG' and curr_state == 'LONG'):
+                            
+                            # Update State (Once per signal, but actions depend on user)
+                            if fut_sig == 'BUY': pos_state[asset] = 'LONG'
+                            if fut_sig == 'CLOSE_LONG': pos_state[asset] = 'NEUTRAL'
+                            last_alert_times[asset] = current_time
+
+                            msg_text = ""
+                            if fut_sig == 'BUY':
+                                msg_text = (
+                                    f"🚀 *SEÑAL FUTUROS: {asset}*\n"
+                                    f"Estrategia: Squeeze & Velocity\n"
+                                    f"Precio: ${m['close']:,.2f}\n"
+                                    f"Razón: {res['reason_futures']}\n"
+                                    f"ADX: {m['adx']:.1f} | Squeeze: {'ON' if m['squeeze_on'] else 'OFF'}"
+                                )
+                            else:
+                                msg_text = (
                                     f"📉 *SALIDA FUTUROS: {asset}*\n"
                                     f"Razón: {res['reason_futures']}"
-                                 )
-                                 send_alert(msg)
-                                 last_alert_times[asset] = current_time
-                                 pos_state[asset] = 'NEUTRAL'
+                                )
+
+                            for session in all_sessions:
+                                mode = session.mode
+                                cid = session.chat_id
+                                
+                                try:
+                                    if mode == 'PILOT':
+                                        # AUTO EXECUTE
+                                        if fut_sig == 'BUY':
+                                            ok, res_msg = session.execute_long_position(asset, atr=m['atr'])
+                                            bot.send_message(cid, f"🤖 *PILOT ACTION*\n{res_msg}", parse_mode='Markdown')
+                                        elif fut_sig == 'CLOSE_LONG':
+                                            ok, res_msg = session.execute_close_position(asset)
+                                            bot.send_message(cid, f"🤖 *PILOT ACTION*\n{res_msg}", parse_mode='Markdown')
+                                            
+                                    elif mode == 'COPILOT':
+                                        # INTERACTIVE BUTTONS
+                                        markup = InlineKeyboardMarkup()
+                                        if fut_sig == 'BUY':
+                                            markup.add(
+                                                InlineKeyboardButton("✅ Entrar LONG", callback_data=f"BUY|{asset}|LONG"),
+                                                InlineKeyboardButton("❌ Ignorar", callback_data=f"IGNORE|{asset}|LONG")
+                                            )
+                                        elif fut_sig == 'CLOSE_LONG':
+                                            markup.add(
+                                                InlineKeyboardButton("✅ Cerrar Ahora", callback_data=f"CLOSE|{asset}|LONG"),
+                                                InlineKeyboardButton("❌ Mantener", callback_data=f"IGNORE|{asset}|LONG")
+                                            )
+                                        bot.send_message(cid, msg_text, reply_markup=markup, parse_mode='Markdown')
+                                        
+                                    else: # WATCHER (Default)
+                                        bot.send_message(cid, msg_text, parse_mode='Markdown')
+                                        
+                                except Exception as e:
+                                    print(f"Error dispatching to {cid}: {e}")
+
+                            # 2. PROCESS ENV CHATS (Watcher Only)
+                            for cid in env_chats:
+                                if cid not in session_chats:
+                                    try:
+                                        bot.send_message(cid, msg_text, parse_mode='Markdown')
+                                    except: pass
 
                     except Exception as e:
                         print(f"⚠️ Error procesando {asset}: {e}")
