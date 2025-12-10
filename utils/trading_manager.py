@@ -374,24 +374,35 @@ class TradingSession:
         
         try:
             start_time = int((time.time() - (days * 86400)) * 1000)
-            income_history = self.client.futures_income_history(
+            
+            # Fetch Realized PnL
+            income = self.client.futures_income_history(
                 incomeType='REALIZED_PNL', 
                 startTime=start_time,
-                limit=50
+                limit=100
+            )
+            # Fetch Commission (to subtract for Net PnL)
+            commission = self.client.futures_income_history(
+                incomeType='COMMISSION', 
+                startTime=start_time,
+                limit=100
             )
             
             total_pnl = 0.0
             details = []
             
-            for item in income_history:
+            # Process PnL
+            for item in income:
                 amt = float(item['income'])
                 total_pnl += amt
-                details.append({
-                    'symbol': item['symbol'],
-                    'amount': amt,
-                    'time': item['time']
-                })
-                
+                details.append({'symbol': item['symbol'], 'amount': amt, 'time': item['time'], 'type': 'PNL'})
+            
+            # Process Commission
+            for item in commission:
+                amt = float(item['income'])
+                total_pnl += amt # Commission is negative, so adding subtracts it
+                # details.append({'symbol': item['symbol'], 'amount': amt, 'time': item['time'], 'type': 'COMM'})
+
             return total_pnl, details
             
         except Exception as e:
@@ -437,16 +448,21 @@ class TradingSession:
             
             details['spot_usdt'] = spot_usdt
 
-            # 3. EARN / SAVINGS (Simple Earn Flexible)
-            # Try getting flexible product position (USDT)
+            # 3. EARN (Flexible + Locked)
             earn_usdt = 0.0
             try:
-                # This endpoint returns list of all flexible positions
-                earn_pos = self.client.get_simple_earn_flexible_position()
-                for p in earn_pos:
-                     if p['asset'] == 'USDT':
+                # Flexible
+                flex_pos = self.client.get_simple_earn_flexible_position()
+                for p in flex_pos:
+                     if 'USDT' in p['asset']: # Matches USDT, LDUSDT etc
                          earn_usdt += float(p['totalAmount'])
-                         # Note: totalAmount = free + locked in earn
+                
+                # Locked
+                locked_pos = self.client.get_simple_earn_locked_position()
+                for p in locked_pos:
+                     if 'USDT' in p['asset']:
+                         earn_usdt += float(p['amount']) # 'amount' usually for locked
+                         
             except Exception as e: 
                 print(f"Earn fetch error: {e}")
             
