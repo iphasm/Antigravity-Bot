@@ -59,9 +59,23 @@ GROUP_CONFIG = {
     'COMMODITY': True
 }
 
-# ... (omitted signal cooldown) ...
+# Configuración de Señales
+SIGNAL_COOLDOWN = 900 # 15 Minutos por defecto
+last_alert_times = {} # {asset: timestamp}
+pos_state = {} # {asset: 'NEUTRAL' | 'LONG'} - Para evitar spam de salidas
 
-# ... (process_asset stays same) ...
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
+TELEGRAM_CHAT_IDS = [id.strip() for id in os.getenv('TELEGRAM_CHAT_ID', '').split(',') if id.strip()]
+
+# Inicializar Bot
+bot = None
+session_manager = None 
+
+if TELEGRAM_TOKEN:
+    bot = telebot.TeleBot(TELEGRAM_TOKEN)
+else:
+    print("ADVERTENCIA: No se encontró TELEGRAM_TOKEN.")
 
 def resolve_symbol(text):
     """Clean and standardize input symbol"""
