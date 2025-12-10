@@ -149,6 +149,93 @@ class TradingSession:
         except Exception as e:
             return False, f"Error: {str(e)}"
 
+    def execute_short_position(self, symbol):
+        if not self.client:
+            return False, "No valid API Keys provided for this chat."
+            
+        try:
+            leverage = self.config['leverage']
+            max_capital_pct = self.config['max_capital_pct']
+            stop_loss_pct = self.config['stop_loss_pct']
+
+            # 0. Safety Check: Existing Position
+            positions = self.client.futures_position_information(symbol=symbol)
+            net_qty = 0.0
+            for p in positions:
+                net_qty += float(p['positionAmt'])
+            
+            if net_qty != 0:
+                return False, f"⚠️ Position already open ({net_qty} {symbol})."
+
+            # 1. Update Leverage
+            self.client.futures_change_leverage(symbol=symbol, leverage=leverage)
+
+            # 2. Calculate Position Size
+            account = self.client.futures_account_balance()
+            usdt_balance = next((float(a['availableBalance']) for a in account if a['asset'] == 'USDT'), 0)
+            
+            if usdt_balance <= 0:
+                return False, f"Insufficient USDT Balance: ${usdt_balance:.2f}"
+
+            margin_assignment = usdt_balance * max_capital_pct
+            
+            ticker = self.client.futures_symbol_ticker(symbol=symbol)
+            current_price = float(ticker['price'])
+            
+            raw_quantity = (margin_assignment * leverage) / current_price
+            
+            qty_precision, price_precision = self.get_symbol_precision(symbol)
+            quantity = float(round(raw_quantity, qty_precision))
+            
+            if quantity <= 0:
+                return False, f"Position too small for ${margin_assignment:.2f} margin."
+
+            # 3. Execute Market SELL (Short)
+            order = self.client.futures_create_order(
+                symbol=symbol, side='SELL', type='MARKET', quantity=quantity
+            )
+            entry_price = float(order.get('avgPrice', current_price))
+            if entry_price == 0: entry_price = current_price
+
+            # 4. Stop Loss & Take Profit (BUY to Close)
+            # Short: Stop Loss is ABOVE entry, TP is BELOW entry
+            sl_price = round(entry_price * (1 + stop_loss_pct), price_precision)
+            tp_price = round(entry_price * (1 - (stop_loss_pct * 3)), price_precision)
+            
+            if sl_price <= 0 or tp_price <= 0:
+                 return True, "Executed Short, but SL/TP calc failed."
+
+            self.client.futures_create_order(
+                symbol=symbol, side='BUY', type='STOP_MARKET', stopPrice=sl_price, closePosition=True
+            )
+            self.client.futures_create_order(
+                symbol=symbol, side='BUY', type='TAKE_PROFIT_MARKET', stopPrice=tp_price, closePosition=True
+            )
+            
+            self._log_trade(symbol, entry_price, quantity, sl_price, tp_price, side='SHORT')
+            return True, f"📉 Short {symbol} @ {entry_price} (SL: {sl_price}, TP: {tp_price})"
+
+        except BinanceAPIException as e:
+            return False, f"Binance Error: {e.message}"
+        except Exception as e:
+            return False, f"Error: {str(e)}"
+
+    def execute_close_all(self):
+        """Closes ALL active positions"""
+        if not self.client: return False, "No valid session."
+        
+        active_pos = self.get_active_positions()
+        if not active_pos:
+            return False, "No active positions to close."
+            
+        results = []
+        for p in active_pos:
+            sym = p['symbol']
+            success, msg = self.execute_close_position(sym)
+            results.append(f"{sym}: {'✅' if success else '❌'}")
+            
+        return True, "Batch Close:\n" + "\n".join(results)
+
     def execute_close_position(self, symbol):
         """Closes all positions and open orders for a symbol"""
         if not self.client: return False, "No valid session."
@@ -238,7 +325,7 @@ class TradingSession:
             return 0.0, 0.0
 
 
-    def _log_trade(self, symbol, entry, qty, sl, tp):
+    def _log_trade(self, symbol, entry, qty, sl, tp, side='LONG'):
         """Logs trade to local JSON file for history"""
         try:
             log_file = 'data/trades.json'
@@ -247,7 +334,7 @@ class TradingSession:
                 "date": time.strftime('%Y-%m-%d %H:%M:%S'),
                 "chat_id": self.chat_id,
                 "symbol": symbol,
-                "side": "LONG",
+                "side": side,
                 "entry_price": entry,
                 "quantity": qty,
                 "sl": sl,

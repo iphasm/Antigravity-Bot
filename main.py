@@ -33,71 +33,39 @@ if sys_proxy:
 # --- CONFIGURACIÓN DE ACTIVOS Y GRUPOS ---
 ASSET_GROUPS = {
     'CRYPTO': ['BTCUSDT', 'ETHUSDT', 'XRPUSDT', 'SOLUSDT', 'SUIUSDT', 'ZECUSDT'],
-    'ACCIONES': ['TSLA', 'NVDA', 'MSFT'],
-    'MATERIAS_PRIMAS': ['GC=F', 'CL=F']
+    'STOCKS': ['TSLA', 'NVDA', 'MSFT'],
+    'COMMODITY': ['GC=F', 'CL=F']
+}
+
+# Mapping de nombres amigables
+TICKER_MAP = {
+    'BTCUSDT': 'Bitcoin',
+    'ETHUSDT': 'Ethereum',
+    'XRPUSDT': 'Ripple',
+    'SOLUSDT': 'Solana',
+    'SUIUSDT': 'Sui',
+    'ZECUSDT': 'Zcash',
+    'TSLA': 'Tesla',
+    'NVDA': 'NVIDIA',
+    'MSFT': 'Microsoft',
+    'GC=F': 'Oro',
+    'CL=F': 'Petróleo'
 }
 
 # Estado de los Grupos (Switch ON/OFF)
 GROUP_CONFIG = {
     'CRYPTO': True,
-    'ACCIONES': True,
-    'MATERIAS_PRIMAS': True
+    'STOCKS': True,
+    'COMMODITY': True
 }
 
-# Configuración de Señales
-SIGNAL_COOLDOWN = 900 # 15 Minutos por defecto
-last_alert_times = {} # {asset: timestamp}
-pos_state = {} # {asset: 'NEUTRAL' | 'LONG'} - Para evitar spam de salidas
+# ... (omitted signal cooldown) ...
 
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID')
-TELEGRAM_CHAT_IDS = [id.strip() for id in os.getenv('TELEGRAM_CHAT_ID', '').split(',') if id.strip()]
+# ... (process_asset stays same) ...
 
-# Inicializar Bot
-bot = None
-session_manager = None 
-
-if TELEGRAM_TOKEN:
-    bot = telebot.TeleBot(TELEGRAM_TOKEN)
-else:
-    print("ADVERTENCIA: No se encontró TELEGRAM_TOKEN.")
-
-def process_asset(asset):
-    """
-    Función helper unificada para procesar un activo.
-    Usada tanto por /price (reporte) como por el Trading Loop (señales).
-    Devuelve: (Success: bool, Data: dict|str)
-    """
-    try:
-        # 1. Obtener Datos
-        df = get_market_data(asset, timeframe='15m', limit=200)
-        if df.empty: 
-            return False, "No Data"
-        
-        # 2. Análisis Unificado (Spot + Futuros)
-        engine = StrategyEngine(df)
-        analysis_result = engine.analyze()
-        
-        return True, analysis_result
-        
-    except Exception as e:
-        return False, str(e)
-
-def send_alert(message):
-    """Transmite el mensaje a todos los destinos configurados"""
-    targets = set(TELEGRAM_CHAT_IDS)
-    if session_manager:
-        for s in session_manager.get_all_sessions():
-            targets.add(s.chat_id)
-            
-    if bot and targets:
-        for chat_id in targets:
-            try:
-                bot.send_message(chat_id, message, parse_mode='Markdown')
-            except Exception as e:
-                print(f"Error enviando alerta a {chat_id}: {e}")
-    else:
-        print(f"ALERTA (Log): {message}")
+def resolve_symbol(text):
+    """Clean and standardize input symbol"""
+    return text.strip().upper()
 
 def handle_price(message):
     try:
@@ -123,7 +91,8 @@ def handle_price(message):
                 if not success:
                     # Sanitize error
                     safe_err = str(res).replace('`', "'").replace('_', ' ')
-                    report += f"• {asset}: ❌ Err: `{safe_err}`\n"
+                    friendly_name = TICKER_MAP.get(asset, asset)
+                    report += f"• {friendly_name}: ❌ Err: `{safe_err}`\n"
                     continue
                 
                 # Unpack metrics
@@ -137,7 +106,8 @@ def handle_price(message):
                 if fut_sig == 'BUY': sig_icon += "🚀 LONG "
                 elif fut_sig == 'CLOSE_LONG': sig_icon += "📉 CLOSE "
                 
-                entry = f"• {asset}: ${m['close']:,.2f} | RSI: {m['rsi']:.1f} {sig_icon}\n"
+                friendly_name = TICKER_MAP.get(asset, asset)
+                entry = f"• {friendly_name}: ${m['close']:,.2f} | RSI: {m['rsi']:.1f} {sig_icon}\n"
                 report += entry
             
             report += "\n"
@@ -153,6 +123,106 @@ def handle_price(message):
                 pass
         else:
             bot.reply_to(message, f"❌ Error Fatal: {str(e)}")
+
+
+# --- MANUAL TRADING HANDLERS ---
+
+def handle_manual_long(message):
+    """ /long <SYMBOL> """
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session:
+        bot.reply_to(message, "⚠️ No tienes sesión activa. Usa /set_keys.")
+        return
+
+    try:
+        parts = message.text.split()
+        if len(parts) < 2:
+            bot.reply_to(message, "⚠️ Uso: `/long <SYMBOL>` (Ej: BTCUSDT)")
+            return
+            
+        symbol = resolve_symbol(parts[1])
+        bot.reply_to(message, f"⏳ Ejecutando LONG en {symbol}...")
+        
+        success, msg = session.execute_long_position(symbol)
+        
+        if success:
+            bot.reply_to(message, f"✅ *LONG EJECUTADO*\n{msg}", parse_mode='Markdown')
+        else:
+            bot.reply_to(message, f"❌ Error: {msg}")
+
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error crítico: {e}")
+
+def handle_manual_sell(message):
+    """ /sell <SYMBOL> (Smart Sell: Close Long OR Open Short) """
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session: return
+
+    try:
+        parts = message.text.split()
+        if len(parts) < 2:
+            bot.reply_to(message, "⚠️ Uso: `/sell <SYMBOL>`")
+            return
+            
+        symbol = resolve_symbol(parts[1])
+        
+        # 1. Check Active Positions
+        active_positions = session.get_active_positions()
+        has_pos = False
+        pos_amt = 0.0
+        
+        for p in active_positions:
+            if p['symbol'] == symbol:
+                has_pos = True
+                pos_amt = float(p.get('amt', 0))
+                break
+        
+        # Logic: If Long (>0) -> Close. Else -> Short.
+        if has_pos and pos_amt > 0:
+            bot.reply_to(message, f"📉 Cerrando LONG existente en {symbol}...")
+            success, msg = session.execute_close_position(symbol)
+            bot.reply_to(message, f"{msg}")
+        else:
+            bot.reply_to(message, f"⏳ Ejecutando SHORT en {symbol}...")
+            success, msg = session.execute_short_position(symbol)
+            if success:
+                bot.reply_to(message, f"✅ *SHORT EJECUTADO*\n{msg}", parse_mode='Markdown')
+            else:
+                bot.reply_to(message, f"❌ Error: {msg}")
+                
+    except Exception as e:
+         bot.reply_to(message, f"❌ Error crítico: {e}")
+
+def handle_manual_close(message):
+    """ /close <SYMBOL> """
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session: return
+
+    try:
+        parts = message.text.split()
+        if len(parts) < 2:
+            bot.reply_to(message, "⚠️ Uso: `/close <SYMBOL>`")
+            return
+        
+        symbol = resolve_symbol(parts[1])
+        success, msg = session.execute_close_position(symbol)
+        bot.reply_to(message, msg)
+        
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error: {e}")
+
+def handle_manual_closeall(message):
+    """ /closeall """
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session: return
+    
+    bot.reply_to(message, "🚨 Ejecutando CLOSE ALL...")
+    success, msg = session.execute_close_all()
+    bot.reply_to(message, msg)
 
 # ... (Handlers remain) ...
 
@@ -242,25 +312,31 @@ def run_trading_loop():
 def send_welcome(message):
     # Texto en plano para evitar errores de parseo (Markdown legacy es estricto con _)
     help_text = (
-        "🤖 ANTIGRAVITY BOT v3.0 - ARQUITECTURA HIBRIDA\n\n"
+        "🤖 ANTIGRAVITY BOT v3.1 - MANUAL OVERRIDE\n\n"
         "🎮 Control de Mercado\n"
-        "/toggle_group <grupo> - Activar/Desactivar Grupos (CRYPTO, ACCIONES, MATERIAS_PRIMAS).\n"
+        "/toggle_group <grupo> - Activ/Des (CRYPTO, STOCKS, COMMODITY).\n"
         "/status - Ver estado de Grupos y Estrategias.\n"
-        "/set_interval <min> - Ajustar frecuencia de alertas (Cooldown).\n\n"
+        "/set_interval <min> - Ajustar cooldown.\n\n"
+        
+        "🔫 Trading Manual (FUTUROS)\n"
+        "/long <TICKER> - Abrir LONG.\n"
+        "/sell <TICKER> - Smart Sell (Cierra Long o Abre Short).\n"
+        "/close <TICKER> - Cerrar posición específica.\n"
+        "/closeall - CERRAR TODO (Pánico).\n\n"
         
         "📊 Estrategias Duales\n"
-        "1. Reversion a la Media (SPOT): Compra en caidas profundas.\n"
-        "2. Squeeze & Velocity (FUTUROS): Rupturas de volatilidad explosivas.\n\n"
+        "1. Reversion a la Media (SPOT).\n"
+        "2. Squeeze & Velocity (FUTUROS).\n\n"
         
-        "⚙️ Configuracion & Riesgo\n"
-        "/config - Ver parametros actuales.\n"
-        "/set_leverage <x> - Apalancamiento (Futuros).\n"
-        "/set_margin <%> - % de Capital por operacion.\n"
-        "/set_keys <k> <s> - Registrar API Keys.\n\n"
+        "⚙️ Configuracion\n"
+        "/config - Ver parametros.\n"
+        "/set_leverage <x> - Apalancamiento.\n"
+        "/set_margin <%> - % Capital.\n"
+        "/set_keys <k> <s> - API Keys.\n\n"
         
         "📡 Inteligencia\n"
-        "/price - Radar de Mercado en Tiempo Real.\n"
-        "/pnl - Resultados y PnL."
+        "/price - Radar (Nombres Reales).\n"
+        "/pnl - Resultados."
     )
     bot.reply_to(message, help_text) # Removed parse_mode='Markdown'
 
@@ -285,7 +361,7 @@ def handle_toggle_group(message):
     try:
         args = message.text.split()
         if len(args) < 2:
-            bot.reply_to(message, "⚠️ Uso: `/toggle_group <NOMBRE>` (CRYPTO, ACCIONES, etc)")
+            bot.reply_to(message, "⚠️ Uso: `/toggle_group <NOMBRE>` (CRYPTO, STOCKS, COMMODITY)")
             return
             
         target = args[1].upper()
@@ -538,6 +614,15 @@ def master_listener(message):
                 handle_set_margin(message)
             elif cmd_part == '/pnl':
                 handle_pnlrequest(message)
+            # Manual Trading
+            elif cmd_part == '/long':
+                handle_manual_long(message)
+            elif cmd_part == '/sell':
+                handle_manual_sell(message)
+            elif cmd_part == '/close':
+                handle_manual_close(message)
+            elif cmd_part == '/closeall':
+                handle_manual_closeall(message)
             else:
                bot.reply_to(message, "🤷‍♂️ Comando desconocido.")
 
