@@ -100,7 +100,7 @@ def handle_price(message):
     try:
         sent = bot.reply_to(message, "⏳ Escaneando mercado con Motores Híbridos...")
         
-        report = "📡 **RADAR DE MERCADO (SPOT + FUTUROS)**\n\n"
+        report = "📡 *RADAR DE MERCADO (SPOT + FUTUROS)*\n\n"
         
         # Check Groups
         active_groups = [g for g, active in GROUP_CONFIG.items() if active]
@@ -109,8 +109,10 @@ def handle_price(message):
             return
 
         for group_name in active_groups:
+            # Format Group Name: Remove underscores, Bold
+            display_name = group_name.replace('_', ' ')
             assets = ASSET_GROUPS.get(group_name, [])
-            report += f"**{group_name}**\n"
+            report += f"*{display_name}*\n"
             
             for asset in assets:
                 success, res = process_asset(asset)
@@ -262,16 +264,16 @@ def send_welcome(message):
 
 def handle_status(message):
     """Muestra estado de grupos y configuración"""
-    status = "🕹️ **ESTADO DEL SISTEMA**\n\n"
+    status = "🕹️ *ESTADO DEL SISTEMA*\n\n"
     
     # Grupos
-    status += "**Grupos de Activos:**\n"
+    status += "*Grupos de Activos:*\n"
     for group, enabled in GROUP_CONFIG.items():
         icon = "✅" if enabled else "🔴"
         status += f"{icon} {group}\n"
         
-    status += f"\n**Cooldown de Señal:** {SIGNAL_COOLDOWN/60:.0f} minutos\n"
-    status += f"**Activos Vigilados:** {sum(len(v) for k,v in ASSET_GROUPS.items() if GROUP_CONFIG[k])}"
+    status += f"\n*Cooldown de Señal:* {SIGNAL_COOLDOWN/60:.0f} minutos\n"
+    status += f"*Activos Vigilados:* {sum(len(v) for k,v in ASSET_GROUPS.items() if GROUP_CONFIG[k])}"
     
     bot.reply_to(message, status, parse_mode='Markdown')
 
@@ -351,12 +353,12 @@ def handle_config(message):
     cfg = session.get_configuration()
     
     msg = (
-        "⚙️ **CONFIGURACIÓN PERSONAL**\n\n"
-        f"🔑 **API Binance:** {'✅ Conectado' if cfg['has_keys'] else '❌ Desconectado'}\n"
-        f"🌍 **Proxy:** {'✅ Activado' if cfg['proxy_enabled'] else '🔴 Apagado'}\n"
-        f"🕹️ **Apalancamiento:** {cfg['leverage']}x\n"
-        f"💰 **Margen Máx:** {cfg['max_capital_pct']*100:.1f}%\n"
-        f"🛡️ **Stop Loss:** {cfg['stop_loss_pct']*100:.1f}%\n\n"
+        "⚙️ *CONFIGURACIÓN PERSONAL*\n\n"
+        f"🔑 *API Binance:* {'✅ Conectado' if cfg['has_keys'] else '❌ Desconectado'}\n"
+        f"🌍 *Proxy:* {'✅ Activado' if cfg['proxy_enabled'] else '🔴 Apagado'}\n"
+        f"🕹️ *Apalancamiento:* {cfg['leverage']}x\n"
+        f"💰 *Margen Máx:* {cfg['max_capital_pct']*100:.1f}%\n"
+        f"🛡️ *Stop Loss:* {cfg['stop_loss_pct']*100:.1f}%\n\n"
         "Para editar: `/set_leverage`, `/set_margin`, `/set_proxy`."
     )
     bot.reply_to(message, msg, parse_mode='Markdown')
@@ -392,7 +394,7 @@ def handle_pnlrequest(message):
     
     pnl, _ = session.get_pnl_history()
     avail, total = session.get_balance_details()
-    bot.reply_to(message, f"💰 **PnL (24h):** ${pnl:.2f}\n💳 **Balance:** ${avail:.2f} / ${total:.2f}", parse_mode='Markdown')
+    bot.reply_to(message, f"💰 *PnL (24h):* ${pnl:.2f}\n💳 *Balance:* ${avail:.2f} / ${total:.2f}", parse_mode='Markdown')
 
 
 # --- MASTER LISTENER ---
@@ -471,7 +473,7 @@ def run_trading_loop():
                         # SPOT ALERT
                         if res['signal_spot']:
                             msg = (
-                                f"💎 **SEÑAL SPOT: {asset}**\n"
+                                f"💎 *SEÑAL SPOT: {asset}*\n"
                                 f"Estrategia: Reversión a la Media\n"
                                 f"Precio: ${m['close']:,.2f}\n"
                                 f"Razón: {res['reason_spot']}"
@@ -486,7 +488,7 @@ def run_trading_loop():
                         
                         if fut_sig == 'BUY':
                             msg = (
-                                f"🚀 **SEÑAL FUTUROS: {asset}**\n"
+                                f"🚀 *SEÑAL FUTUROS: {asset}*\n"
                                 f"Estrategia: Squeeze & Velocity\n"
                                 f"Precio: ${m['close']:,.2f}\n"
                                 f"Razón: {res['reason_futures']}\n"
@@ -499,7 +501,7 @@ def run_trading_loop():
                         elif fut_sig == 'CLOSE_LONG':
                              if curr_state == 'LONG':
                                  msg = (
-                                    f"📉 **SALIDA FUTUROS: {asset}**\n"
+                                    f"📉 *SALIDA FUTUROS: {asset}*\n"
                                     f"Razón: {res['reason_futures']}"
                                  )
                                  send_alert(msg)
