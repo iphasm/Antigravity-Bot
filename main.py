@@ -676,12 +676,13 @@ def handle_wallet(message):
             
         # Unpack
         spot = details.get('spot_usdt', 0.0)
+        earn = details.get('earn_usdt', 0.0)
         fut_bal = details.get('futures_balance', 0.0)
         fut_pnl = details.get('futures_pnl', 0.0)
         fut_total = details.get('futures_total', 0.0)
         
         # Calculate Total Net Worth
-        net_worth = spot + fut_total
+        net_worth = spot + earn + fut_total
         
         # Formatting
         pnl_icon = "🟢" if fut_pnl >= 0 else "🔴"
@@ -689,13 +690,14 @@ def handle_wallet(message):
         msg = (
             "🏦 *WALLET REPORT*\n"
             "〰️〰️〰️〰️〰️〰️\n"
-            f"💎 *SPOT Capital:* `${spot:,.2f}` (USDT)\n"
+            f"💎 *SPOT Capital:* `${spot:,.2f}`\n"
+            f"🐷 *EARN (Ahorros):* `${earn:,.2f}`\n"
             "〰️〰️〰️〰️〰️〰️\n"
             f"🚀 *FUTUROS Balance:* `${fut_bal:,.2f}`\n"
             f"📊 *FUTUROS PnL:* {pnl_icon} `${fut_pnl:,.2f}`\n"
             f"💰 *FUTUROS Total:* `${fut_total:,.2f}`\n"
             "〰️〰️〰️〰️〰️〰️\n"
-            f"🏆 *NET WORTH:* `${net_worth:,.2f}`"
+            f"🏆 *NET WORTH TOTAL:* `${net_worth:,.2f}`"
         )
         
         bot.reply_to(message, msg, parse_mode='Markdown')

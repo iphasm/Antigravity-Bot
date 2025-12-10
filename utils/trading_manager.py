@@ -435,6 +435,23 @@ class TradingSession:
             
             details['spot_usdt'] = spot_usdt
             
+            details['spot_usdt'] = spot_usdt
+
+            # 3. EARN / SAVINGS (Simple Earn Flexible)
+            # Try getting flexible product position (USDT)
+            earn_usdt = 0.0
+            try:
+                # This endpoint returns list of all flexible positions
+                earn_pos = self.client.get_simple_earn_flexible_position()
+                for p in earn_pos:
+                     if p['asset'] == 'USDT':
+                         earn_usdt += float(p['totalAmount'])
+                         # Note: totalAmount = free + locked in earn
+            except Exception as e: 
+                print(f"Earn fetch error: {e}")
+            
+            details['earn_usdt'] = earn_usdt
+            
             return details
             
         except Exception as e:
