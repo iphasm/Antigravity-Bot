@@ -214,29 +214,30 @@ def run_trading_loop():
         time.sleep(60)
 
 def send_welcome(message):
+    # Texto en plano para evitar errores de parseo (Markdown legacy es estricto con _)
     help_text = (
-        "🤖 **ANTIGRAVITY BOT v3.0 - ARQUITECTURA HÍBRIDA**\n\n"
-        "**🎮 Control de Mercado**\n"
-        "`/toggle_group <grupo>` — Activar/Desactivar Grupos (CRYPTO, ACCIONES, MATERIAS_PRIMAS).\n"
-        "`/status` — Ver estado de Grupos y Estrategias.\n"
-        "`/set_interval <min>` — Ajustar frecuencia de alertas (Cooldown).\n\n"
+        "🤖 ANTIGRAVITY BOT v3.0 - ARQUITECTURA HIBRIDA\n\n"
+        "🎮 Control de Mercado\n"
+        "/toggle_group <grupo> - Activar/Desactivar Grupos (CRYPTO, ACCIONES, MATERIAS_PRIMAS).\n"
+        "/status - Ver estado de Grupos y Estrategias.\n"
+        "/set_interval <min> - Ajustar frecuencia de alertas (Cooldown).\n\n"
         
-        "**📊 Estrategias Duales**\n"
-        "1️⃣ **Reversión a la Media (SPOT)**: Compra en caídas profundas.\n"
-        "2️⃣ **Squeeze & Velocity (FUTUROS)**: Rupturas de volatilidad explosivas.\n\n"
+        "📊 Estrategias Duales\n"
+        "1. Reversion a la Media (SPOT): Compra en caidas profundas.\n"
+        "2. Squeeze & Velocity (FUTUROS): Rupturas de volatilidad explosivas.\n\n"
         
-        "**⚙️ Configuración & Riesgo**\n"
-        "`/config` — Ver parámetros actuales (incluyendo Proxy).\n"
-        "`/set_proxy <url>` — Configurar HTTP Proxy para Binance.\n"
-        "`/set_leverage <x>` — Apalancamiento (Futuros).\n"
-        "`/set_margin <%>` — % de Capital por operación.\n"
-        "`/set_keys` — Registrar API Keys.\n\n"
+        "⚙️ Configuracion & Riesgo\n"
+        "/config - Ver parametros actuales (incluyendo Proxy).\n"
+        "/set_proxy <url> - Configurar HTTP Proxy para Binance.\n"
+        "/set_leverage <x> - Apalancamiento (Futuros).\n"
+        "/set_margin <%> - % de Capital por operacion.\n"
+        "/set_keys - Registrar API Keys.\n\n"
         
-        "**📡 Inteligencia**\n"
-        "`/price` — Radar de Mercado en Tiempo Real.\n"
-        "`/pnl` — Resultados y PnL."
+        "📡 Inteligencia\n"
+        "/price - Radar de Mercado en Tiempo Real.\n"
+        "/pnl - Resultados y PnL."
     )
-    bot.reply_to(message, help_text, parse_mode='Markdown')
+    bot.reply_to(message, help_text) # Removed parse_mode='Markdown'
 
 def handle_status(message):
     """Muestra estado de grupos y configuración"""
