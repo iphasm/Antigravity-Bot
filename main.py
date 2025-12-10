@@ -272,7 +272,8 @@ def handle_status(message):
     status += "*Grupos de Activos:*\n"
     for group, enabled in GROUP_CONFIG.items():
         icon = "✅" if enabled else "🔴"
-        status += f"{icon} {group}\n"
+        display_name = group.replace('_', ' ')
+        status += f"{icon} {display_name}\n"
         
     status += f"\n*Cooldown de Señal:* {SIGNAL_COOLDOWN/60:.0f} minutos\n"
     status += f"*Activos Vigilados:* {sum(len(v) for k,v in ASSET_GROUPS.items() if GROUP_CONFIG[k])}"
