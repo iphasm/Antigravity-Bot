@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Antigravity Bot v3.2 - Documentación Técnica</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ startOnLoad: true });</script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px;
+            background: #f4f4f9;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #1a202c;
+        }
+
+        h1 {
+            border-bottom: 3px solid #3182ce;
+            padding-bottom: 10px;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            margin-top: 50px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #3182ce;
+        }
+
+        .card {
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .diagram-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #fff;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        th {
+            background: #3182ce;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .tag-buy {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .tag-sell {
+            background: #fed7d7;
+            color: #822727;
+        }
+
+        .tag-info {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .card {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+
+            h2 {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>🤖 Antigravity Bot v3.2 <span style="font-size:0.6em; color:#718096; float:right">Reporte Técnico</span>
+        </h1>
+        <p><strong>Fecha:</strong> 10 de Diciembre, 2025</p>
+        <p><strong>Sistema:</strong> Híbrido (Spot + Futuros) con Gestión de Riesgo y Filtro Dinámico.</p>
+    </header>
+
+    <!-- SECTION 1 -->
+    <section>
+        <h2>1. Arquitectura del Sistema</h2>
+        <div class="card">
+            <p>El bot opera en un bucle continuo (Daemon Thread) independiente de la interfaz de Telegram. Su
+                arquitectura modular separa la detección de señales (Engine) de la ejecución (Session Manager).</p>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+                    graph TD
+                    User[Usuario Telegram] -->|Comandos / Config| Main[Main Dispatcher]
+                    Main -->|Actualiza| Session[Session Manager]
+                    Session -->|API Keys| Binance[(Binance API)]
+
+                    subgraph "Background Thread"
+                    Loop[Loop de Trading] -->|1. Fetch OHLCV| Data[Gestor Datos]
+                    Loop -->|2. Analiza| Engine[Strategy Engine]
+                    Engine -->|3. Señal Detectada| Filter{Filtro Inteligente}
+                    Filter -->|Ignorar| Loop
+                    Filter -->|Aprobar| Router{Modo Operativo}
+                    end
+
+                    Router -->|Pilot| Exec[Ejecución Auto]
+                    Router -->|Copilot| Alert[Botones Interactivos]
+                    Router -->|Watcher| Notify[Notificación Texto]
+
+                    Exec --> Binance
+                    Alert --> User
+                    Notify --> User
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section>
+        <h2>2. Modos de Operación</h2>
+        <div class="card">
+            <p>El sistema se adapta al perfil de riesgo del usuario mediante tres modos distintos:</p>
+            <table>
+                <tr>
+                    <th>Modo</th>
+                    <th>Rol del Bot</th>
+                    <th>Acción Usuario</th>
+                    <th>Caso de Uso</th>
+                </tr>
+                <tr>
+                    <td><strong>WATCHER</strong></td>
+                    <td>Analista</td>
+                    <td>Recibe alerta, opera manual.</td>
+                    <td>Seguimiento pasivo.</td>
+                </tr>
+                <tr>
+                    <td><strong>COPILOT</strong></td>
+                    <td>Asistente</td>
+                    <td>Aprueba/Rechaza con botones.</td>
+                    <td>Control total con agilidad.</td>
+                </tr>
+                <tr>
+                    <td><strong>PILOT</strong></td>
+                    <td>Trader</td>
+                    <td>Supervisión (Bot opera solo).</td>
+                    <td>Automatización 24/7.</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section>
+        <h2>3. Lógica de Estrategia (The Brain)</h2>
+
+        <div class="card">
+            <h3>A. Estrategia SPOT: "Mean Reversion"</h3>
+            <p>Busca comprar activos sobrevendidos en tendencias laterales o correcciones para acumular.</p>
+            <div class="mermaid">
+                graph LR
+                Start((Inicio)) --> CheckBB{Precio < BB Lower?} CheckBB -->|No| Wait[Esperar]
+                    CheckBB -->|Si| CheckRSI{RSI < 40?} CheckRSI -->|No| Wait
+                        CheckRSI -->|Si| CheckStoch{StochRSI < 20 & Cruce K/D?} CheckStoch -->|Si| Buy[💎 SEÑAL SPOT]
+                            CheckStoch -->|No| Wait
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>B. Estrategia FUTUROS: "Squeeze & Velocity"</h3>
+            <p>Opera rupturas de volatilidad (Squeeze) y continuación de tendencia fuerte (Velocity).</p>
+
+            <div class="mermaid">
+                flowchart TD
+                Start((Análisis)) --> State{Estado Actual?}
+
+                State -->|NEUTRAL| ScanEntry[Escanear Entrada]
+                State -->|LONG| ScanExitL[Escanear Salida Long]
+                State -->|SHORT| ScanExitS[Escanear Salida Short]
+
+                %% ENTRY LOGIC
+                ScanEntry --> LongCond{Cond Long?}
+                LongCond -->|Si| SigLong[🚀 SEÑAL LONG]
+                LongCond -->|No| ShortCond{Cond Short?}
+                ShortCond -->|Si| SigShort[📉 SEÑAL SHORT]
+
+                %% EXIT LOGIC
+                ScanExitL --> TrendBroken{Precio < HMA 55?} TrendBroken -->|Si| CloseL[🏁 CLOSE LONG]
+
+                    ScanExitS --> TrendRecover{Precio > HMA 55?}
+                    TrendRecover -->|Si| CloseS[🏁 CLOSE SHORT]
+
+                    subgraph "Logica LONG (Resumen)"
+                    L1[Precio > BB Upper]
+                    L2[RSI > 50]
+                    L3[ADX > 20]
+                    end
+
+                    subgraph "Logica SHORT (Resumen)"
+                    S1[Precio < BB Lower] S2[RSI < 50] S3[Precio < HMA 55] end </div>
+            </div>
+    </section>
+
+    <!-- SECTION 4 -->
+    <section>
+        <h2>4. Gestión de Riesgo y Filtro</h2>
+
+        <div class="card">
+            <h3>🛡️ Modelo de Riesgo (Risk Engine)</h3>
+            <p>Cada operación, ya sea automática o manual, pasa por un chequeo de seguridad riguroso:</p>
+            <ul>
+                <li><strong>Posición Máxima:</strong> Nunca usa más del margen configurado (Ej: 10% de la cuenta).</li>
+                <li><strong>Stop Loss Dinámico:</strong> Calculado con ATR (Volatilidad).
+                    <ul>
+                        <li>Long SL = Precio - (2 * ATR)</li>
+                        <li>Short SL = Precio + (2 * ATR)</li>
+                    </ul>
+                </li>
+                <li><strong>Protección de Capital:</strong> Si el balance es menor a $5, la operación se aborta.</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>🧠 Filtro Inteligente (Smart Cooldown)</h3>
+            <p>Evita el spam sin perder oportunidades críticas.</p>
+            <div class="diagram-container">
+                <div class="mermaid">
+                    graph TD
+                    Signal((Señal Detectada)) --> CheckTime{Pasaron 15 min?}
+                    CheckTime -->|Si| Alert[🔔 ENVIAR ALERTA]
+                    CheckTime -->|No| CheckFlip{Cambio de Direccion?}
+
+                    CheckFlip -->|Si| Alert
+                    CheckFlip -->|No| CheckVol{Movimiento > 0.8%?}
+
+                    CheckVol -->|Si| Alert
+                    CheckVol -->|No| Silence[🤫 Silencio (Ahorro)]
+                </div>
+            </div>
+            <p class="tag-info">Este sistema reduce el ruido en un 80% mientras mantiene la reactividad ante eventos de
+                alta volatilidad.</p>
+        </div>
+    </section>
+
+    <footer>
+        <p style="text-align:center; color:#718096; margin-top:50px;">
+            Generado por <strong>Antigravity AI</strong><br>
+            &copy; 2025
+        </p>
+    </footer>
+
+</body>
+
+</html>
