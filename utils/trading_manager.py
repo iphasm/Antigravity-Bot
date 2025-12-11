@@ -25,7 +25,8 @@ class TradingSession:
         self.config = {
             "leverage": 5,
             "max_capital_pct": 0.10,
-            "stop_loss_pct": 0.02
+            "stop_loss_pct": 0.02,
+            "spot_allocation_pct": 0.20 # Default 20% for Spot Buys
         }
         
         if config:
@@ -105,6 +106,10 @@ class TradingSession:
             "leverage": self.config['leverage'],
             "max_capital_pct": self.config['max_capital_pct'],
             "stop_loss_pct": self.config['stop_loss_pct'],
+            "leverage": self.config['leverage'],
+            "max_capital_pct": self.config['max_capital_pct'],
+            "stop_loss_pct": self.config['stop_loss_pct'],
+            "spot_allocation_pct": self.config.get('spot_allocation_pct', 0.20),
             "has_keys": bool(self.client) # Status check
         }
 
@@ -563,8 +568,8 @@ class TradingSession:
                     usdt_bal = float(b['free'])
                     break
             
-            # 2. Allocation Logic (20%)
-            alloc_pct = 0.20
+            # 2. Allocation Logic (Dynamic)
+            alloc_pct = self.config.get('spot_allocation_pct', 0.20)
             amount_to_spend = usdt_bal * alloc_pct
             
             if amount_to_spend < 6.0:

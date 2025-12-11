@@ -350,10 +350,14 @@ def send_welcome(message):
 
         "⚙️ *CONTROL GENERAL*\n"
         "• /start - Verificar Estado y Conexión.\n"
-        "• /status - Ver estado del sistema y modo de riesgo.\n"
+        "• /status - DASHBOARD COMPLETO (Estado + Configuración).\n"
         "• /toggle_group <GRUPO> - Activar/Desactivar (CRYPTO, STOCKS, COMMODITY).\n"
         "• /set_interval <MIN> - Ajustar frecuencia de análisis.\n"
         "• /debug - Diagnóstico completo de conexión y claves.\n\n"
+        
+        "🔫 *TRADING MANUAL (SPOT)*\n"
+        "• /buy <TICKER> - Comprar SPOT (Ej: `/buy XRP`).\n"
+        "• /set_spot_alloc <%> - % del capital USDT para compras (Ej: `0.2` = 20%).\n\n"
         
         "🔫 *TRADING MANUAL (FUTUROS)*\n"
         "• /long <TICKER> - Abrir LONG (Ej: `/long BTC`).\n"
@@ -363,9 +367,7 @@ def send_welcome(message):
         
         "🛡️ *GESTIÓN Y RIESGO*\n"
         "• /risk - Explicación detallada del modelo de Riesgo.\n"
-        "• /config - Ver tu apalancamiento y margen.\n"
         "• /wallet - Ver Capital Spot, Balance Futuros y PnL Total.\n"
-        "• /pnl - Reporte de rendimiento (24h).\n"
         "• /set_leverage <X> - Cambiar apalancamiento (Ej: 10).\n"
         "• /set_margin <%> - Límite asignación (Ej: 0.1 para 10%).\n"
         "• /set_keys <KEY> <SECRET> - Configurar API Binance.\n\n"
@@ -441,17 +443,50 @@ def handle_start(message):
     bot.reply_to(message, msg, parse_mode='Markdown')
 
 def handle_status(message):
-    """Muestra estado de grupos y configuración"""
+    """Muestra estado de grupos y configuración (Fusionado con /config)"""
     chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
-    mode = session.mode if session else "WATCHER (Default)"
+    
+    # Defaults if no session
+    if not session:
+        bot.reply_to(message, "⚠️ Sin sesión configurada. Se muestran valores por defecto.")
+        mode = "WATCHER (Default)"
+        has_keys = False
+        leverage = 5
+        max_margin = 0.10
+        spot_alloc = 0.20
+    else:
+        cfg = session.get_configuration()
+        mode = cfg.get('mode', 'WATCHER')
+        has_keys = cfg['has_keys']
+        leverage = cfg['leverage']
+        max_margin = cfg['max_capital_pct']
+        spot_alloc = cfg.get('spot_allocation_pct', 0.20)
 
-    status = "🕹️ *ESTADO DEL SISTEMA*\n\n"
-    status += f"🎮 *Modo Operativo:* {mode}\n"
-    status += f"*Activos Vigilados:* {sum(len(v) for k,v in ASSET_GROUPS.items() if GROUP_CONFIG[k])}\n"
-    status += f"*Cooldown de Señal:* {SIGNAL_COOLDOWN/60:.0f} minutos\n"
-    status += f"*Threads Activos:* {threading.active_count()}\n"
-    status += "🤖 *Motor:* Antigravity v3.2 (Hybrid Engine)"
+    # 1. System State
+    status = "🕹️ *DASHBOARD CENTRAL*\n"
+    status += "〰️〰️〰️〰️〰️〰️\n"
+    status += f"🎮 *Modo:* `{mode}`\n"
+    status += f"🔑 *API:* {'✅ Vinculada' if has_keys else '❌ Sin Vincular'}\n\n"
+    
+    status += "📡 *Radares Activos:*\n"
+    count = 0
+    for group, enabled in GROUP_CONFIG.items():
+        icon = "✅" if enabled else "🔴"
+        display_name = group.replace('_', ' ')
+        if enabled: count += len(ASSET_GROUPS.get(group, []))
+        status += f"{icon} {display_name}\n"
+    
+    status += f"\n*Total Activos Vigilados:* {count}\n"
+    status += f"*Frecuencia Escaneo:* {SIGNAL_COOLDOWN/60:.0f} min\n"
+    
+    status += "〰️〰️〰️〰️〰️〰️\n"
+    status += "⚙️ *Configuración de Riesgo:*\n"
+    status += f"🕹️ *Apalancamiento Futuros:* `{leverage}x`\n"
+    status += f"💰 *Margen Máx Futuros:* `{max_margin*100:.1f}%`\n"
+    status += f"💎 *Asignación Spot:* `{spot_alloc*100:.1f}%` (del USDT disponible)\n"
+    status += "〰️〰️〰️〰️〰️〰️\n"
+    status += "ℹ️ _Comandos: /set_leverage, /set_margin, /set_spot_alloc_"
     
     bot.reply_to(message, status, parse_mode='Markdown')
 
@@ -521,44 +556,7 @@ def handle_set_keys(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {e}")
 
-def handle_config(message):
-    chat_id = str(message.chat.id)
-    session = session_manager.get_session(chat_id)
-    
-    if not session:
-        bot.reply_to(message, "❌ Sesión no encontrada. Usa `/set_keys`.")
-        return
 
-    cfg = session.get_configuration()
-    
-    # Global Proxy Check
-    sys_proxy = os.getenv('PROXY_URL')
-    proxy_status = "✅ Activado (Global)" if sys_proxy else "🔴 Apagado"
-    
-    msg = (
-        "⚙️ *CONFIGURACIÓN PERSONAL*\n\n"
-        f"🎮 *Modo:* {cfg.get('mode', 'WATCHER')}\n"
-        f"🔑 *API:* {'✅ Vinculada' if cfg['has_keys'] else '❌ Sin Vincular'}\n"
-        "〰️〰️〰️〰️〰️〰️\n"
-        "📡 *Grupos Activos (Scanner):*\n"
-    )
-    
-    for group, enabled in GROUP_CONFIG.items():
-        icon = "✅" if enabled else "🔴"
-        display_name = group.replace('_', ' ')
-        msg += f"{icon} {display_name}\n"
-    
-    msg += (
-        "〰️〰️〰️〰️〰️〰️\n"
-        f"🕹️ *Apalancamiento:* {cfg['leverage']}x\n"
-        f"💰 *Margen Máx:* {cfg['max_capital_pct']*100:.1f}%\n"
-        f"🛡️ *Stop Loss:* {cfg['stop_loss_pct']*100:.1f}% (Fallback)\n"
-        "〰️〰️〰️〰️〰️〰️\n"
-        "ℹ️ _Para cambiar:_\n"
-        "• `/set_leverage <x>`\n"
-        "• `/set_margin <0.1>`"
-    )
-    bot.reply_to(message, msg, parse_mode='Markdown')
 
 def handle_set_leverage(message):
     chat_id = str(message.chat.id)
@@ -679,30 +677,49 @@ def handle_set_margin(message):
         bot.reply_to(message, f"✅ *Margen Máximo Global:* {val*100:.1f}%\nℹ️ _Límite de seguridad para asignación total._")
     except: bot.reply_to(message, "❌ Error: Usa `/set_margin 0.1` (10%)")
 
-@threaded_handler
-def handle_pnlrequest(message):
+def handle_manual_buy_spot(message):
+    """ /buy <SYMBOL> """
     chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
     if not session: 
-        bot.reply_to(message, "⚠️ Sin sesión activa.")
+        bot.reply_to(message, "⚠️ Configura tus llaves primero (/set_keys).")
         return
-    
-    # Obtener datos
-    pnl, _ = session.get_pnl_history() # Simulado o real según implementación
-    avail, total = session.get_balance_details()
-    
-    # Determinar iconos
-    icon = "🟢" if pnl >= 0 else "🔴"
-    
-    msg = (
-        "📊 *REPORTE DE RENDIMIENTO (24h)*\n"
-        "〰️〰️〰️〰️〰️〰️\n"
-        f"💰 *PnL Realizado:* {icon} `${pnl:,.2f}`\n"
-        "〰️〰️〰️〰️〰️〰️\n"
-        f"💳 *Balance Disponible:* `${avail:,.2f}`\n"
-        f"🏦 *Balance Total:* `${total:,.2f}`"
-    )
-    bot.reply_to(message, msg, parse_mode='Markdown')
+
+    try:
+        parts = message.text.split()
+        if len(parts) < 2:
+            bot.reply_to(message, "⚠️ Uso: `/buy <SYMBOL>` (Ej: `/buy XRP`)")
+            return
+        
+        symbol = resolve_symbol(parts[1])
+        # Force USDT if not present, though resolve_symbol does it?
+        # resolve_symbol auto-appends USDT if missing and not 6 chars? Let's assume standard.
+        
+        bot.reply_to(message, f"⏳ Ejecutando Compra Spot: {symbol}...")
+        success, msg = session.execute_spot_buy(symbol)
+        bot.reply_to(message, msg)
+        
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error: {e}")
+
+def handle_set_spot_allocation(message):
+    """ /set_spot_alloc 0.2 """
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session: return
+    try:
+        val = float(message.text.split()[1])
+        if val <= 0 or val > 1.0:
+            bot.reply_to(message, "⚠️ El valor debe estar entre 0.01 y 1.0 (Ej: 0.2 = 20%)")
+            return
+            
+        session.update_config('spot_allocation_pct', val)
+        session_manager.save_sessions()
+        bot.reply_to(message, f"✅ *Asignación Spot Actualizada:* {val*100:.1f}%\n(El bot usará este % de tu USDT disponible por compra).", parse_mode='Markdown')
+    except: 
+        bot.reply_to(message, "❌ Error: Usa `/set_spot_alloc 0.2`")
+
+
 
 @threaded_handler
 def handle_wallet(message):
@@ -889,9 +906,10 @@ def master_listener(message):
             elif cmd_part == '/debug':
                 handle_debug(message)
             
+
             # User Config & Trading (Allowed for Subscribers)
-            elif cmd_part == '/config':
-                handle_config(message)
+            elif cmd_part in ['/config', '/status']: # Alias /config to /status
+                handle_status(message)
             elif cmd_part == '/price':
                 handle_price(message)
             elif cmd_part == '/set_keys':
@@ -900,12 +918,14 @@ def master_listener(message):
                 handle_set_leverage(message)
             elif cmd_part == '/set_margin':
                 handle_set_margin(message)
-            elif cmd_part == '/pnl':
-                handle_pnlrequest(message)
+            elif cmd_part == '/set_spot_alloc':
+                handle_set_spot_allocation(message)
             elif cmd_part == '/wallet':
                 handle_wallet(message)
-            elif cmd_part == '/set_proxy':
-                handle_set_proxy(message)
+            
+            # Manual Spot
+            elif cmd_part == '/buy':
+                handle_manual_buy_spot(message)
             
             # --- AUTOMATION FLOW ---
             elif cmd_part == '/watcher':
