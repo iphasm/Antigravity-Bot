@@ -538,6 +538,48 @@ class TradingSession:
         except Exception as e:
             return False, f"Error: {str(e)}"
 
+    def execute_spot_buy(self, symbol):
+        """Executes a SPOT Market Buy (Binance)"""
+        if not self.client: return False, "No valid keys."
+        
+        try:
+            # 1. Check Balance
+            # For Spot, we need 'FREE' USDT
+            acc = self.client.get_account()
+            usdt_bal = 0.0
+            for b in acc['balances']:
+                if b['asset'] == 'USDT':
+                    usdt_bal = float(b['free'])
+                    break
+            
+            # 2. Allocation Logic (20%)
+            alloc_pct = 0.20
+            amount_to_spend = usdt_bal * alloc_pct
+            
+            if amount_to_spend < 6.0:
+                 return False, f"❌ Insufficient Spot USDT (${usdt_bal:.2f}). Need >$6 to trade."
+            
+            # 3. Execute
+            order = self.client.create_order(
+                symbol=symbol,
+                side='BUY',
+                type='MARKET',
+                quoteOrderQty=round(amount_to_spend, 2)
+            )
+            
+            # 4. Result
+            executed_qty = float(order.get('executedQty', 0))
+            cummulative_quote_qty = float(order.get('cummulativeQuoteQty', 0))
+            avg_price = cummulative_quote_qty / executed_qty if executed_qty else 0
+            
+            self._log_trade(symbol, avg_price, executed_qty, 0, 0, side='SPOT_BUY')
+            return True, f"✅ SPOT BUY: {symbol}\nSpent: ${cummulative_quote_qty:.2f}\nQty: {executed_qty}\nAvg: {avg_price:.4f}"
+
+        except BinanceAPIException as e:
+            return False, f"Binance Spot Error: {e.message}"
+        except Exception as e:
+            return False, f"Error: {e}"
+
     def get_pnl_history(self, days=1):
         """Fetches Realized PnL from Binance for the last N days"""
         if not self.client: return 0.0, []

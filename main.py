@@ -690,6 +690,17 @@ def handle_pnlrequest(message):
     # Obtener datos
     pnl, _ = session.get_pnl_history() # Simulado o real según implementación
     avail, total = session.get_balance_details()
+    
+    # Determinar iconos
+    icon = "🟢" if pnl >= 0 else "🔴"
+    
+    msg = (
+        "📊 *REPORTE DE RENDIMIENTO (24h)*\n"
+        "〰️〰️〰️〰️〰️〰️\n"
+        f"💰 *PnL Realizado:* {icon} `${pnl:,.2f}`\n"
+        "〰️〰️〰️〰️〰️〰️\n"
+        f"💳 *Balance Disponible:* `${avail:,.2f}`\n"
+        f"🏦 *Balance Total:* `${total:,.2f}`"
     )
     bot.reply_to(message, msg, parse_mode='Markdown')
 
@@ -806,6 +817,9 @@ def handle_trade_callback(call):
             # For simplicity, we re-calc or just use fallback.
             # Let's try to pass current price or something? No, just run execute.
             success, msg = session.execute_long_position(symbol)
+            
+        elif action == 'BUY' and side == 'SPOT':
+            success, msg = session.execute_spot_buy(symbol)
             
         elif action == 'CLOSE':
              success, msg = session.execute_close_position(symbol)
@@ -949,17 +963,44 @@ def run_trading_loop():
                         
                         # 2. Alertas
                         
-                        # SPOT ALERT
+                        # SPOT LOGIC
                         if res['signal_spot']:
-                            msg = (
+                            last_alert_times[asset] = current_time
+                            
+                            # Prepare basic alert text
+                            base_msg = (
                                 f"💎 *SEÑAL SPOT: {asset}*\n"
                                 f"Estrategia: Reversión a la Media\n"
                                 f"Precio: ${m['close']:,.2f}\n"
                                 f"Razón: {res['reason_spot']}"
                             )
-                            send_alert(msg)
-                            last_alert_times[asset] = current_time
-                            continue # Si es Spot, enviamos y pasamos (no mezclamos con Futuros por ahora)
+                            
+                            # Iterate Sessions
+                            all_sessions = session_manager.get_all_sessions()
+                            for session in all_sessions:
+                                mode = session.config.get('mode', 'WATCHER')
+                                cid = session.chat_id
+                                
+                                if mode == 'PILOT':
+                                    # AUTO BUY
+                                    success_t, info = session.execute_spot_buy(asset)
+                                    status_icon = "✅" if success_t else "❌"
+                                    bot.send_message(cid, f"{base_msg}\n\n🤖 *PILOT ACTION:*\n{status_icon} {info}", parse_mode='Markdown')
+                                    
+                                elif mode == 'COPILOT':
+                                    # PROPOSE
+                                    markup = types.InlineKeyboardMarkup()
+                                    # Data: BUY|SYMBOL|SPOT_LONG
+                                    btn_yes = types.InlineKeyboardButton("✅ Comprar (20%)", callback_data=f"BUY|{asset}|SPOT")
+                                    btn_no = types.InlineKeyboardButton("❌ Rechazar", callback_data=f"IGNORE|{asset}|SPOT")
+                                    markup.add(btn_yes, btn_no)
+                                    bot.send_message(cid, f"{base_msg}\n\n🤝 *PROPUESTA COPILOT:*", reply_markup=markup, parse_mode='Markdown')
+                                    
+                                else:
+                                    # WATCHER
+                                    bot.send_message(cid, base_msg, parse_mode='Markdown')
+
+                            continue # Stop here for Spot signals
                             
                         # FUTUROS ALERTS (Con State)
                         curr_state = pos_state.get(asset, 'NEUTRAL')
