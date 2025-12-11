@@ -378,38 +378,32 @@ def send_welcome(message):
         "• /pilot - Modo Piloto (Automático - Bajo tu riesgo).\n"
         "• /mode - Ver modo actual.\n\n"
 
-        "⚙️ *CONTROL GENERAL*\n"
-        "• /start - Verificar Estado y Conexión.\n"
-        "• /status - DASHBOARD COMPLETO (Estado + Configuración).\n"
-        "• /toggle_group <GRUPO> - Activar/Desactivar (CRYPTO, STOCKS, COMMODITY).\n"
-        "• /set_interval <MIN> - Ajustar frecuencia de análisis.\n"
-        "• /debug - Diagnóstico completo de conexión y claves.\n\n"
+        "⚙️ *SISTEMA (ADMIN)*\n"
+        "• /status - Ver estado, latencia y tendencias de mercado.\n"
+        "• /risk - Consultar reglas de riesgos y filtros activos.\n"
+        "• /debug - Diagnóstico técnico avanzado.\n"
+        "• /config - Panel de configuración rápida.\n\n"
         
-        "🔫 *TRADING MANUAL (SPOT)*\n"
-        "• /buy <TICKER> - Comprar SPOT (Ej: `/buy XRP`).\n"
-        "• /set_spot_alloc <%> - % del capital USDT para compras (Ej: `0.2` = 20%).\n\n"
+        "🎮 *MODOS OPERATIVOS*\n"
+        "• /pilot - Modo Automático (Sin confirmación).\n"
+        "• /copilot - Modo Asistido (Requiere aprobación).\n"
+        "• /watcher - Modo Vigilancia (Solo alertas).\n\n"
         
-        "🔫 *TRADING MANUAL (FUTUROS)*\n"
-        "• /long <TICKER> - Abrir LONG (Ej: `/long BTC`).\n"
-        "• /sell <TICKER> - Smart Sell (Cierra Long o Abre Short).\n"
-        "• /close <TICKER> - Cerrar posición específica.\n"
-        "• /closeall - CERRAR TODO (Botón de Pánico).\n\n"
+        "🔫 *TRADING MANUAL*\n"
+        "• /buy <TICKER> - Compra Spot instantánea.\n"
+        "• /long <TICKER> - Abrir Long Futuros.\n"
+        "• /short <TICKER> - Abrir Short Futuros.\n"
+        "• /close <TICKER> - Cerrar posición.\n"
+        "• /closeall - PÁNICO (Cierra todo).\n\n"
         
-        "🛡️ *GESTIÓN Y RIESGO*\n"
-        "• /risk - Explicación detallada del modelo de Riesgo.\n"
-        "• /wallet - Ver Capital Spot, Balance Futuros y PnL Total.\n"
-        "• /set_leverage <X> - Cambiar apalancamiento (Ej: 10).\n"
-        "• /set_margin <%> - Límite asignación (Ej: 0.1 para 10%).\n"
-        "• /set_keys <KEY> <SECRET> - Configurar API Binance.\n\n"
-        
-        "📡 *INTELIGENCIA*\n"
-        "• /price - Radar de precios y señales técnicas."
+        "🔧 *AJUSTES*\n"
+        "• /set_leverage <x> - Apalancamiento (Ej: 10).\n"
+        "• /set_margin <%> - Riesgo máx del capital (Ej: 0.1).\n"
+        "• /toggle_group <GRUPO> - Activar/Desactivar Crypto/Stocks."
     )
     try:
         bot.reply_to(message, help_text, parse_mode='Markdown')
     except Exception as e:
-        # Fallback to plain text if Markdown fails (usually due to bad char or syntax)
-        print(f"⚠️ Error enviando Help (Markdown): {e}")
         bot.reply_to(message, help_text.replace('*', '').replace('`', ''))
 
 def handle_risk(message):
@@ -425,57 +419,14 @@ def handle_risk(message):
         sl_fixed = f"{session.config['stop_loss_pct']*100:.1f}%"
 
     msg = (
-        "🛡️ *SISTEMA DE GESTIÓN DE RIESGO AVANZADO*\n"
+        "🛡️ *MOTOR DE RIESGO E INTELIGENCIA (MTF)*\n"
         "〰️〰️〰️〰️〰️〰️\n"
-        "1. *Stop Loss Dinámico (ATR)*\n"
-        "   El bot analiza la volatilidad (Average True Range). \n"
-        "   • *Distancia SL:* `2.0 x ATR` (Se aleja si hay ruido, se acerca si hay calma).\n"
-        "   • *Objetivo:* Evitar barridas de stop en mercados volátiles.\n\n"
+        "1. *Filtro Multi-Timeframe (MTF)* 🧠\n"
+        "   • El bot valida cada señal de 15m con la tendencia de **1 Hora**.\n"
+        "   • ✅ **LONG** solo si 1H es Alcista (Precio > EMA200).\n"
+        "   • ✅ **SHORT** solo si 1H es Bajista (Precio < EMA200).\n"
+        "   • _Esto evita operar contra la marea institucional._\n\n"
         
-        "2. *Cálculo de Posición (Sizing)*\n"
-        "   El tamaño de la operación NO es fijo. Se calcula para arriesgar máx un **2%** de tu capital por trade.\n"
-        "   • *Fórmula:* `Capital * 0.02 / Distancia_SL`\n"
-        "   • *Límite de Seguridad:* Nunca superará el Margin Global configurado (actual: **{margin}**).\n\n"
-        
-        "3. *Take Profit Dividido (Split)*\n"
-        "   • *TP1 (50%):* Se cierra al alcanzar **1.5R** (Retorno/Riesgo). Asegura ganancias rápido.\n"
-        "   • *TP2 (50%):* Activa un **Trailing Stop** del 1.5%. Si el precio sigue subiendo, el bot lo persigue para maximizar la ganancia.\n\n"
-        
-        "ℹ️ _Si la volatilidad (ATR) no está disponible, el sistema usa el modo 'Fallback' (SL {sl_fixed} fijo)._"
-    ).format(margin=margin, sl_fixed=sl_fixed)
-    
-    bot.reply_to(message, msg, parse_mode='Markdown')
-
-def handle_start(message):
-    """ Verificación Rápida de Salud e Intro """
-    bot.reply_to(message, "⏳ Iniciando sistemas...")
-    
-    # Quick Check
-    status = "✅ *ONLINE*\n"
-    if not bot.get_me():
-        status = "⚠️ *CONEXIÓN INESTABLE*"
-        
-    chat_id = str(message.chat.id)
-    session = session_manager.get_session(chat_id)
-    
-    auth_status = "❌ Sin Llaves"
-    if session and session.client:
-        auth_status = "✅ Autenticado"
-        
-    msg = (
-        "🤖 *ANTIGRAVITY BOT v3.2*\n"
-        f"Estado: {status}\n"
-        f"API: {auth_status}\n\n"
-        "Comandos: `/help`\n"
-        "Configuración: `/config`\n"
-        "Diagnóstico: `/debug`"
-    )
-    bot.reply_to(message, msg, parse_mode='Markdown')
-
-def get_fear_and_greed_index():
-    """Fetch Fear and Greed Index from alternative.me"""
-    try:
-        url = "https://api.alternative.me/fng/"
         resp = requests.get(url, timeout=5)
         data = resp.json()
         if 'data' in data and len(data['data']) > 0:
@@ -522,30 +473,26 @@ def handle_status(message):
     fg_index = get_fear_and_greed_index()
 
     # 1. System State
-    status = "🕹️ *DASHBOARD CENTRAL*\n"
+    status = "🕹️ *CENTRO DE MANDO*\n"
     status += "〰️〰️〰️〰️〰️〰️\n"
-    status += f"🎮 *Modo:* `{mode}`\n"
-    status += f"🧠 *Sentiment:* {fg_index}\n"
-    status += f"🔑 *API:* {'✅ Vinculada' if has_keys else '❌ Sin Vincular'}\n\n"
+    status += f"🛡️ *Modo Trading:* `{mode}`\n"
+    status += f"🧠 *Sentimiento:* {fg_index}\n"
+    status += f"🔌 *Conexión:* {'✅ Estable' if has_keys else '❌ Desconectado'}\n"
+    status += "〰️〰️〰️〰️〰️〰️\n"
     
-    status += "📡 *Radares Activos:*\n"
+    status += "⚙️ *Configuración Actual:*\n"
+    status += f"• *Apalancamiento:* `{leverage}x`\n"
+    status += f"• *Margen Máx:* `{max_margin*100:.1f}%`\n"
+    status += f"• *Spot Alloc:* `{spot_alloc*100:.1f}%`\n"
+    status += f"• *Frecuencia:* {SIGNAL_COOLDOWN/60:.0f} min\n"
+    
+    status += "\n📡 *Radares Activos:*\n"
     count = 0
     for group, enabled in GROUP_CONFIG.items():
         icon = "✅" if enabled else "🔴"
         display_name = group.replace('_', ' ')
         if enabled: count += len(ASSET_GROUPS.get(group, []))
         status += f"{icon} {display_name}\n"
-    
-    status += f"\n*Total Activos Vigilados:* {count}\n"
-    status += f"*Frecuencia Escaneo:* {SIGNAL_COOLDOWN/60:.0f} min\n"
-    
-    status += "〰️〰️〰️〰️〰️〰️\n"
-    status += "⚙️ *Configuración de Riesgo:*\n"
-    status += f"🕹️ *Apalancamiento Futuros:* `{leverage}x`\n"
-    status += f"💰 *Margen Máx Futuros:* `{max_margin*100:.1f}%`\n"
-    status += f"💎 *Asignación Spot:* `{spot_alloc*100:.1f}%` (del USDT disponible)\n"
-    status += "〰️〰️〰️〰️〰️〰️\n"
-    status += "ℹ️ Comandos:\n• `/set_leverage`\n• `/set_margin`\n• `/set_spot_alloc`"
     
     bot.reply_to(message, status, parse_mode='Markdown')
 
