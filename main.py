@@ -486,7 +486,7 @@ def handle_status(message):
     status += f"💰 *Margen Máx Futuros:* `{max_margin*100:.1f}%`\n"
     status += f"💎 *Asignación Spot:* `{spot_alloc*100:.1f}%` (del USDT disponible)\n"
     status += "〰️〰️〰️〰️〰️〰️\n"
-    status += "ℹ️ _Comandos: /set_leverage, /set_margin, /set_spot_alloc_"
+    status += "ℹ️ Comandos:\n• `/set_leverage`\n• `/set_margin`\n• `/set_spot_alloc`"
     
     bot.reply_to(message, status, parse_mode='Markdown')
 
@@ -558,16 +558,7 @@ def handle_set_keys(message):
 
 
 
-def handle_set_leverage(message):
-    chat_id = str(message.chat.id)
-    session = session_manager.get_session(chat_id)
-    if not session: return
-    try:
-        val = int(message.text.split()[1])
-        session.update_config('leverage', val)
-        session_manager.save_sessions()
-        bot.reply_to(message, f"✅ *Palanca Ajustada:* {val}x")
-    except: bot.reply_to(message, "❌ Error: Usa `/set_leverage 10`")
+
 
 @threaded_handler
 def handle_debug(message):
@@ -666,16 +657,31 @@ def handle_debug(message):
     
     bot.edit_message_text(report, chat_id=sent.chat.id, message_id=sent.message_id, parse_mode='Markdown')
 
+@threaded_handler
+def handle_set_leverage(message):
+    """ /set_leverage - Interactive Menu """
+    markup = InlineKeyboardMarkup()
+    markup.row_width = 4
+    markup.add(
+        InlineKeyboardButton("3x", callback_data="CFG|LEV|3"),
+        InlineKeyboardButton("5x", callback_data="CFG|LEV|5"),
+        InlineKeyboardButton("10x", callback_data="CFG|LEV|10"),
+        InlineKeyboardButton("20x", callback_data="CFG|LEV|20")
+    )
+    bot.reply_to(message, "⚖️ *Selecciona Apalancamiento:*", reply_markup=markup, parse_mode='Markdown')
+
+@threaded_handler
 def handle_set_margin(message):
-    chat_id = str(message.chat.id)
-    session = session_manager.get_session(chat_id)
-    if not session: return
-    try:
-        val = float(message.text.split()[1])
-        session.update_config('max_capital_pct', val)
-        session_manager.save_sessions()
-        bot.reply_to(message, f"✅ *Margen Máximo Global:* {val*100:.1f}%\nℹ️ _Límite de seguridad para asignación total._")
-    except: bot.reply_to(message, "❌ Error: Usa `/set_margin 0.1` (10%)")
+    """ /set_margin - Interactive Menu """
+    markup = InlineKeyboardMarkup()
+    markup.row_width = 4
+    markup.add(
+        InlineKeyboardButton("5%", callback_data="CFG|MARGIN|0.05"),
+        InlineKeyboardButton("10%", callback_data="CFG|MARGIN|0.10"),
+        InlineKeyboardButton("20%", callback_data="CFG|MARGIN|0.20"),
+        InlineKeyboardButton("50%", callback_data="CFG|MARGIN|0.50")
+    )
+    bot.reply_to(message, "💰 *Selecciona Margen Máximo Global:*", reply_markup=markup, parse_mode='Markdown')
 
 def handle_manual_buy_spot(message):
     """ /buy <SYMBOL> """
@@ -702,22 +708,18 @@ def handle_manual_buy_spot(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {e}")
 
+@threaded_handler
 def handle_set_spot_allocation(message):
-    """ /set_spot_alloc 0.2 """
-    chat_id = str(message.chat.id)
-    session = session_manager.get_session(chat_id)
-    if not session: return
-    try:
-        val = float(message.text.split()[1])
-        if val <= 0 or val > 1.0:
-            bot.reply_to(message, "⚠️ El valor debe estar entre 0.01 y 1.0 (Ej: 0.2 = 20%)")
-            return
-            
-        session.update_config('spot_allocation_pct', val)
-        session_manager.save_sessions()
-        bot.reply_to(message, f"✅ *Asignación Spot Actualizada:* {val*100:.1f}%\n(El bot usará este % de tu USDT disponible por compra).", parse_mode='Markdown')
-    except: 
-        bot.reply_to(message, "❌ Error: Usa `/set_spot_alloc 0.2`")
+    """ /set_spot_alloc - Interactive Menu """
+    markup = InlineKeyboardMarkup()
+    markup.row_width = 4
+    markup.add(
+        InlineKeyboardButton("10%", callback_data="CFG|SPOT|0.10"),
+        InlineKeyboardButton("20%", callback_data="CFG|SPOT|0.20"),
+        InlineKeyboardButton("50%", callback_data="CFG|SPOT|0.50"),
+        InlineKeyboardButton("100%", callback_data="CFG|SPOT|1.0")
+    )
+    bot.reply_to(message, "💎 *Selecciona Asignación Spot (por trade):*", reply_markup=markup, parse_mode='Markdown')
 
 
 
@@ -817,7 +819,27 @@ def handle_trade_callback(call):
         data = call.data.split('|')
         action = data[0]
         
-        if action == 'IGNORE':
+        if action == 'CFG':
+            # Configuration Change
+            key = data[1]
+            val = data[2]
+            
+            if key == 'LEV':
+                session.update_config('leverage', int(val))
+                msg = f"⚖️ *Apalancamiento:* {val}x"
+            elif key == 'MARGIN':
+                session.update_config('max_capital_pct', float(val))
+                msg = f"💰 *Margen Máx:* {float(val)*100:.0f}%"
+            elif key == 'SPOT':
+                session.update_config('spot_allocation_pct', float(val))
+                msg = f"💎 *Asignación Spot:* {float(val)*100:.0f}%"
+            
+            session_manager.save_sessions()
+            success = True
+            bot.edit_message_text(f"✅ Configuración Actualizada:\n{msg}", chat_id=chat_id, message_id=call.message.message_id, parse_mode='Markdown')
+            return # Exit after config update
+
+        elif action == 'IGNORE':
             bot.edit_message_text(f"❌ Operación Rechazada par {data[1]}.", chat_id=chat_id, message_id=call.message.message_id)
             return
 
