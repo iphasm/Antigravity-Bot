@@ -254,6 +254,41 @@ def handle_price(message):
 # --- MANUAL TRADING HANDLERS ---
 
 @threaded_handler
+def handle_manual_short(message):
+    """ /short <SYMBOL> """
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session:
+        bot.reply_to(message, "⚠️ No tienes sesión activa. Usa /set_keys.")
+        return
+
+    try:
+        parts = message.text.split()
+        if len(parts) < 2:
+            bot.reply_to(message, "⚠️ Uso: `/short <SYMBOL>` (Ej: ETHUSDT)")
+            return
+            
+        symbol = resolve_symbol(parts[1])
+        bot.reply_to(message, f"⏳ Analizando {symbol} (ATR) y Ejecutando SHORT...")
+        
+        # 1. Get ATR
+        atr_val = None
+        success, res = process_asset(symbol)
+        if success and 'metrics' in res:
+            atr_val = res['metrics'].get('atr', None)
+        
+        # 2. Execute
+        success, msg = session.execute_short_position(symbol, atr=atr_val)
+        
+        if success:
+            bot.reply_to(message, f"✅ *SHORT EJECUTADO*\n{msg}", parse_mode='Markdown')
+        else:
+            bot.reply_to(message, f"❌ Error: {msg}")
+
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error crítico: {e}")
+
+@threaded_handler
 def handle_manual_long(message):
     """ /long <SYMBOL> """
     chat_id = str(message.chat.id)
@@ -292,8 +327,11 @@ def handle_manual_long(message):
 def handle_manual_sell(message):
     """ /sell <SYMBOL> (Smart Sell: Close Long OR Open Short) """
     chat_id = str(message.chat.id)
+    chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
-    if not session: return
+    if not session:
+        bot.reply_to(message, "⚠️ No tienes sesión activa. Usa /set_keys.")
+        return
 
     try:
         parts = message.text.split()
@@ -342,8 +380,11 @@ def handle_manual_sell(message):
 def handle_manual_close(message):
     """ /close <SYMBOL> """
     chat_id = str(message.chat.id)
+    chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
-    if not session: return
+    if not session: 
+        bot.reply_to(message, "⚠️ No tienes sesión activa. Usa /set_keys.")
+        return
 
     try:
         parts = message.text.split()
@@ -362,8 +403,11 @@ def handle_manual_close(message):
 def handle_manual_closeall(message):
     """ /closeall """
     chat_id = str(message.chat.id)
+    chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
-    if not session: return
+    if not session: 
+        bot.reply_to(message, "⚠️ No tienes sesión activa. Usa /set_keys.")
+        return
     
     bot.reply_to(message, "🚨 Ejecutando CLOSE ALL...")
     success, msg = session.execute_close_all()
@@ -681,8 +725,11 @@ def handle_toggle_group(message):
 def handle_reset_breaker(message):
     """Reinicia el contador del Circuit Breaker"""
     chat_id = str(message.chat.id)
+    chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
-    if not session: return
+    if not session: 
+        bot.reply_to(message, "⚠️ No tienes sesión activa. Usa /set_keys.")
+        return
 
     session.reset_circuit_breaker()
     bot.reply_to(message, "✅ **Circuit Breaker Reiniciado**.\nEl contador de pérdidas consecutivas se ha restablecido a 0.\nPuedes reactivar `/pilot` si lo deseas.", parse_mode='Markdown')
@@ -931,10 +978,16 @@ def master_listener(message):
         text = message.text
         if not text: return
         
-        print(f"📨 DEBUG: Recibido '{text}' de {message.chat.id}")
+        # print(f"📨 DEBUG: Recibido '{text}' de {message.chat.id}")
         
         if text.startswith('/'):
-            cmd_part = text.split()[0].lower()
+            # 1. CLEAN COMMAND Parsing (/start@BotName -> /start)
+            full_cmd = text.split()[0]
+            if '@' in full_cmd:
+                cmd_part = full_cmd.split('@')[0].lower()
+            else:
+                cmd_part = full_cmd.lower()
+            
             user_id = str(message.chat.id)
             
             # --- RBAC LAYER ---
@@ -954,7 +1007,7 @@ def master_listener(message):
             
             # 2. SYSTEM COMMANDS (Admin Only)
             # /toggle_group, /set_interval, /debug
-            SYSTEM_CMDS = ['/toggle_group', '/set_interval', '/debug']
+            SYSTEM_CMDS = ['/toggle_group', '/togglegroup', '/set_interval', '/setinterval', '/debug']
             if cmd_part in SYSTEM_CMDS and role != 'ADMIN':
                 bot.reply_to(message, "🛡️ Comando reservado para Administrador.")
                 return
@@ -972,27 +1025,26 @@ def master_listener(message):
             elif cmd_part == '/status':
                 handle_status(message)
             
-            # System (Admin Only - Filtered above)
-            elif cmd_part == '/toggle_group':
+            # System (System Only - Filtered above)
+            elif cmd_part in ['/toggle_group', '/togglegroup']:
                 handle_toggle_group(message)
-            elif cmd_part in ['/set_interval', '/set_cooldown']:
+            elif cmd_part in ['/set_interval', '/setinterval', '/set_cooldown']:
                 handle_set_interval(message)
             elif cmd_part == '/debug':
                 handle_debug(message)
             
-
             # User Config & Trading (Allowed for Subscribers)
             elif cmd_part in ['/config', '/status']: # Alias /config to /status
                 handle_status(message)
             elif cmd_part == '/price':
                 handle_price(message)
-            elif cmd_part == '/set_keys':
+            elif cmd_part in ['/set_keys', '/setkeys']:
                 handle_set_keys(message)
-            elif cmd_part == '/set_leverage':
+            elif cmd_part in ['/set_leverage', '/setleverage']:
                 handle_set_leverage(message)
-            elif cmd_part == '/set_margin':
+            elif cmd_part in ['/set_margin', '/setmargin']:
                 handle_set_margin(message)
-            elif cmd_part == '/set_spot_alloc':
+            elif cmd_part in ['/set_spot_alloc', '/setspotallocation', '/set_spot_allocation']:
                 handle_set_spot_allocation(message)
             elif cmd_part == '/wallet':
                 handle_wallet(message)
@@ -1014,19 +1066,21 @@ def master_listener(message):
             # Manual Trading
             elif cmd_part == '/long':
                 handle_manual_long(message)
+            elif cmd_part == '/short':
+                handle_manual_short(message)
             elif cmd_part == '/sell':
                 handle_manual_sell(message)
             elif cmd_part == '/close':
                 handle_manual_close(message)
             elif cmd_part == '/closeall':
                 handle_manual_closeall(message)
+            elif cmd_part in ['/reset_breaker', '/resetbreaker']:
+                 handle_reset_breaker(message)
             else:
-               bot.reply_to(message, "🤷‍♂️ Comando desconocido.")
+               bot.reply_to(message, f"🤷‍♂️ Comando desconocido: {cmd_part}")
 
     except Exception as e:
         print(f"❌ Error en dispatcher: {e}")
-
-
 # --- TRADING LOOP ---
 
 def run_trading_loop():
