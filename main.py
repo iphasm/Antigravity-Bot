@@ -764,6 +764,7 @@ def handle_get_mode(message):
 # --- CALLBACK HANDLER (COPILOT) ---
 @bot.callback_query_handler(func=lambda call: True)
 def handle_trade_callback(call):
+    print(f"🔘 Callback received: {call.data}")
     chat_id = str(call.message.chat.id)
     session = session_manager.get_session(chat_id)
     
@@ -1049,7 +1050,7 @@ def start_bot():
             send_alert("✅ *SISTEMA DEPURADO Y LISTO (MANUAL DISPATCH)*\nEnvía /start o /help para probar.")
             
             bot.delete_webhook(drop_pending_updates=True)
-            bot.infinity_polling(timeout=10, long_polling_timeout=10, allowed_updates=['message'])
+            bot.infinity_polling(timeout=10, long_polling_timeout=10, allowed_updates=['message', 'callback_query'])
             
         except Exception as e:
             print(f"❌ Polling Error: {e}")
