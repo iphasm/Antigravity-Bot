@@ -596,6 +596,54 @@ class TradingSession:
         except Exception as e:
             return False, f"Error: {e}"
 
+    def check_circuit_breaker(self):
+        """
+        Circuit Breaker / Switch de Seguridad
+        Si detecta 5 pérdidas CONSECUTIVAS (Realized PnL < 0) en modo PILOT,
+        baja automáticamente a COPILOT para detener la hemorragia.
+        Returns: (Triggered: bool, Message: str)
+        """
+        if self.mode != 'PILOT':
+             return False, ""
+             
+        if not self.client:
+             return False, ""
+             
+        try:
+            # Fetch last 20 Income entries (REALIZED_PNL only)
+            income = self.client.futures_income_history(incomeType='REALIZED_PNL', limit=20)
+            
+            # Sort descending by time (Newest first)
+            income.sort(key=lambda x: x['time'], reverse=True)
+            
+            consecutive_losses = 0
+            for trade in income:
+                pnl = float(trade['income'])
+                if pnl < 0:
+                    consecutive_losses += 1
+                else:
+                    # Found a win or zero, break the streak
+                    break
+            
+            # Threshold Check
+            if consecutive_losses >= 5:
+                # Trigger Circuit Breaker
+                old_mode = self.mode
+                self.set_mode('COPILOT')
+                
+                msg = (
+                    f"⚠️ **CIRCUIT BREAKER ACTIVADO** ⚠️\n"
+                    f"Se han detectado {consecutive_losses} pérdidas consecutivas en modo PILOT.\n"
+                    f"🛡️ El sistema ha cambiado automáticamente a **COPILOT** para proteger tu capital.\n"
+                    f"Revisa el mercado manualmente antes de reactivar."
+                )
+                return True, msg
+                
+        except Exception as e:
+            print(f"Error checking circuit breaker: {e}")
+            
+        return False, ""
+
     def get_pnl_history(self, days=1):
         """Fetches Realized PnL from Binance for the last N days"""
         if not self.client: return 0.0, []

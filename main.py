@@ -1215,6 +1215,18 @@ def run_trading_loop():
                     except Exception as e:
                         print(f"⚠️ Error procesando {asset}: {e}")
                         
+            # --- SAFETY CHECK (Circuit Breaker) ---
+            # Runs every loop iteration (approx 60s)
+            try:
+                all_sessions = session_manager.get_all_sessions()
+                for session in all_sessions:
+                    triggered, msg = session.check_circuit_breaker()
+                    if triggered:
+                        bot.send_message(session.chat_id, msg, parse_mode='Markdown')
+                        print(f"🚨 Circuit Breaker Triggered for {session.chat_id}")
+            except Exception as e:
+                print(f"Safety Check Error: {e}")
+
         except Exception as e:
             print(f"❌ Error CRÍTICO en bucle de trading: {e}")
             
