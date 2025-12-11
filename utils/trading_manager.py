@@ -608,6 +608,16 @@ class TradingSession:
         except Exception as e:
             return False, f"Error: {e}"
 
+    def reset_circuit_breaker(self):
+        """
+        Resets the circuit breaker logic by updating the 'ignore_until' timestamp.
+        Any losses recorded before this timestamp will not count towards the streak.
+        """
+        self.cb_ignore_until = int(time.time() * 1000)
+        # Also optional: Restore mode to PILOT automatically?
+        # No, better let user do it explicitly via /pilot command as safety.
+        print(f"✅ [Chat {self.chat_id}] Circuit Breaker Reset. Ignoring history before {self.cb_ignore_until}")
+
     def check_circuit_breaker(self):
         """
         Circuit Breaker / Switch de Seguridad

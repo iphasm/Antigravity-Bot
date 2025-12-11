@@ -731,16 +731,19 @@ def handle_toggle_group(message):
 def handle_reset_pilot(message):
     """Reinicia el contador del Circuit Breaker"""
     chat_id = str(message.chat.id)
-    chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
     if not session: 
         bot.reply_to(message, "⚠️ No tienes sesión activa. Usa /set_keys.")
         return
 
-    session.reset_circuit_breaker()
-    bot.reply_to(message, "✅ **Circuit Breaker Reiniciado**.\nEl contador de pérdidas consecutivas se ha restablecido a 0.\nPuedes reactivar `/pilot` si lo deseas.", parse_mode='Markdown')
-
-    bot.reply_to(message, "✅ **Circuit Breaker Reiniciado**.\nEl contador de pérdidas consecutivas se ha restablecido a 0.\nPuedes reactivar `/pilot` si lo deseas.", parse_mode='Markdown')
+    # Call method (will be added to utils next)
+    try:
+        session.reset_circuit_breaker()
+        bot.reply_to(message, "✅ **Circuit Breaker Reiniciado**.\nEl contador de pérdidas consecutivas se ha restablecido a 0.\nPuedes reactivar `/pilot` si lo deseas.", parse_mode='Markdown')
+    except AttributeError:
+        bot.reply_to(message, "❌ Error: Método reset_circuit_breaker no encontrado en TradingSession (Actualizando código...).")
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error: {e}")
 
 @bot.message_handler(commands=['set_interval', 'setinterval'])
 def handle_set_interval(message):
