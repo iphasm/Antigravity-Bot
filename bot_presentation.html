@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Antigravity Bot v3.2 - Documentation</title>
-    <!-- Load Mermaid -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <!-- Load Mermaid (Specific Stable Version) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             mermaid.initialize({
@@ -58,6 +58,7 @@
             font-size: 3rem;
             margin: 0;
             background: var(--accent-gradient);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-transform: uppercase;
@@ -114,7 +115,7 @@
             margin: 25px 0;
         }
 
-        /* Mermaid text color fix */
+        /* Mermaid styling */
         .label {
             color: #fff !important;
         }
@@ -123,6 +124,16 @@
         .node rect,
         .node polygon {
             stroke: #38bdf8 !important;
+            stroke-width: 2px;
+        }
+
+        .edgePath .path {
+            stroke: #94a3b8 !important;
+            stroke-width: 2px;
+        }
+
+        .arrowheadPath {
+            fill: #94a3b8 !important;
         }
 
         /* TYPOGRAPHY & ELEMENTS */
@@ -265,7 +276,7 @@
 
                 <div class="diagram-container">
                     <div class="mermaid">
-                        flowchart LR
+                        graph LR
                         subgraph Core["Lógica Principal"]
                         Loop["Infinite Loop"] --> Scanner["Data Fetcher"]
                         Scanner --> Engine["Strategy Engine"]
@@ -299,10 +310,12 @@
                     <div class="diagram-container">
                         <div class="mermaid">
                             graph TD
-                            Start(("Inicio")) --> BB{"Precio < Banda Inf?"} BB -->|No| Next["Esperar"]
-                                BB -->|Si| RSI{"RSI < 40?"} RSI -->|Si| Stoch{"StochRSI < 20?"} Stoch -->|Si| Buy["💎
-                                        BUY SIGNAL"]
-                                        Stoch -->|No| Next
+                            Start(("Inicio")) --> BB{"Precio Menor a Banda Inf?"}
+                            BB -->|No| Next["Esperar"]
+                            BB -->|Si| RSI{"RSI Menor 40?"}
+                            RSI -->|Si| Stoch{"StochRSI Menor 20?"}
+                            Stoch -->|Si| Buy["💎 BUY SIGNAL"]
+                            Stoch -->|No| Next
                         </div>
                     </div>
                 </div>
@@ -312,26 +325,29 @@
                     <p>Detecta explosiones de volatilidad.</p>
                     <div class="diagram-container">
                         <div class="mermaid">
-                            flowchart TD
+                            graph TD
                             Start(("Scan")) --> Zone{"Estado?"}
 
-                            Zone -->|Neutral| EntryLogic
-                            Zone -->|In Position| ExitLogic
+                            Zone -->|Neutral| EntryLogic["Lógica de Entrada"]
+                            Zone -->|In Position| ExitLogic["Lógica de Salida"]
 
-                            subgraph EntryLogic
-                            dir["Direction?"]
-                            dir -->|Long| L1{"Close > BB Upper?"}
-                            dir -->|Short| S1{"Close < BB Lower?"} L1 -->|Yes| L2{"ADX > 20?"}
-                                L2 -->|Rising| LONG["🚀 GO LONG"]
+                            subgraph Entry["Entrada"]
+                            EntryLogic --> dir{"Dirección?"}
+                            dir -->|Long| L1{"Cl Mayor BB Upper?"}
+                            dir -->|Short| S1{"Cl Menor BB Lower?"}
 
-                                S1 -->|Yes| S2{"ADX > 20?"}
-                                S2 -->|Rising| SHORT["📉 GO SHORT"]
-                                end
+                            L1 -->|Yes| L2{"ADX Mayor 20?"}
+                            L2 -->|Rising| LONG["🚀 GO LONG"]
 
-                                subgraph ExitLogic
-                                Check{"Valid Trend?"}
-                                Check -->|Price < HMA| ExitL["Close Long"] Check -->|Price > HMA| ExitS["Close Short"]
-                                    end
+                            S1 -->|Yes| S2{"ADX Mayor 20?"}
+                            S2 -->|Rising| SHORT["📉 GO SHORT"]
+                            end
+
+                            subgraph Exit["Salida"]
+                            ExitLogic --> Check{"Tendencia?"}
+                            Check -->|Price Menor HMA| ExitL["Close Long"]
+                            Check -->|Price Mayor HMA| ExitS["Close Short"]
+                            end
                         </div>
                     </div>
                 </div>
@@ -365,20 +381,17 @@
                         </tr>
                         <tr>
                             <td><strong>RSI</strong></td>
-                            <td>Mide la fuerza. >50 es Alcista, <50 es Bajista. Evita entrar en falsos
-                                    rompimientos.</td>
+                            <td>Mide la fuerza. >50 es Alcista, <50 es Bajista.</td>
                             <td>Periodo: 14</td>
                         </tr>
                         <tr>
                             <td><strong>ADX</strong></td>
-                            <td>Mide la potencia de la tendencia (sin dirección). Solo operamos si ADX > 20 y subiendo.
-                            </td>
+                            <td>Mide la potencia de la tendencia (sin dirección).</td>
                             <td>Periodo: 14</td>
                         </tr>
                         <tr>
                             <td><strong>HMA (Hull Moving Avg)</strong></td>
-                            <td>Filtro de tendencia ultra-rápido. Define si el mercado es Bull/Bear y gatilla las
-                                salidas.</td>
+                            <td>Filtro de tendencia ultra-rápido.</td>
                             <td>Periodo: 55</td>
                         </tr>
                     </tbody>
@@ -398,19 +411,19 @@
                         <div class="metric-title">Stop Loss Dinámico</div>
                         <div class="metric-value">2x ATR</div>
                         <p style="font-size:0.9em; color:var(--text-muted)">Se adapta a la volatilidad. Si el mercado
-                            está loco, el SL es más amplio pero la posición es más pequeña.</p>
+                            está loco, el SL es más amplio.</p>
                     </div>
                     <div class="metric-box">
                         <div class="metric-title">Riesgo por Trade</div>
                         <div class="metric-value">2% Equity</div>
                         <p style="font-size:0.9em; color:var(--text-muted)">Nunca arriesgas más del 2% de tu cuenta en
-                            una sola operación mala.</p>
+                            una operación.</p>
                     </div>
                     <div class="metric-box">
                         <div class="metric-title">Margen Máximo</div>
                         <div class="metric-value">Configurable</div>
-                        <p style="font-size:0.9em; color:var(--text-muted)">Límite duro de cuánto capital total se puede
-                            usar (ej. 10%).</p>
+                        <p style="font-size:0.9em; color:var(--text-muted)">Límite duro de capital total usado (ej.
+                            10%).</p>
                     </div>
                 </div>
 
@@ -418,8 +431,7 @@
                     <code style="display:block; color: #4ade80;">
                     Pos Size = (Cuenta Total * 0.02) / (Distancia al Stop Loss)
                 </code>
-                    <p style="font-size:0.85em; margin-top:5px; color:#94a3b8;">Esta fórmula garantiza que si toca el
-                        Stop Loss, pierdes exactamente el 2%, sin importar el apalancamiento.</p>
+                    <p style="font-size:0.85em; margin-top:5px; color:#94a3b8;">Garantiza una pérdida máxima del 2%.</p>
                 </div>
             </div>
         </section>
@@ -430,19 +442,24 @@
             <div class="shiny-card">
                 <div class="diagram-container">
                     <div class="mermaid">
-                        stateDiagram-v2
-                        [*] --> Analisis
-                        Analisis --> Detectado
+                        graph TD
+                        Start(("Señal")) --> Analisis["Análisis"]
+                        Analisis --> Detected{"DETECTADA"}
 
-                        state "Validación de Filtro" as Validacion {
-                        state "Cooldown (15m)" as CD
-                        state "Flip de Señal" as Flip
-                        state "Volatilidad > 0.8%" as Vol
-                        }
+                        subgraph Filter["Validación Inteligente"]
+                        Detected --> Checks{"Checks"}
+                        Checks -->|OK| C1["Cooldown Mayor 15m?"]
+                        Checks -->|OK| C2["Flip de Señal?"]
+                        Checks -->|OK| C3["Movimiento Mayor 0.8%?"]
+                        end
 
-                        Detectado --> Validacion
-                        Validacion --> Enviar: Si cumple CUALQUIERA
-                        Validacion --> Ignorar: Si no cumple NINGUNA
+                        C1 -->|No| CheckFlip{"Check Flip"}
+                        CheckFlip -->|No| CheckVol{"Check Vol"}
+                        CheckVol -->|No| Ignorar["🤫 SILENCIO"]
+
+                        C1 -->|Si| Enviar["🔔 ENVIAR"]
+                        CheckFlip -->|Si| Enviar
+                        CheckVol -->|Si| Enviar
                     </div>
                 </div>
             </div>
