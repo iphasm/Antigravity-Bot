@@ -1057,9 +1057,20 @@ def start_bot():
                 print("🔄 Starting Infinity Polling...")
                 bot.infinity_polling(timeout=10, long_polling_timeout=10, allowed_updates=['message', 'callback_query'])
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 print(f"❌ Polling Crash: {e}")
                 time.sleep(5)
                 print("⚠️ Restarting Polling...")
+            except BaseException as e:
+                # Catch KeyboardInterrupt or SystemExit only to log, then re-raise or continue?
+                # If user wants to stop, we should let them.
+                # But if it's some other weird error...
+                print(f"❌ Critical Crash (BaseException): {e}")
+                time.sleep(5)
+                # break # If we want to allow exit
+                # If user implies 'crash' means it stops working, maybe we should just restart?
+                print("⚠️ Force Restarting...")
     else:
         print("❌ Bot no inicializado.")
         while True:
