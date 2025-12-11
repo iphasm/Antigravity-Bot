@@ -526,6 +526,7 @@ def send_welcome(message):
         "〰️〰️〰️〰️〰️〰️\n\n"
         "⚙️ *SISTEMA (ADMIN)*\n"
         "• /status - Ver estado, latencia y tendencias de mercado.\n"
+        "• /strategy - Explicación de la Lógica Cuántica.\n"
         "• /risk - Consultar reglas de riesgos ('Smart Filters').\n"
         "• /debug - Diagnóstico técnico avanzado.\n"
         "• /config - Panel de configuración rápida.\n\n"
@@ -589,6 +590,35 @@ def handle_risk(message):
     ).format(margin=margin)
     
     bot.reply_to(message, msg, parse_mode='Markdown')
+
+def handle_strategy(message):
+    """Explication detallada de la estrategia cuántica"""
+    msg = (
+        "🧠 *ESTRATEGIA QUANTUM (ADAPTATIVA)*\n"
+        "〰️〰️〰️〰️〰️〰️\n"
+        "El bot asigna dinámicamente un algoritmo específico según el perfil del activo:\n\n"
+        
+        "1. *Trend Following (Dominancia)* 📈\n"
+        "   • **Activos**: BTC, ETH.\n"
+        "   • **Lógica**: Cruce de EMAs (20/50) + Filtro de Fuerza ADX > 25.\n"
+        "   • **Objetivo**: Capturar grandes movimientos tendenciales. Stops más amplios (2x ATR).\n\n"
+        
+        "2. *Grid Trading (Rangos)* 🕸️\n"
+        "   • **Activos**: ADA, XRP (Alta lateralidad).\n"
+        "   • **Lógica**: Compra en soportes de desviación estándar y vende en resistencias.\n"
+        "   • **Objetivo**: Acumular ganancias pequeñas en mercados aburridos.\n\n"
+        
+        "3. *Scalping de Volatilidad (Alpha)* ⚡\n"
+        "   • **Activos**: SOL, AVAX, Altcoins High Beta.\n"
+        "   • **Lógica**: Momentum agresivo de ruptura en 5m/15m.\n"
+        "   • **Gestión**: Stops muy ajustados y TPs rápidos.\n\n"
+        
+        "4. *Validación Técnica (El Guardián)* 🛡️\n"
+        "   • Ninguna operación se abre si contradice la tendencia Macro (1H).\n"
+        "   • **Filtro de Ruido**: RSI no debe estar en sobrecompra extrema (>80) para largos."
+    )
+    bot.reply_to(message, msg, parse_mode='Markdown')
+
 
 def handle_start(message):
     """ Bienvenida Profesional con Efecto de Carga """
@@ -1031,6 +1061,8 @@ def master_listener(message):
                 send_welcome(message)
             elif cmd_part == '/risk':
                 handle_risk(message)
+            elif cmd_part == '/strategy':
+                handle_strategy(message)
             elif cmd_part == '/status':
                 handle_status(message)
             
