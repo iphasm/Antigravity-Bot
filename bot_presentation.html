@@ -3,123 +3,239 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Antigravity Bot v3.2 - Documentación Técnica</title>
+    <title>Antigravity Bot v3.2 - Documentation</title>
+    <!-- Load Mermaid -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <script>mermaid.initialize({ startOnLoad: true });</script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: 'dark',
+                securityLevel: 'loose',
+                flowchart: { curve: 'basis' }
+            });
+        });
+    </script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 40px;
-            background: #f4f4f9;
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --success: #4ade80;
+            --danger: #f87171;
+            --warning: #fbbf24;
         }
 
-        h1,
-        h2,
-        h3 {
-            color: #1a202c;
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         h1 {
-            border-bottom: 3px solid #3182ce;
-            padding-bottom: 10px;
-            margin-bottom: 40px;
+            font-size: 3rem;
+            margin: 0;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+
+        /* SECTIONS */
+        section {
+            margin-bottom: 60px;
+            animation: fadeIn 0.8s ease-in-out;
         }
 
         h2 {
-            margin-top: 50px;
-            background: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            border-left: 5px solid #3182ce;
+            font-size: 1.8em;
+            color: var(--text-main);
+            border-left: 4px solid #38bdf8;
+            padding-left: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
         }
 
-        .card {
-            background: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
+        .shiny-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
         }
 
+        .shiny-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(56, 189, 248, 0.1);
+        }
+
+        /* DIAGRAMS */
         .diagram-container {
-            background: #fff;
+            background: #0b1120;
             padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             justify-content: center;
-            margin: 20px 0;
-            overflow-x: auto;
+            margin: 25px 0;
+        }
+
+        /* Mermaid text color fix */
+        .label {
+            color: #fff !important;
+        }
+
+        .node circle,
+        .node rect,
+        .node polygon {
+            stroke: #38bdf8 !important;
+        }
+
+        /* TYPOGRAPHY & ELEMENTS */
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        li::before {
+            content: "►";
+            color: var(--accent);
+            position: absolute;
+            left: 0;
+            font-size: 0.8em;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 0.9em;
         }
 
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             margin: 20px 0;
-            background: #fff;
         }
 
         th,
         td {
-            padding: 12px;
-            border: 1px solid #e2e8f0;
+            padding: 15px;
             text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         th {
-            background: #3182ce;
-            color: white;
-        }
-
-        tr:nth-child(even) {
-            background: #f7fafc;
-        }
-
-        .tag {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
             font-size: 0.85em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-box {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .metric-title {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 1.2em;
             font-weight: bold;
+            color: var(--text-main);
+            margin-top: 5px;
         }
 
-        .tag-buy {
-            background: #c6f6d5;
-            color: #22543d;
-        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
 
-        .tag-sell {
-            background: #fed7d7;
-            color: #822727;
-        }
-
-        .tag-info {
-            background: #bee3f8;
-            color: #2a4365;
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media print {
             body {
-                background: #fff;
-                padding: 0;
+                background: white;
+                color: black;
             }
 
-            .card {
+            .shiny-card {
                 box-shadow: none;
-                border: 1px solid #ccc;
+                border: 1px solid #ddd;
+                background: white;
+                color: black;
             }
 
-            h2 {
-                page-break-before: always;
+            .diagram-container {
+                background: white;
+                border: 1px solid #ddd;
+            }
+
+            h1 {
+                -webkit-text-fill-color: black;
             }
         }
     </style>
@@ -127,179 +243,212 @@
 
 <body>
 
-    <header>
-        <h1>🤖 Antigravity Bot v3.2 <span style="font-size:0.6em; color:#718096; float:right">Reporte Técnico</span>
-        </h1>
-        <p><strong>Fecha:</strong> 10 de Diciembre, 2025</p>
-        <p><strong>Sistema:</strong> Híbrido (Spot + Futuros) con Gestión de Riesgo y Filtro Dinámico.</p>
-    </header>
+    <div class="container">
 
-    <!-- SECTION 1 -->
-    <section>
-        <h2>1. Arquitectura del Sistema</h2>
-        <div class="card">
-            <p>El bot opera en un bucle continuo (Daemon Thread) independiente de la interfaz de Telegram. Su
-                arquitectura modular separa la detección de señales (Engine) de la ejecución (Session Manager).</p>
+        <header>
+            <h1>Antigravity v3.2</h1>
+            <div class="subtitle">Arquitectura de Trading Algorítmico Híbrido</div>
+            <div style="margin-top:20px">
+                <span
+                    style="border: 1px solid var(--accent); padding: 5px 15px; border-radius: 20px; font-size: 0.9em; color: var(--accent);">
+                    Estado: ONLINE
+                </span>
+            </div>
+        </header>
 
-            <div class="diagram-container">
-                <div class="mermaid">
-                    graph TD
-                    User[Usuario Telegram] -->|Comandos / Config| Main[Main Dispatcher]
-                    Main -->|Actualiza| Session[Session Manager]
-                    Session -->|API Keys| Binance[(Binance API)]
+        <!-- 1. ARQUITECTURA -->
+        <section>
+            <h2>1. Arquitectura del Sistema</h2>
+            <div class="shiny-card">
+                <p>El bot funciona como un cerebro centralizado que conecta el análisis de mercado con la ejecución de
+                    órdenes. Su diseño es <strong>asíncrono</strong>.</p>
 
-                    subgraph "Background Thread"
-                    Loop[Loop de Trading] -->|1. Fetch OHLCV| Data[Gestor Datos]
-                    Loop -->|2. Analiza| Engine[Strategy Engine]
-                    Engine -->|3. Señal Detectada| Filter{Filtro Inteligente}
-                    Filter -->|Ignorar| Loop
-                    Filter -->|Aprobar| Router{Modo Operativo}
-                    end
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        flowchart LR
+                        subgraph Core["Lógica Principal"]
+                        Loop["Infinite Loop"] --> Scanner["Data Fetcher"]
+                        Scanner --> Engine["Strategy Engine"]
+                        Engine --> SmartFilter{"Smart Filter"}
+                        end
 
-                    Router -->|Pilot| Exec[Ejecución Auto]
-                    Router -->|Copilot| Alert[Botones Interactivos]
-                    Router -->|Watcher| Notify[Notificación Texto]
+                        subgraph UI["Interfaz Usuario"]
+                        Telegram --> Dispatcher
+                        Dispatcher --> SessionMgr["Session Manager"]
+                        end
 
-                    Exec --> Binance
-                    Alert --> User
-                    Notify --> User
+                        SmartFilter -->|Approved| Router{"Router"}
+                        Router -->|Pilot| Exec["Binance Auto"]
+                        Router -->|Copilot| Alert["Telegram Button"]
+                        Router -->|Watcher| Notify["Text Alert"]
+
+                        Dispatcher -.->|Control| Loop
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- SECTION 2 -->
-    <section>
-        <h2>2. Modos de Operación</h2>
-        <div class="card">
-            <p>El sistema se adapta al perfil de riesgo del usuario mediante tres modos distintos:</p>
-            <table>
-                <tr>
-                    <th>Modo</th>
-                    <th>Rol del Bot</th>
-                    <th>Acción Usuario</th>
-                    <th>Caso de Uso</th>
-                </tr>
-                <tr>
-                    <td><strong>WATCHER</strong></td>
-                    <td>Analista</td>
-                    <td>Recibe alerta, opera manual.</td>
-                    <td>Seguimiento pasivo.</td>
-                </tr>
-                <tr>
-                    <td><strong>COPILOT</strong></td>
-                    <td>Asistente</td>
-                    <td>Aprueba/Rechaza con botones.</td>
-                    <td>Control total con agilidad.</td>
-                </tr>
-                <tr>
-                    <td><strong>PILOT</strong></td>
-                    <td>Trader</td>
-                    <td>Supervisión (Bot opera solo).</td>
-                    <td>Automatización 24/7.</td>
-                </tr>
-            </table>
-        </div>
-    </section>
+        <!-- 2. ESTRATEGIA -->
+        <section>
+            <h2>2. Lógica de Estrategia</h2>
 
-    <!-- SECTION 3 -->
-    <section>
-        <h2>3. Lógica de Estrategia (The Brain)</h2>
+            <div class="metric-grid">
+                <div class="shiny-card">
+                    <h3>A. SPOT: Mean Reversion</h3>
+                    <p>Compra en caídas sobrevendidas.</p>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+                            graph TD
+                            Start(("Inicio")) --> BB{"Precio < Banda Inf?"} BB -->|No| Next["Esperar"]
+                                BB -->|Si| RSI{"RSI < 40?"} RSI -->|Si| Stoch{"StochRSI < 20?"} Stoch -->|Si| Buy["💎
+                                        BUY SIGNAL"]
+                                        Stoch -->|No| Next
+                        </div>
+                    </div>
+                </div>
 
-        <div class="card">
-            <h3>A. Estrategia SPOT: "Mean Reversion"</h3>
-            <p>Busca comprar activos sobrevendidos en tendencias laterales o correcciones para acumular.</p>
-            <div class="mermaid">
-                graph LR
-                Start((Inicio)) --> CheckBB{Precio < BB Lower?} CheckBB -->|No| Wait[Esperar]
-                    CheckBB -->|Si| CheckRSI{RSI < 40?} CheckRSI -->|No| Wait
-                        CheckRSI -->|Si| CheckStoch{StochRSI < 20 & Cruce K/D?} CheckStoch -->|Si| Buy[💎 SEÑAL SPOT]
-                            CheckStoch -->|No| Wait
-            </div>
-        </div>
+                <div class="shiny-card">
+                    <h3>B. FUTUROS: Squeeze & Velocity</h3>
+                    <p>Detecta explosiones de volatilidad.</p>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+                            flowchart TD
+                            Start(("Scan")) --> Zone{"Estado?"}
 
-        <div class="card">
-            <h3>B. Estrategia FUTUROS: "Squeeze & Velocity"</h3>
-            <p>Opera rupturas de volatilidad (Squeeze) y continuación de tendencia fuerte (Velocity).</p>
+                            Zone -->|Neutral| EntryLogic
+                            Zone -->|In Position| ExitLogic
 
-            <div class="mermaid">
-                flowchart TD
-                Start((Análisis)) --> State{Estado Actual?}
+                            subgraph EntryLogic
+                            dir["Direction?"]
+                            dir -->|Long| L1{"Close > BB Upper?"}
+                            dir -->|Short| S1{"Close < BB Lower?"} L1 -->|Yes| L2{"ADX > 20?"}
+                                L2 -->|Rising| LONG["🚀 GO LONG"]
 
-                State -->|NEUTRAL| ScanEntry[Escanear Entrada]
-                State -->|LONG| ScanExitL[Escanear Salida Long]
-                State -->|SHORT| ScanExitS[Escanear Salida Short]
+                                S1 -->|Yes| S2{"ADX > 20?"}
+                                S2 -->|Rising| SHORT["📉 GO SHORT"]
+                                end
 
-                %% ENTRY LOGIC
-                ScanEntry --> LongCond{Cond Long?}
-                LongCond -->|Si| SigLong[🚀 SEÑAL LONG]
-                LongCond -->|No| ShortCond{Cond Short?}
-                ShortCond -->|Si| SigShort[📉 SEÑAL SHORT]
-
-                %% EXIT LOGIC
-                ScanExitL --> TrendBroken{Precio < HMA 55?} TrendBroken -->|Si| CloseL[🏁 CLOSE LONG]
-
-                    ScanExitS --> TrendRecover{Precio > HMA 55?}
-                    TrendRecover -->|Si| CloseS[🏁 CLOSE SHORT]
-
-                    subgraph "Logica LONG (Resumen)"
-                    L1[Precio > BB Upper]
-                    L2[RSI > 50]
-                    L3[ADX > 20]
-                    end
-
-                    subgraph "Logica SHORT (Resumen)"
-                    S1[Precio < BB Lower] S2[RSI < 50] S3[Precio < HMA 55] end </div>
-            </div>
-    </section>
-
-    <!-- SECTION 4 -->
-    <section>
-        <h2>4. Gestión de Riesgo y Filtro</h2>
-
-        <div class="card">
-            <h3>🛡️ Modelo de Riesgo (Risk Engine)</h3>
-            <p>Cada operación, ya sea automática o manual, pasa por un chequeo de seguridad riguroso:</p>
-            <ul>
-                <li><strong>Posición Máxima:</strong> Nunca usa más del margen configurado (Ej: 10% de la cuenta).</li>
-                <li><strong>Stop Loss Dinámico:</strong> Calculado con ATR (Volatilidad).
-                    <ul>
-                        <li>Long SL = Precio - (2 * ATR)</li>
-                        <li>Short SL = Precio + (2 * ATR)</li>
-                    </ul>
-                </li>
-                <li><strong>Protección de Capital:</strong> Si el balance es menor a $5, la operación se aborta.</li>
-            </ul>
-        </div>
-
-        <div class="card">
-            <h3>🧠 Filtro Inteligente (Smart Cooldown)</h3>
-            <p>Evita el spam sin perder oportunidades críticas.</p>
-            <div class="diagram-container">
-                <div class="mermaid">
-                    graph TD
-                    Signal((Señal Detectada)) --> CheckTime{Pasaron 15 min?}
-                    CheckTime -->|Si| Alert[🔔 ENVIAR ALERTA]
-                    CheckTime -->|No| CheckFlip{Cambio de Direccion?}
-
-                    CheckFlip -->|Si| Alert
-                    CheckFlip -->|No| CheckVol{Movimiento > 0.8%?}
-
-                    CheckVol -->|Si| Alert
-                    CheckVol -->|No| Silence[🤫 Silencio (Ahorro)]
+                                subgraph ExitLogic
+                                Check{"Valid Trend?"}
+                                Check -->|Price < HMA| ExitL["Close Long"] Check -->|Price > HMA| ExitS["Close Short"]
+                                    end
+                        </div>
+                    </div>
                 </div>
             </div>
-            <p class="tag-info">Este sistema reduce el ruido en un 80% mientras mantiene la reactividad ante eventos de
-                alta volatilidad.</p>
-        </div>
-    </section>
+        </section>
 
-    <footer>
-        <p style="text-align:center; color:#718096; margin-top:50px;">
-            Generado por <strong>Antigravity AI</strong><br>
-            &copy; 2025
-        </p>
-    </footer>
+        <!-- 3. INDICADORES -->
+        <section>
+            <h2>3. Glosario de Indicadores</h2>
+            <div class="shiny-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Indicador</th>
+                            <th>Función en el Bot</th>
+                            <th>Configuración</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Bollinger Bands (BB)</strong></td>
+                            <td>Define la volatilidad. Rupturas de bandas indican inicio de tendencia o sobre-venta.
+                            </td>
+                            <td>Periodo: 20, Desviación: 2.0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Keltner Channels (KC)</strong></td>
+                            <td>Se usa junto a las BB. Si las BB entran dentro de los KC, hay un "Squeeze" (Compresión).
+                            </td>
+                            <td>Periodo: 20, Multiplicador: 1.5</td>
+                        </tr>
+                        <tr>
+                            <td><strong>RSI</strong></td>
+                            <td>Mide la fuerza. >50 es Alcista, <50 es Bajista. Evita entrar en falsos
+                                    rompimientos.</td>
+                            <td>Periodo: 14</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ADX</strong></td>
+                            <td>Mide la potencia de la tendencia (sin dirección). Solo operamos si ADX > 20 y subiendo.
+                            </td>
+                            <td>Periodo: 14</td>
+                        </tr>
+                        <tr>
+                            <td><strong>HMA (Hull Moving Avg)</strong></td>
+                            <td>Filtro de tendencia ultra-rápido. Define si el mercado es Bull/Bear y gatilla las
+                                salidas.</td>
+                            <td>Periodo: 55</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 4. GESTIÓN DE RIESGO -->
+        <section>
+            <h2>4. Gestión de Riesgo (Risk Engine)</h2>
+            <div class="shiny-card">
+                <p>La supervivencia es la prioridad #1. El motor de riesgo rechaza cualquier operación que viole estas
+                    reglas:</p>
+
+                <div class="metric-grid">
+                    <div class="metric-box">
+                        <div class="metric-title">Stop Loss Dinámico</div>
+                        <div class="metric-value">2x ATR</div>
+                        <p style="font-size:0.9em; color:var(--text-muted)">Se adapta a la volatilidad. Si el mercado
+                            está loco, el SL es más amplio pero la posición es más pequeña.</p>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-title">Riesgo por Trade</div>
+                        <div class="metric-value">2% Equity</div>
+                        <p style="font-size:0.9em; color:var(--text-muted)">Nunca arriesgas más del 2% de tu cuenta en
+                            una sola operación mala.</p>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-title">Margen Máximo</div>
+                        <div class="metric-value">Configurable</div>
+                        <p style="font-size:0.9em; color:var(--text-muted)">Límite duro de cuánto capital total se puede
+                            usar (ej. 10%).</p>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
+                    <code style="display:block; color: #4ade80;">
+                    Pos Size = (Cuenta Total * 0.02) / (Distancia al Stop Loss)
+                </code>
+                    <p style="font-size:0.85em; margin-top:5px; color:#94a3b8;">Esta fórmula garantiza que si toca el
+                        Stop Loss, pierdes exactamente el 2%, sin importar el apalancamiento.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. SMART FILTER -->
+        <section>
+            <h2>5. Filtro Dinámico (Anti-Spam)</h2>
+            <div class="shiny-card">
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        stateDiagram-v2
+                        [*] --> Analisis
+                        Analisis --> Detectado
+
+                        state "Validación de Filtro" as Validacion {
+                        state "Cooldown (15m)" as CD
+                        state "Flip de Señal" as Flip
+                        state "Volatilidad > 0.8%" as Vol
+                        }
+
+                        Detectado --> Validacion
+                        Validacion --> Enviar: Si cumple CUALQUIERA
+                        Validacion --> Ignorar: Si no cumple NINGUNA
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
 
 </body>
 

@@ -442,6 +442,31 @@ def handle_start(message):
     )
     bot.reply_to(message, msg, parse_mode='Markdown')
 
+def get_fear_and_greed_index():
+    """Fetch Fear and Greed Index from alternative.me"""
+    try:
+        url = "https://api.alternative.me/fng/"
+        resp = requests.get(url, timeout=5)
+        data = resp.json()
+        if 'data' in data and len(data['data']) > 0:
+            item = data['data'][0]
+            val = int(item['value'])
+            classification = item['value_classification']
+            
+            # Icon Logic
+            icon = "😐"
+            if val >= 75: icon = "🤑" # Extreme Greed
+            elif val >= 55: icon = "😏" # Greed
+            elif val <= 25: icon = "😱" # Extreme Fear
+            elif val <= 45: icon = "😨" # Fear
+            
+            return f"{icon} *{classification}* ({val}/100)"
+    except Exception as e:
+        print(f"F&G Error: {e}")
+    
+    return "N/A"
+
+@threaded_handler
 def handle_status(message):
     """Muestra estado de grupos y configuración (Fusionado con /config)"""
     chat_id = str(message.chat.id)
@@ -462,11 +487,15 @@ def handle_status(message):
         leverage = cfg['leverage']
         max_margin = cfg['max_capital_pct']
         spot_alloc = cfg.get('spot_allocation_pct', 0.20)
+    
+    # Get F&G
+    fg_index = get_fear_and_greed_index()
 
     # 1. System State
     status = "🕹️ *DASHBOARD CENTRAL*\n"
     status += "〰️〰️〰️〰️〰️〰️\n"
     status += f"🎮 *Modo:* `{mode}`\n"
+    status += f"🧠 *Sentiment:* {fg_index}\n"
     status += f"🔑 *API:* {'✅ Vinculada' if has_keys else '❌ Sin Vincular'}\n\n"
     
     status += "📡 *Radares Activos:*\n"
