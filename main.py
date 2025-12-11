@@ -33,7 +33,7 @@ if sys_proxy:
 
 # --- CONFIGURACIÓN DE ACTIVOS Y GRUPOS ---
 ASSET_GROUPS = {
-    'CRYPTO': ['BTCUSDT', 'ETHUSDT', 'XRPUSDT', 'SOLUSDT', 'SUIUSDT', 'ZECUSDT'],
+    'CRYPTO': ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'LTCUSDT', 'LINKUSDT', 'DOGEUSDT', 'AVAXUSDT', 'ZECUSDT', 'SUIUSDT'],
     'STOCKS': ['TSLA', 'NVDA', 'MSFT', 'AAPL', 'AMD'],
     'COMMODITY': ['GLD', 'USO'] # ETFs for Alpaca (Gold, Oil)
 }
@@ -42,10 +42,16 @@ ASSET_GROUPS = {
 TICKER_MAP = {
     'BTCUSDT': 'Bitcoin',
     'ETHUSDT': 'Ethereum',
-    'XRPUSDT': 'Ripple',
     'SOLUSDT': 'Solana',
-    'SUIUSDT': 'Sui',
+    'BNBUSDT': 'Binance Coin',
+    'XRPUSDT': 'Ripple',
+    'ADAUSDT': 'Cardano',
+    'LTCUSDT': 'Litecoin',
+    'LINKUSDT': 'Chainlink',
+    'DOGEUSDT': 'Dogecoin',
+    'AVAXUSDT': 'Avalanche',
     'ZECUSDT': 'Zcash',
+    'SUIUSDT': 'Sui',
     'TSLA': 'Tesla',
     'NVDA': 'NVIDIA',
     'MSFT': 'Microsoft',
@@ -516,7 +522,7 @@ def handle_trade_callback(call):
 
 def send_welcome(message):
     help_text = (
-        "🤖 *ANTIGRAVITY BOT v3.2 - CENTER*\n"
+        "🤖 *ANTIGRAVITY BOT v3.3 - QUANTUM*\n"
         "〰️〰️〰️〰️〰️〰️\n\n"
         "⚙️ *SISTEMA (ADMIN)*\n"
         "• /status - Ver estado, latencia y tendencias de mercado.\n"
@@ -537,10 +543,10 @@ def send_welcome(message):
         "• /closeall - PÁNICO (Cierra todo).\n\n"
         
         "🔧 *AJUSTES*\n"
-        "• /set_leverage <x> - Apalancamiento (Ej: 10).\n"
-        "• /set_margin <%> - Riesgo máx del capital (Ej: 0.1).\n"
-        "• /toggle_group <GRUPO> - Activar/Desactivar Crypto/Stocks.\n"
-        "• /reset_breaker - Reiniciar contador de pérdidas (Circuit Breaker)."
+        "• /setleverage <x> - Apalancamiento (Ej: 10).\n"
+        "• /setmargin <%> - Riesgo máx del capital (Ej: 0.1).\n"
+        "• /togglegroup <GRUPO> - Activar/Desactivar Crypto/Stocks.\n"
+        "• /resetpilot - Reiniciar contador de pérdidas (Circuit Breaker)."
     )
     try:
         bot.reply_to(message, help_text, parse_mode='Markdown')
@@ -579,7 +585,7 @@ def handle_risk(message):
         
         "4. *Circuit Breaker (Seguridad Extrema)* 🚨\n"
         "   • Si detecta **5 pérdidas consecutivas** en modo PILOT, se degrada a **COPILOT** automáticamente.\n"
-        "   • Evita rachas negativas automáticas ('Account Drain')."
+        "   • Use `/resetpilot` para reactivar tras una racha negativa."
     ).format(margin=margin)
     
     bot.reply_to(message, msg, parse_mode='Markdown')
@@ -612,7 +618,7 @@ def handle_start(message):
     
     # 4. Mensaje Final
     welcome = (
-        "🌌 *ANTIGRAVITY QUANTUM CORE v3.2*\n"
+        "🌌 *ANTIGRAVITY QUANTUM CORE v3.3*\n"
         "〰️〰️〰️〰️〰️〰️〰️\n\n"
         f"🔋 *Estado:* `{status_text}` {status_icon}\n"
         f"🎮 *Modo Operativo:* `{mode}`\n"
@@ -721,8 +727,8 @@ def handle_toggle_group(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {e}")
 
-@bot.message_handler(commands=['reset_breaker', 'resetbreaker'])
-def handle_reset_breaker(message):
+@bot.message_handler(commands=['resetpilot', 'reset_pilot'])
+def handle_reset_pilot(message):
     """Reinicia el contador del Circuit Breaker"""
     chat_id = str(message.chat.id)
     chat_id = str(message.chat.id)
@@ -1074,8 +1080,8 @@ def master_listener(message):
                 handle_manual_close(message)
             elif cmd_part == '/closeall':
                 handle_manual_closeall(message)
-            elif cmd_part in ['/reset_breaker', '/resetbreaker']:
-                 handle_reset_breaker(message)
+            elif cmd_part in ['/reset_pilot', '/resetpilot']:
+                 handle_reset_pilot(message)
             else:
                bot.reply_to(message, f"🤷‍♂️ Comando desconocido: {cmd_part}")
 
