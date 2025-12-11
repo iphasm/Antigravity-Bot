@@ -1046,15 +1046,20 @@ def start_bot():
     # Iniciar Polling
     if bot:
         print("📡 Iniciando Telegram Polling (Main Thread)...")
+        send_alert("✅ *SISTEMA DEPURADO Y LISTO (MANUAL DISPATCH)*\nEnvía /start o /help para probar.")
         try:
-            send_alert("✅ *SISTEMA DEPURADO Y LISTO (MANUAL DISPATCH)*\nEnvía /start o /help para probar.")
-            
             bot.delete_webhook(drop_pending_updates=True)
-            bot.infinity_polling(timeout=10, long_polling_timeout=10, allowed_updates=['message', 'callback_query'])
-            
         except Exception as e:
-            print(f"❌ Polling Error: {e}")
-            time.sleep(5)
+            print(f"Webhook cleanup error: {e}")
+            
+        while True:
+            try:
+                print("🔄 Starting Infinity Polling...")
+                bot.infinity_polling(timeout=10, long_polling_timeout=10, allowed_updates=['message', 'callback_query'])
+            except Exception as e:
+                print(f"❌ Polling Crash: {e}")
+                time.sleep(5)
+                print("⚠️ Restarting Polling...")
     else:
         print("❌ Bot no inicializado.")
         while True:
