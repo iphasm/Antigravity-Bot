@@ -31,7 +31,4 @@ def send_telegram_alert(message: str):
             response.raise_for_status() # Raise exception for 4xx/5xx errors
         except requests.exceptions.RequestException as e:
             print(f"Error sending Telegram alert to {chat_id}: {e}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error sending Telegram alert: {e}")
-    except Exception as e:
-        print(f"Unexpected error in notifier: {e}")
+

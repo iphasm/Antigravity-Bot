@@ -504,8 +504,8 @@ def handle_set_keys(message):
             bot.reply_to(message, "⚠️ Uso: `/set_keys <API_KEY> <API_SECRET>`\n(Te recomendamos borrar el mensaje después)", parse_mode='Markdown')
             return
             
-        key = args[1]
-        secret = args[2]
+        key = args[1].strip()
+        secret = args[2].strip()
         
         # Guardar en SessionManager
         session = session_manager.create_or_update_session(chat_id, key, secret)

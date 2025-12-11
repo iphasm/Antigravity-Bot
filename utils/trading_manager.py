@@ -239,8 +239,14 @@ class TradingSession:
             self.client.futures_change_leverage(symbol=symbol, leverage=leverage)
 
             # 2. Calculate Position Size
-            account = self.client.futures_account_balance()
-            usdt_balance = next((float(a['availableBalance']) for a in account if a['asset'] == 'USDT'), 0)
+            # Use futures_account for unified balance view
+            acc_info = self.client.futures_account()
+            
+            # AVAILABLE BALANCE (For Check)
+            available_balance = float(acc_info.get('availableBalance', 0))
+            
+            # TOTAL EQUITY (For Sizing) - Use this so position size doesn't shrink with open trades
+            total_equity = float(acc_info.get('totalMarginBalance', 0))
             
             ticker = self.client.futures_symbol_ticker(symbol=symbol)
             current_price = float(ticker['price'])
@@ -253,7 +259,7 @@ class TradingSession:
                 sl_price = round(current_price - sl_dist, price_precision)
                 
                 # Rule: Risk Amount = 2% of Equity
-                risk_amount = usdt_balance * 0.02 
+                risk_amount = total_equity * 0.02 
                 
                 raw_quantity = risk_amount / sl_dist
                 
@@ -266,14 +272,14 @@ class TradingSession:
                 notional = raw_quantity * current_price
                 margin_req = notional / leverage
                 
-                if margin_req > (usdt_balance * max_capital_pct):
-                     raw_quantity = (usdt_balance * max_capital_pct * leverage) / current_price
+                if margin_req > (total_equity * max_capital_pct):
+                     raw_quantity = (total_equity * max_capital_pct * leverage) / current_price
                 
                 tp1_price = round(current_price + (1.5 * sl_dist), price_precision)
                 
             else:
                 # --- FALLBACK (FIXED %) ---
-                margin_assignment = usdt_balance * max_capital_pct
+                margin_assignment = total_equity * max_capital_pct
                 raw_quantity = (margin_assignment * leverage) / current_price
                 sl_price = round(current_price * (1 - stop_loss_pct), price_precision)
                 tp1_price = round(current_price * (1 + (stop_loss_pct * 3)), price_precision) 
@@ -374,8 +380,13 @@ class TradingSession:
             self.client.futures_change_leverage(symbol=symbol, leverage=leverage)
 
             # 2. Calculate Size & Params
-            account = self.client.futures_account_balance()
-            usdt_balance = next((float(a['availableBalance']) for a in account if a['asset'] == 'USDT'), 0)
+            acc_info = self.client.futures_account()
+            
+            # AVAILABLE BALANCE (For Check)
+            available_balance = float(acc_info.get('availableBalance', 0))
+            
+            # TOTAL EQUITY (For Sizing)
+            total_equity = float(acc_info.get('totalMarginBalance', 0))
             
             ticker = self.client.futures_symbol_ticker(symbol=symbol)
             current_price = float(ticker['price'])
@@ -386,7 +397,7 @@ class TradingSession:
                 sl_dist = 2.0 * atr
                 sl_price = round(current_price + sl_dist, price_precision) # Short SL is above
                 
-                risk_amount = usdt_balance * 0.02
+                risk_amount = total_equity * 0.02
                 raw_quantity = risk_amount / sl_dist
                 
                 # Check Min Notional
@@ -397,13 +408,13 @@ class TradingSession:
                 notional = raw_quantity * current_price
                 margin_req = notional / leverage
                 
-                if margin_req > (usdt_balance * max_capital_pct):
-                     raw_quantity = (usdt_balance * max_capital_pct * leverage) / current_price
+                if margin_req > (total_equity * max_capital_pct):
+                     raw_quantity = (total_equity * max_capital_pct * leverage) / current_price
                 
                 tp1_price = round(current_price - (1.5 * sl_dist), price_precision) # Short TP is below
                 
             else:
-                margin_assignment = usdt_balance * max_capital_pct
+                margin_assignment = total_equity * max_capital_pct
                 raw_quantity = (margin_assignment * leverage) / current_price
                 sl_price = round(current_price * (1 + stop_loss_pct), price_precision)
                 tp1_price = round(current_price * (1 - (stop_loss_pct * 3)), price_precision)
