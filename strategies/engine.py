@@ -123,7 +123,7 @@ class StrategyEngine:
         adx_rising = curr['adx'] > prev['adx']
         adx_strong = curr['adx'] > 20
         
-        # Lógica de Entrada
+        # Lógica de Entrada (LONG)
         if breakout_up and trend_bullish and momentum_bullish and adx_rising:
             if recent_squeeze:
                 fut_signal = "BUY"
@@ -131,17 +131,47 @@ class StrategyEngine:
             elif adx_strong:
                 fut_signal = "BUY"
                 fut_reason = "🌊 **TREND VELOCITY**: Continuación de tendencia fuerte."
+
+        # Lógica de Entrada (SHORT)
+        # Inverse logic: Breakout Down, Price < HMA, RSI < 50
+        breakout_down = (curr['close'] < curr['bb_lower'])
+        momentum_bearish = (curr['rsi'] < 50)
+        trend_bearish = (curr['close'] < curr['hma_55'])
         
-        # Lógica de Salida (Close Long)
+        if breakout_down and trend_bearish and momentum_bearish and adx_rising:
+             # Prioritizes Shorts if we are not already in Long logic (which we aren't if fut_signal is WAIT)
+             if fut_signal == "WAIT":
+                if recent_squeeze:
+                    fut_signal = "SHORT"
+                    fut_reason = "🔻 **SQUEEZE SHORT**: Ruptura bajista tras compresión."
+                elif adx_strong:
+                    fut_signal = "SHORT"
+                    fut_reason = "📉 **BEARISH VELOCITY**: Tendencia bajista fuerte."
+        
+        # Lógica de Salida (Close Long / Close Short)
         adx_collapse = (prev['adx'] > 30 and curr['adx'] < 25)
-        trend_loss = (curr['close'] < curr['hma_55'])
+        trend_loss_bull = (curr['close'] < curr['hma_55'])
+        trend_loss_bear = (curr['close'] > curr['hma_55'])
         
-        if trend_loss:
-            fut_signal = "CLOSE_LONG"
+        # Determine Exit based on assumed state (Caller handles state, here we return generic close signals depending on chart violation)
+        # Actually, best practice is to return specific "CLOSE_LONG" or "CLOSE_SHORT" if we detect that specific violation.
+        # But since we don't know the state here, we can flag both? 
+        # Better approach: Return distinct signals. The Loop checks state.
+        
+        if trend_loss_bull:
+            # Crucial for Longs to close
+            if fut_signal == "WAIT": fut_signal = "CLOSE_LONG"
             fut_reason = "📉 **TENDENCIA ROTA**: Precio bajo HMA 55."
+            
+        elif trend_loss_bear:
+            # Crucial for Shorts to close
+            if fut_signal == "WAIT": fut_signal = "CLOSE_SHORT"
+            fut_reason = "📈 **RECUPERACIÓN**: Precio sobre HMA 55."
+            
         elif adx_collapse:
-             fut_signal = "CLOSE_LONG"
-             fut_reason = "exhaustion **ADX**: Pérdida de fuerza."
+             # Valid for both
+             if fut_signal == "WAIT": fut_signal = "EXIT_ALL" # Generic Exit
+             fut_reason = "exhaustion **ADX**: Pérdida de fuerza (Side)."
 
         # --- MÉTRICAS FINALES ---
         final_metrics = {

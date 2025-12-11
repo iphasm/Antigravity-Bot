@@ -853,10 +853,11 @@ def handle_trade_callback(call):
         
         if action == 'BUY' and side == 'LONG':
             # Need ATR? Ideally passed in data, but limited space. Re-calc or pass 'None' (Fallback).
-            # For simplicity, we re-calc or just use fallback.
-            # Let's try to pass current price or something? No, just run execute.
             success, msg = session.execute_long_position(symbol)
             
+        elif action == 'BUY' and side == 'SHORT':
+            success, msg = session.execute_short_position(symbol)
+
         elif action == 'BUY' and side == 'SPOT':
             success, msg = session.execute_spot_buy(symbol)
             
@@ -1057,62 +1058,106 @@ def run_trading_loop():
                         session_chats = set(s.chat_id for s in all_sessions)
                         
                         # 1. PROCESS SESSIONS (Watcher/Copilot/Pilot)
-                        if fut_sig == 'BUY' or (fut_sig == 'CLOSE_LONG' and curr_state == 'LONG'):
-                            
-                            # Update State (Once per signal, but actions depend on user)
-                            if fut_sig == 'BUY': pos_state[asset] = 'LONG'
-                            if fut_sig == 'CLOSE_LONG': pos_state[asset] = 'NEUTRAL'
+                        
+                        # Determine Action based on Signal + State
+                        action_needed = None
+                        target_side = None
+                        
+                        if fut_sig == 'BUY' and curr_state == 'NEUTRAL':
+                            action_needed = 'OPEN_LONG'
+                            pos_state[asset] = 'LONG'
                             last_alert_times[asset] = current_time
+                            
+                        elif fut_sig == 'SHORT' and curr_state == 'NEUTRAL':
+                            action_needed = 'OPEN_SHORT'
+                            pos_state[asset] = 'SHORT'
+                            last_alert_times[asset] = current_time
+                            
+                        elif fut_sig == 'CLOSE_LONG' and curr_state == 'LONG':
+                            action_needed = 'CLOSE'
+                            target_side = 'LONG'
+                            pos_state[asset] = 'NEUTRAL'
 
-                            msg_text = ""
-                            if fut_sig == 'BUY':
-                                msg_text = (
-                                    f"🚀 *SEÑAL FUTUROS: {asset}*\n"
-                                    f"Estrategia: Squeeze & Velocity\n"
-                                    f"Precio: ${m['close']:,.2f}\n"
-                                    f"Razón: {res['reason_futures']}\n"
-                                    f"ADX: {m['adx']:.1f} | Squeeze: {'ON' if m['squeeze_on'] else 'OFF'}"
-                                )
-                            else:
-                                msg_text = (
-                                    f"📉 *SALIDA FUTUROS: {asset}*\n"
-                                    f"Razón: {res['reason_futures']}"
-                                )
+                        elif fut_sig == 'CLOSE_SHORT' and curr_state == 'SHORT':
+                            action_needed = 'CLOSE'
+                            target_side = 'SHORT'
+                            pos_state[asset] = 'NEUTRAL'
+                            
+                        elif fut_sig == 'EXIT_ALL' and curr_state != 'NEUTRAL':
+                            action_needed = 'CLOSE'
+                            target_side = curr_state # Close whatever is open
+                            pos_state[asset] = 'NEUTRAL'
+                        
+                        if not action_needed:
+                            continue # Nothing to do
 
-                            for session in all_sessions:
-                                mode = session.mode
-                                cid = session.chat_id
-                                
-                                try:
-                                    if mode == 'PILOT':
-                                        # AUTO EXECUTE
-                                        if fut_sig == 'BUY':
-                                            ok, res_msg = session.execute_long_position(asset, atr=m['atr'])
-                                            bot.send_message(cid, f"🤖 *PILOT ACTION*\n{res_msg}", parse_mode='Markdown')
-                                        elif fut_sig == 'CLOSE_LONG':
-                                            ok, res_msg = session.execute_close_position(asset)
-                                            bot.send_message(cid, f"🤖 *PILOT ACTION*\n{res_msg}", parse_mode='Markdown')
-                                            
-                                    elif mode == 'COPILOT':
-                                        # INTERACTIVE BUTTONS
-                                        markup = InlineKeyboardMarkup()
-                                        if fut_sig == 'BUY':
-                                            markup.add(
-                                                InlineKeyboardButton("✅ Entrar LONG", callback_data=f"BUY|{asset}|LONG"),
-                                                InlineKeyboardButton("❌ Ignorar", callback_data=f"IGNORE|{asset}|LONG")
-                                            )
-                                        elif fut_sig == 'CLOSE_LONG':
-                                            markup.add(
-                                                InlineKeyboardButton("✅ Cerrar Ahora", callback_data=f"CLOSE|{asset}|LONG"),
-                                                InlineKeyboardButton("❌ Mantener", callback_data=f"IGNORE|{asset}|LONG")
-                                            )
-                                        bot.send_message(cid, msg_text, reply_markup=markup, parse_mode='Markdown')
+                        # Prepare Message
+                        msg_text = ""
+                        if action_needed == 'OPEN_LONG':
+                            msg_text = (
+                                f"🚀 *SEÑAL LONG: {asset}*\n"
+                                f"Estrategia: Squeeze & Velocity\n"
+                                f"Precio: ${m['close']:,.2f}\n"
+                                f"Razón: {res['reason_futures']}\n"
+                                f"ADX: {m['adx']:.1f}"
+                            )
+                        elif action_needed == 'OPEN_SHORT':
+                            msg_text = (
+                                f"📉 *SEÑAL SHORT: {asset}*\n"
+                                f"Estrategia: Bearish Breakout\n"
+                                f"Precio: ${m['close']:,.2f}\n"
+                                f"Razón: {res['reason_futures']}\n"
+                                f"ADX: {m['adx']:.1f}"
+                            )
+                        elif action_needed == 'CLOSE':
+                            msg_text = (
+                                f"🏁 *SALIDA FUTUROS ({target_side}): {asset}*\n"
+                                f"Razón: {res['reason_futures']}"
+                            )
+
+                        # Dispatch
+                        for session in all_sessions:
+                            mode = session.mode
+                            cid = session.chat_id
+                            
+                            try:
+                                if mode == 'PILOT':
+                                    # AUTO EXECUTE
+                                    if action_needed == 'OPEN_LONG':
+                                        ok, res_msg = session.execute_long_position(asset, atr=m['atr'])
+                                    elif action_needed == 'OPEN_SHORT':
+                                        ok, res_msg = session.execute_short_position(asset, atr=m['atr'])
+                                    else: # CLOSE
+                                        ok, res_msg = session.execute_close_position(asset)
                                         
-                                    else: # WATCHER (Default)
-                                        bot.send_message(cid, msg_text, parse_mode='Markdown')
+                                    bot.send_message(cid, f"🤖 *PILOT ACTION*\n{res_msg}", parse_mode='Markdown')
                                         
-                                except Exception as e:
-                                    print(f"Error dispatching to {cid}: {e}")
+                                elif mode == 'COPILOT':
+                                    # INTERACTIVE BUTTONS
+                                    markup = InlineKeyboardMarkup()
+                                    if action_needed == 'OPEN_LONG':
+                                        markup.add(
+                                            InlineKeyboardButton("✅ Entrar LONG", callback_data=f"BUY|{asset}|LONG"),
+                                            InlineKeyboardButton("❌ Ignorar", callback_data=f"IGNORE|{asset}|LONG")
+                                        )
+                                    elif action_needed == 'OPEN_SHORT':
+                                        markup.add(
+                                            InlineKeyboardButton("✅ Entrar SHORT", callback_data=f"BUY|{asset}|SHORT"),
+                                            InlineKeyboardButton("❌ Ignorar", callback_data=f"IGNORE|{asset}|SHORT")
+                                        )
+                                    else: # CLOSE
+                                        markup.add(
+                                            InlineKeyboardButton("✅ Cerrar Ahora", callback_data=f"CLOSE|{asset}|ANY"),
+                                            InlineKeyboardButton("❌ Mantener", callback_data=f"IGNORE|{asset}|ANY")
+                                        )
+                                    bot.send_message(cid, msg_text, reply_markup=markup, parse_mode='Markdown')
+                                    
+                                else: # WATCHER (Default)
+                                    bot.send_message(cid, msg_text, parse_mode='Markdown')
+                                    
+                            except Exception as e:
+                                print(f"Error dispatching to {cid}: {e}")
+
 
                             # 2. PROCESS ENV CHATS (Watcher Only)
                             for cid in env_chats:
