@@ -563,6 +563,37 @@ class PersonalityManager:
             'TRADE_CLOSE': "💰 **¡TOMA YA: {asset}!** ({side})\n¡Cerrada! A la saca. ¡Qué buena hostia!",
             'PILOT_ACTION': "🇪🇸 *METIENDO CAÑA*\n{msg}",
             'CB_TRIGGER': "😡 **¡ME CAGO EN SUS MUERTOS!**\n\n5 seguidas palmando. Paro ya que me estoy calentando."
+        },
+        
+        'WICK': {
+            'NAME': "✏️ John Wick",
+            'WELCOME': (
+                "✏️ **BABA YAGA**\n"
+                "Continental Hotel Services\n"
+                "〰️〰️〰️〰️〰️〰️〰️\n\n"
+                "🔋 *Status:* `{status_text}` {status_icon}\n"
+                "🎮 *Mode:* `{mode}`\n"
+                "🔐 *Access:* `{auth}`\n\n"
+                "*La gente sigue preguntando si he vuelto... y realmente no tenía una respuesta. Pero ahora, sí... PIENSO QUE HE VUELTO.*"
+            ),
+            'PILOT_ON': (
+                "✏️ **MODO PILOT: EXCOMMUNICADO**\n\n"
+                "No soy exactamente el hombre del saco. Soy el que envías a matar al puto hombre del saco. Con un lápiz.\n\n"
+                "⚠️ **Advertencia:** *Consequences.*"
+            ),
+            'COPILOT_ON': "🤝 **Copilot**: Tú quieres una guerra, o quieres darle una oportunidad? Yo te cubro.",
+            'WATCHER_ON': "👀 **Watcher**: Buscando. Esperando. Sin ruido.",
+            'STATUS_HEADER': "✏️ **MARKER STATUS**",
+            'WALLET_HEADER': "🥇 **GOLD COINS**",
+            'STATUS_FOOTER': "\n*Be seeing you.*",
+            'RISK_MSG': "🛡️ **SUIT UP**\nSL: `{sl_fixed}`. Kevlar táctico. Ninguna bala pasa.",
+            'STRATEGY_MSG': "✏️ **FOCUS, COMMITMENT, SHEER WILL**\n\nUn hombre de foco:\n1. **Headshot**: Entradas de precisión quirúrgica (Sniper).\n2. **Double Tap**: Confirmación de ruptura antes de disparar.\n3. **The Pencil**: Scalping minimalista y letal.",
+            'ABOUT_MSG': "✏️ **BABA YAGA**\n\nEra un hombre asociado, de voluntad sólida. Este bot no opera por suerte. Opera por pura voluntad.",
+            'TRADE_LONG': "🔫 **TARGET ACQUIRED: {asset}**\nEstá en la mira. Disparando.\nPrecio: ${price:,.2f}",
+            'TRADE_SHORT': "📉 **TAKEDOWN: {asset}**\nTermínalo.\nPrecio: ${price:,.2f}",
+            'TRADE_CLOSE': "✝️ **AMEN: {asset}** ({side})\nRequiescat in pace.",
+            'PILOT_ACTION': "✏️ *WICK TACTIC*\n{msg}",
+            'CB_TRIGGER': "🩸 **BLEEDING OUT**\n\nNecesito un médico (5 fallos). Pausa en el Continental."
         }
     }
 
