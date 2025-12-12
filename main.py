@@ -661,20 +661,6 @@ def handle_start(message):
     mode = "WATCHER"
     auth = "🔒 Sin Credenciales"
     
-    if session:
-        cfg = session.get_configuration()
-        mode = cfg.get('mode', 'WATCHER')
-        if session.client:
-            auth = "🔑 Binance Vinculado"
-    
-    # Get Personality
-    session = session_manager.get_session(chat_id)
-    p_key = session.config.get('personality', 'NEXUS')
-
-    # 4. Mensaje Final Dinámico (Updated for Button UI)
-    welcome = personality_manager.get_message(
-        p_key, 'WELCOME',
-        status_text=status_text,
         status_icon=status_icon,
         mode=mode,
         auth=auth
@@ -1036,7 +1022,7 @@ def handle_wallet(message):
         pnl_icon = "🟢" if fut_pnl >= 0 else "🔴"
         
         # Get Personality Header
-        p_key = session.config.get('personality', 'NEXUS')
+        p_key = session.config.get('personality', 'STANDARD_ES')
         wallet_header = personality_manager.get_message(p_key, 'WALLET_HEADER')
 
         msg = (
@@ -1430,14 +1416,17 @@ def handle_personality(message):
     cid = message.chat.id
     
     markup = InlineKeyboardMarkup(row_width=2)
-    markup.add(
-        InlineKeyboardButton("🦅 Nexus-6", callback_data="CFG|PERS|NEXUS"),
-        InlineKeyboardButton("🌴 Kurtz", callback_data="CFG|PERS|KURTZ"),
-        InlineKeyboardButton("🎰 Gambler", callback_data="CFG|PERS|GAMBLER"),
-        InlineKeyboardButton("🇩🇴 Dominicano", callback_data="CFG|PERS|DOMINICAN"),
-        InlineKeyboardButton("🇪🇸 Español", callback_data="CFG|PERS|SPANISH"),
-        InlineKeyboardButton("😐 Estándar", callback_data="CFG|PERS|STANDARD")
-    )
+    buttons = []
+    
+    # Sort: Standards first (ES, EN, FR), then Vader, then others alphabetically? 
+    # Or just iterate as defined in PROFILES (Python 3.7+ keeps insertion order, and we ordered them in file)
+    
+    for key, profile in personality_manager.PROFILES.items():
+        name = profile['NAME']
+        btn = InlineKeyboardButton(name, callback_data=f"CFG|PERS|{key}")
+        buttons.append(btn)
+        
+    markup.add(*buttons)
     
     bot.reply_to(message, "🧠 **SELECCIONA PERSONALIDAD**\n¿Quién quieres que opere por ti hoy?", reply_markup=markup, parse_mode='Markdown')
 

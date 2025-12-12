@@ -18,22 +18,6 @@ class TradingSession:
     def __init__(self, chat_id, api_key, api_secret, config=None):
         self.chat_id = chat_id
         self.api_key = api_key
-        self.api_secret = api_secret
-        self.client = None
-        self.cb_ignore_until = 0 # Timestamp (ms) to ignore previous losses
-        
-        # Default Config
-        self.config = {
-            "leverage": 5,
-            "max_capital_pct": 0.10,
-            "stop_loss_pct": 0.02,
-            "spot_allocation_pct": 0.20, # Default 20% for Spot Buys
-            "personality": "NEXUS" # Default: Nexus-6
-        }
-        
-        if config:
-            self.config.update(config)
-
         # Automation Mode: WATCHER (Default), COPILOT, PILOT
         self.mode = self.config.get('mode', 'WATCHER')
 
