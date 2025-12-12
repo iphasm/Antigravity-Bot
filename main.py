@@ -16,15 +16,16 @@ from data.fetcher import get_market_data
 from antigravity_quantum.config import ENABLED_STRATEGIES, DISABLED_ASSETS
 
 from strategies.engine import StrategyEngine
-from strategies.engine import StrategyEngine
-from utils.trading_manager import SessionManager
 from utils.trading_manager import SessionManager
 from utils.personalities import PersonalityManager
-from utils.system_state_manager import SystemStateManager # NEW
+from utils.system_state_manager import SystemStateManager 
+from utils.ai_analyst import QuantumAnalyst # NEW AI
 
 # Personality & State Engine
+# Personality & State Engine
 personality_manager = PersonalityManager()
-state_manager = SystemStateManager() # NEW Initialize State Manager
+state_manager = SystemStateManager()
+quantum_analyst = QuantumAnalyst() # NEW Init AI
 
 # Cargar variables de entorno
 load_dotenv()
@@ -988,6 +989,8 @@ def master_listener(message):
             # Manual Spot
             elif cmd_part == '/buy':
                 handle_manual_buy_spot(message)
+            elif cmd_part == '/analyze':
+                handle_analyze(message)
             
             # --- AUTOMATION FLOW ---
             elif cmd_part == '/watcher':
@@ -1811,6 +1814,68 @@ def handle_strategies(message):
     )
     
     bot.send_message(cid, info_text, reply_markup=markup, parse_mode='Markdown')
+
+# --- AI ANALYST COMMAND ---
+@threaded_handler
+@bot.message_handler(commands=['analyze'])
+def handle_analyze(message):
+    """
+    Analyzes a given asset using OpenAI.
+    Usage: /analyze BTC
+    """
+    args = message.text.split()
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    
+    if len(args) < 2:
+        bot.reply_to(message, "⚠️ Uso: `/analyze <SYMBOL>` (ej. `/analyze BTC`)", parse_mode='Markdown')
+        return
+
+    symbol_input = args[1].upper()
+    symbol = resolve_symbol(symbol_input)
+    
+    # 1. Notify User
+    bot.send_chat_action(chat_id, 'typing')
+    wait_msg = bot.reply_to(message, f"🧠 **Analizando {symbol}...**\n_Conectando con la Matrix..._", parse_mode='Markdown')
+    
+    try:
+        # 2. Get Real Data
+        df = get_market_data(symbol, "15m", limit=100)
+        
+        if df is None or df.empty:
+            bot.edit_message_text("❌ Error obteniendo datos de mercado.", chat_id, wait_msg.message_id)
+            return
+
+        # 3. Calculate Basic Indicators locally for context
+        current_price = df['close'].iloc[-1]
+        # Simple RSI (Approx)
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs)).iloc[-1]
+        
+        # Vol
+        vol_mean = df['volume'].rolling(20).mean().iloc[-1]
+        vol_curr = df['volume'].iloc[-1]
+        vol_str = "HIGH" if vol_curr > vol_mean * 1.5 else "NORMAL"
+
+        indicators = {
+            "price": current_price,
+            "rsi": round(rsi, 2),
+            "vol": vol_str,
+            "gap": "N/A"
+        }
+        
+        # 4. Ask AI
+        personality = session.config.get('personality', 'Standard') if session else "Standard"
+        analysis = quantum_analyst.analyze_signal(symbol, "15m", indicators, personality=personality)
+        
+        # 5. Respond
+        bot.edit_message_text(f"🧠 **ANÁLISIS DE {symbol}**\n\n{analysis}", chat_id, wait_msg.message_id, parse_mode='Markdown')
+        
+    except Exception as e:
+        bot.edit_message_text(f"❌ Error cerebral: {e}", chat_id, wait_msg.message_id)
 
 def start_bot():
     global session_manager, quantum_bridge
