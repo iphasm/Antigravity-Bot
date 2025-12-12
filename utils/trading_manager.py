@@ -17,6 +17,7 @@ class TradingSession:
     """
     def __init__(self, chat_id, api_key, api_secret, config=None):
         self.chat_id = chat_id
+        self.api_key = api_key
         self.api_secret = api_secret
         self.cb_ignore_until = 0 # Timestamp (ms) to ignore previous losses
         
