@@ -689,6 +689,7 @@ def handle_set_interval(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {e}")
 
+@threaded_handler
 @bot.message_handler(commands=['set_keys', 'setkeys'])
 def handle_set_keys(message):
     """Configura API Keys: /set_keys <KEY> <SECRET>"""
@@ -1393,6 +1394,7 @@ def send_welcome(message):
     except Exception as e:
         bot.reply_to(message, help_text.replace('*', '').replace('`', ''))
 
+@threaded_handler
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     """ Bienvenida Profesional con Efecto de Carga """
@@ -1694,6 +1696,7 @@ def handle_query(call):
         except: pass
 
 # --- PERSONALITY COMMAND ---
+@threaded_handler
 @bot.message_handler(commands=['personality', 'pers'])
 def handle_personality(message):
     cid = message.chat.id
