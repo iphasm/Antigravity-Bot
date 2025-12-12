@@ -12,6 +12,9 @@ from dotenv import load_dotenv
 # Importar módulos internos
 from data.fetcher import get_market_data
 
+# Global Config Imports (Fix for Handlers)
+from antigravity_quantum.config import ENABLED_STRATEGIES, DISABLED_ASSETS
+
 from strategies.engine import StrategyEngine
 from strategies.engine import StrategyEngine
 from utils.trading_manager import SessionManager
@@ -1472,7 +1475,8 @@ def handle_start(message):
     bot.edit_message_text(welcome, chat_id=chat_id, message_id=msg_load.message_id, parse_mode='Markdown', reply_markup=markup)
 
 # --- CALLBACK QUERY HANDLER ---
-@threaded_handler
+# Remove @threaded_handler to ensure synchronous dispatch and proper error catching.
+# The dispatched functions handle their own threading if needed.
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     chat_id = str(call.message.chat.id)
@@ -1551,8 +1555,8 @@ def handle_query(call):
                 bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=markup)
             return
 
-        # --- ASSET TOGGLES ---
         if cmd == "TOGGLEASSET":
+            # DISABLED_ASSETS is now imported globally at top
             asset = parts[1]
             if asset in DISABLED_ASSETS:
                 DISABLED_ASSETS.remove(asset)
@@ -1581,6 +1585,7 @@ def handle_query(call):
     except Exception as e:
         print(f"Callback Error: {e}")
         try:
+            bot.answer_callback_query(call.id, "❌ Error")
             bot.send_message(chat_id, f"❌ Error interno en botón: {str(e)}", parse_mode='Markdown')
         except:
             pass
@@ -1707,7 +1712,6 @@ def start_bot():
     saved_state = state_manager.load_state()
     
     # 1. Update Strategies
-    from antigravity_quantum.config import ENABLED_STRATEGIES
     if "enabled_strategies" in saved_state:
         ENABLED_STRATEGIES.update(saved_state["enabled_strategies"])
         
@@ -1716,7 +1720,7 @@ def start_bot():
         GROUP_CONFIG.update(saved_state["group_config"])
         
     # 3. Update Disabled Assets
-    from antigravity_quantum.config import DISABLED_ASSETS
+    # 3. Update Disabled Assets
     if "disabled_assets" in saved_state:
         # Clear and update set
         DISABLED_ASSETS.clear()
