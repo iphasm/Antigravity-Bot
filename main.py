@@ -69,8 +69,8 @@ TICKER_MAP = {
     'MSFT': 'Microsoft',
     'AAPL': 'Apple',
     'AMD': 'AMD',
-    'GLD': 'Gold (ETF)',
-    'USO': 'Oil (ETF)'
+    'GLD': 'ORO',
+    'USO': 'PETROLEO'
 }
 
 # Estado de los Grupos (Switch ON/OFF)
