@@ -15,12 +15,7 @@ class PersonalityManager:
                 "🎮 *Modo:* `{mode}`\n"
                 "🔐 *Acceso:* `{auth}`\n\n"
                 "*He visto cosas que vosotros no creeríais... naves de ataque en llamas más allá de Orión y velas verdes imprimiendo máximos históricos.*\n\n"
-                "Estoy listo para operar. ¿Cuál es tu orden?\n\n"
-                "👇 *INTERFAZ NEURAL*\n"
-                "• `/status` - Test Voight-Kampff\n"
-                "• `/pilot` - Toma el control\n"
-                "• `/risk` - Protocolos de Supervivencia\n"
-                "• `/personality` - Reajuste Psicológico"
+                "Estoy listo para operar. ¿Cuál es tu orden?"
             ),
             'PILOT_ON': "🦅 **PILOT ENGAGED**\n\n*I'm in charge now. I'll trade for you.*\nNo te preocupes. Mis reflejos son diez veces más rápidos que los tuyos.\n\n*Advertencia: La vida es riesgo.*",
             'COPILOT_ON': "🤝 **COPILOT ACTIVATED**\n\nCaminaremos juntos por este desierto. Yo identificaré las señales entre el ruido; tú tomarás la decisión final.\n*No hagas nada sin mi aprobación.*",
@@ -52,11 +47,7 @@ class PersonalityManager:
                 "〰️〰️〰️〰️〰️〰️〰️\n\n"
                 "🔋 *Estado:* `{status_text}` {status_icon}\n"
                 "🎮 *Modo:* `{mode}`\n\n"
-                "*He visto horrores... horrores que tú has visto. Pero no tienes derecho a juzgarme. Soy necesario.*\n\n"
-                "👇 *ÓRDENES*\n"
-                "• `/status` - Informe de Situación\n"
-                "• `/pilot` - Exterminate\n"
-                "• `/personality` - Cambiar Psicología"
+                "*He visto horrores... horrores que tú has visto. Pero no tienes derecho a juzgarme. Soy necesario.*"
             ),
             'PILOT_ON': "☠️ **MANDO ASUMIDO**\n\nVoy a tomar el control. Debes hacerte amigo del horror. El horror moral y el terror son tus amigos.\n*Exterminate all the rational trades.*",
             'COPILOT_ON': "🗡️ **COPILOT: MISIÓN CONJUNTA**\n\nTe enseñaré a ser un soldado. Yo marco el objetivo, tú aprietas el gatillo.\n*Nunca salgas del barco.*",
@@ -87,11 +78,7 @@ class PersonalityManager:
                 "〰️〰️〰️〰️〰️〰️〰️\n\n"
                 "🔋 *Vibe Check:* `{status_text}` {status_icon}\n"
                 "🎮 *Modo:* `{mode}`\n\n"
-                "*Vendí el microondas de mi abuela para meterle un x100 a esta vaina.🚀*\n\n"
-                "👇 **MENÚ DEGEN**\n"
-                "• `/status` - ¿Cómo va el portafolio?\n"
-                "• `/pilot` - FULL SEND (YOLO)\n"
-                "• `/personality` - Change Vibe"
+                "*Vendí el microondas de mi abuela para meterle un x100 a esta vaina.🚀*"
             ),
             'PILOT_ON': "🎰 **FULL SEND ACTIVATED**\n\nAgárrame el cubata. Voy a meterle con todo.\nSi sale bien nos retiramos, si sale mal... borramos la app.\n*YOLO!*",
             'COPILOT_ON': "🤝 **COPILOT BRO**\n\nVamos a medias. Yo te paso el call, tú le das al botón de comprar.\n*To the moon!*",
@@ -122,11 +109,7 @@ class PersonalityManager:
                 "〰️〰️〰️〰️〰️〰️〰️\n\n"
                 "🔋 *Sistema:* `{status_text}` {status_icon}\n"
                 "🎮 *Modo:* `{mode}`\n\n"
-                "*Ya prendí los motores. Trae la hookah que vamo' a hacer dinero hoy. El que tenga miedo a morir que no nazca.*\n\n"
-                "👇 **LA PARA**\n"
-                "• `/status` - ¿Klk con los cheles?\n"
-                "• `/pilot` - Dale banda (Auto)\n"
-                "• `/personality` - Cambiar el flow"
+                "*Ya prendí los motores. Trae la hookah que vamo' a hacer dinero hoy. El que tenga miedo a morir que no nazca.*"
             ),
             'PILOT_ON': "😎 **SUELTA EL VOLANTE**\n\nDale banda a eso manito, que yo manejo ahora.\nTú tranqui, destapa una fría, que yo te resuelvo esta vuelta. Tamo rulay.",
             'COPILOT_ON': "🤜🤛 **COPILOT KLK**\n\nYo te doy la luz y tú ejecutalas. Trabajando en equipo como debe ser.",
@@ -157,11 +140,7 @@ class PersonalityManager:
                 "〰️〰️〰️〰️〰️〰️〰️\n\n"
                 "🔋 *Sistema:* `{status_text}` {status_icon}\n"
                 "🎮 *Modo:* `{mode}`\n\n"
-                "*Hostia, qué volatilidad hay hoy... ¡Yo flipo! Vamos a sacar pasta o me cago en mis muertos.*\n\n"
-                "👇 **DALE CAÑA**\n"
-                "• `/status` - ¿Cómo vamos, tío?\n"
-                "• `/pilot` - ¡Yo piloto!\n"
-                "• `/personality` - Cambiar el rollo"
+                "*Hostia, qué volatilidad hay hoy... ¡Yo flipo! Vamos a sacar pasta o me cago en mis muertos.*"
             ),
             'PILOT_ON': "🏎️ **¡APARTA QUE VOY!**\n\n¡Fuaaa chaval! ¡Sueltame el volante que yo piloto! \nEsto va a ser la hostia. Confía en mí, tío.",
             'COPILOT_ON': "🤜🤛 **COPILOT AL HABLA**\n\nVale tío, vamos a medias. Yo te digo lo que veo y tú decides si entramos. ¡Sin agobios!",
@@ -192,11 +171,7 @@ class PersonalityManager:
                 "〰️〰️〰️〰️〰️〰️〰️\n\n"
                 "🔋 *Estado:* `{status_text}` {status_icon}\n"
                 "🎮 *Modo:* `{mode}`\n\n"
-                "Listo para operar. Seleccione una opción del menú.\n\n"
-                "👇 **MENÚ PRINCIPAL**\n"
-                "• `/status` - Ver estado y configuración\n"
-                "• `/pilot` - Activar modo automático\n"
-                "• `/personality` - Configuración de perfil"
+                "Listo para operar. Seleccione una opción del menú."
             ),
             'PILOT_ON': "✅ **Modo Pilot Activado**\n\nEl bot operará automáticamente según las señales detectadas.\nSupervisión recomendada.",
             'COPILOT_ON': "✅ **Modo Copilot Activado**\n\nEl bot enviará propuestas de trading para su aprobación manual.",
