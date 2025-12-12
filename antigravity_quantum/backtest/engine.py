@@ -11,7 +11,7 @@ class BacktestEngine:
         self.days = days
         self.market_stream = MarketStream()
         
-    async def run(self):
+    async def run(self, strategy_override: IStrategy = None):
         print(f"\n🚀 STARTING BACKTEST SIMULATION (Pilot Mode)")
         print(f"🎯 Assets: {self.assets}")
         print(f"💰 Initial Capital: ${self.initial_capital:,.2f} per asset")
@@ -35,7 +35,10 @@ class BacktestEngine:
             position = None # {'entry': float, 'size': float}
             trades_log = []
             
-            strategy = StrategyFactory.get_strategy(asset.replace('USDT',''), volatility_index=0.5)
+            if strategy_override:
+                strategy = strategy_override
+            else:
+                strategy = StrategyFactory.get_strategy(asset.replace('USDT',''), volatility_index=0.5)
             print(f"⚙️  Strategy: {strategy.name}")
             
             # 3. Iterate (Skip warmup)

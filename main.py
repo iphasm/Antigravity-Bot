@@ -456,98 +456,8 @@ def handle_get_mode(message):
     mode = session.config.get('mode', 'WATCHER')
     bot.reply_to(message, f"🎮 Modo Actual: **{mode}**", parse_mode='Markdown')
 
-# --- CALLBACK HANDLER (COPILOT) ---
-@bot.callback_query_handler(func=lambda call: True)
-@threaded_handler
-def handle_trade_callback(call):
-    print(f"🔘 Callback received: {call.data}")
-    chat_id = str(call.message.chat.id)
-    session = session_manager.get_session(chat_id)
-    
-    if not session:
-        bot.answer_callback_query(call.id, "⚠️ Sesión no encontrada.")
-        return
 
-    try:
-        # Data format: ACTION|SYMBOL|SIDE (e.g., BUY|BTCUSDT|LONG)
-        data = call.data.split('|')
-        action = data[0]
-        
-        if action == 'CMD':
-            # Command Routing from Buttons
-            cmd = data[1]
-            # bot.answer_callback_query(call.id, f"Ejecutando {cmd}...")
-            
-            # Dispatch
-            if cmd == '/status': handle_status(call.message)
-            elif cmd == '/wallet': handle_wallet(call.message)
-            elif cmd == '/pilot': handle_mode_switch(call.message, 'PILOT')
-            elif cmd == '/copilot': handle_mode_switch(call.message, 'COPILOT')
-            elif cmd == '/watcher': handle_mode_switch(call.message, 'WATCHER')
-            elif cmd == '/personality': handle_personality(call.message)
-            elif cmd == '/config': handle_status(call.message) # Reuse status for config
-            elif cmd == '/help': send_welcome(call.message)
-            return
 
-        elif action == 'CFG':
-            # Configuration Change
-            key = data[1]
-            val = data[2]
-            
-            if key == 'LEV':
-                session.update_config('leverage', int(val))
-                msg = f"⚖️ *Apalancamiento:* {val}x"
-            elif key == 'MARGIN':
-                session.update_config('max_capital_pct', float(val))
-                msg = f"💰 *Margen Máx:* {float(val)*100:.0f}%"
-            elif key == 'SPOT':
-                session.update_config('spot_allocation_pct', float(val))
-                msg = f"💎 *Asignación Spot:* {float(val)*100:.0f}%"
-            elif key == 'PERS':
-                session.update_config('personality', val)
-                # Get Name
-                try:
-                    p_name = personality_manager.get_profile(val).get('NAME', val)
-                except: p_name = val
-                msg = f"🧠 *Personalidad:* {p_name}\n_Configuración Neural Actualizada_"
-            
-            session_manager.save_sessions()
-            success = True
-            bot.edit_message_text(f"✅ Configuración Actualizada:\n{msg}", chat_id=chat_id, message_id=call.message.message_id, parse_mode='Markdown')
-            return # Exit after config update
-
-        elif action == 'IGNORE':
-            bot.edit_message_text(f"❌ Operación Rechazada par {data[1]}.", chat_id=chat_id, message_id=call.message.message_id)
-            return
-
-        symbol = data[1]
-        side = data[2]
-        
-        bot.answer_callback_query(call.id, f"⏳ Ejecutando {action} {symbol}...")
-        
-        success = False
-        msg = ""
-        
-        if action == 'BUY' and side == 'LONG':
-            # Need ATR? Ideally passed in data, but limited space. Re-calc or pass 'None' (Fallback).
-            success, msg = session.execute_long_position(symbol)
-            
-        elif action == 'BUY' and side == 'SHORT':
-            success, msg = session.execute_short_position(symbol)
-
-        elif action == 'BUY' and side == 'SPOT':
-            success, msg = session.execute_spot_buy(symbol)
-            
-        elif action == 'CLOSE':
-             success, msg = session.execute_close_position(symbol)
-             
-        # Update Message
-        new_text = f"{call.message.text}\n\n{'✅' if success else '❌'} **RESULTADO:**\n{msg}"
-        bot.edit_message_text(new_text, chat_id=chat_id, message_id=call.message.message_id, parse_mode='Markdown')
-        
-    except Exception as e:
-        print(f"Callback Error: {e}")
-        bot.answer_callback_query(call.id, "❌ Error procesando.")
 
 
 # --- RESTORED HANDLERS ---
@@ -1565,13 +1475,13 @@ def dispatch_quantum_signal(signal):
                             InlineKeyboardButton("✅ Entrar (Quantum)", callback_data=f"BUY|{asset}|LONG"),
                             InlineKeyboardButton("❌ Ignorar", callback_data=f"IGNORE|{asset}|LONG")
                         )
-                        bot.send_message(cid, msg_text, reply_markup=markup, parse_mode='Markdown')
                     elif action_needed == 'CLOSE':
                         markup.add(
                             InlineKeyboardButton("✅ Cerrar (Quantum)", callback_data=f"CLOSE|{asset}|ANY"),
                             InlineKeyboardButton("❌ Mantener", callback_data=f"IGNORE|{asset}|ANY")
                         )
-                        bot.send_message(cid, msg_text, reply_markup=markup, parse_mode='Markdown')
+                    bot.send_message(cid, msg_text, reply_markup=markup, parse_mode='Markdown')
+                    
                 else: # WATCHER
                      bot.send_message(cid, msg_text, parse_mode='Markdown')
                      
@@ -1595,6 +1505,35 @@ def handle_personality(message):
         
     markup.add(*buttons)
     bot.reply_to(message, "🧠 **SELECCIONA PERSONALIDAD**\n¿Quién quieres que opere por ti hoy?", reply_markup=markup, parse_mode='Markdown')
+
+# --- STRATEGY TOGGLE COMMAND ---
+from antigravity_quantum.config import ENABLED_STRATEGIES
+
+@bot.message_handler(commands=['strategies', 'contracts'])
+def handle_strategies(message):
+    cid = message.chat.id
+    
+    markup = InlineKeyboardMarkup()
+    
+    # 1. SCALPING TOGGLE
+    scalp_state = "✅ ACTIVADO" if ENABLED_STRATEGIES['SCALPING'] else "❌ DESACTIVADO"
+    markup.add(InlineKeyboardButton(f"⚡ Scalping: {scalp_state}", callback_data="TOGGLE|SCALPING"))
+    
+    # 2. GRID TOGGLE
+    grid_state = "✅ ACTIVADO" if ENABLED_STRATEGIES['GRID'] else "❌ DESACTIVADO"
+    markup.add(InlineKeyboardButton(f"🕸️ Grid: {grid_state}", callback_data="TOGGLE|GRID"))
+    
+    # Note: Mean Reversion is default, untoggleable for safety
+    
+    info_text = (
+        "⚙️ **CONFIGURACIÓN DE ESTRATEGIAS (QUANTUM)**\n\n"
+        "Controla qué motores están activos en el análisis de mercado:\n\n"
+        "⚡ **Scalping (High Vol)**: Opera rupturas en ZEC, SOL, SUI. (Alto Riesgo)\n"
+        "🕸️ **Grid (Accumulation)**: Opera rangos en ADA, ZEC. (Medio Riesgo)\n"
+        "📉 **Mean Reversion**: Activo por defecto en el resto. (Bajo Riesgo)"
+    )
+    
+    bot.send_message(cid, info_text, reply_markup=markup, parse_mode='Markdown')
 
 def start_bot():
     global session_manager, quantum_bridge
