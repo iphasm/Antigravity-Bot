@@ -469,41 +469,7 @@ def handle_get_mode(message):
 
 # --- RESTORED HANDLERS ---
 
-def send_welcome(message):
-    help_text = (
-        "🤖 *ANTIGRAVITY BOT v3.3 - QUANTUM*\n"
-        "〰️〰️〰️〰️〰️〰️\n\n"
-        "ℹ️ *INFO*\n"
-        "• /about - Sobre el sistema (Resumen).\n"
-        "• /strategy - Lógica de trading (Detalle).\n"
-        "• /risk - Gestión de riesgo activa.\n\n"
-        
-        "⚙️ *SISTEMA (ADMIN)*\n"
-        "• /status - Ver estado y latencia.\n"
-        "• /debug - Diagnóstico técnico avanzado.\n"
-        "• /config - Panel de configuración.\n\n"
-        
-        "🎮 *MODOS OPERATIVOS*\n"
-        "• /pilot - Modo Automático.\n"
-        "• /copilot - Modo Asistido.\n"
-        "• /watcher - Modo Vigilancia.\n\n"
-        
-        "🔫 *TRADING MANUAL*\n"
-        "• /buy <TICKER> - Compra Spot.\n"
-        "• /long <TICKER> - Abrir Long.\n"
-        "• /short <TICKER> - Abrir Short.\n"
-        "• /close <TICKER> - Cerrar.\n"
-        "• /closeall - PÁNICO.\n\n"
-        
-        "🔧 *AJUSTES*\n"
-        "• /personality - Cambiar la personalidad.\n"
-        "• /setleverage <x> - Apalancamiento.\n"
-        "• /togglegroup <GRUPO> - Filtros."
-    )
-    try:
-        bot.reply_to(message, help_text, parse_mode='Markdown')
-    except Exception as e:
-        bot.reply_to(message, help_text.replace('*', '').replace('`', ''))
+
 
 # ... (handle_risk, handle_strategy logic inserted below, handled in previous tool)
 
@@ -547,75 +513,7 @@ def handle_about(message):
     bot.reply_to(message, msg, parse_mode='Markdown')
 
 
-@threaded_handler
-@bot.message_handler(commands=['start'])
-def handle_start(message):
-    """ Bienvenida Profesional con Efecto de Carga """
-    # 1. Mensaje de carga inicial
-    msg_load = bot.reply_to(message, "🔄 _Despertando funciones cognitivas..._", parse_mode='Markdown')
-    
-    # Simular micro-check
-    time.sleep(0.5)
-    
-    # 2. Verificar estado
-    me = bot.get_me()
-    status_icon = "🟢" if me else "🔴"
-    status_text = "SISTEMA ONLINE" if me else "ERROR DE CONEXIÓN"
-    
-    chat_id = str(message.chat.id)
-    session = session_manager.get_session(chat_id)
-    
-    # 3. Datos de Sesión
-    mode = "WATCHER"
-    auth = "🔒 Sin Credenciales"
-    
-    if session:
-        cfg = session.get_configuration()
-        mode = cfg.get('mode', 'WATCHER')
-        if session.client:
-            auth = "🔑 Binance"
-        
-        # Check Alpaca
-        import os
-        if os.getenv('APCA_API_KEY_ID') or os.getenv('ALPACA_API_KEY'):
-            auth += " | 🦙 Alpaca"
-        
-        if auth == "🔑 Binance": auth += " (Solo Crypto)"
-    
-    # Get Personality
-    p_key = session.config.get('personality', 'STANDARD_ES')
 
-    # 4. Mensaje Final Dinámico (Updated for Button UI)
-    welcome = personality_manager.get_message(
-        p_key, 'WELCOME',
-        status_text=status_text,
-        status_icon=status_icon,
-        mode=mode,
-        auth=auth
-    )
-    
-    # Interactive Menu (Buttons)
-    markup = InlineKeyboardMarkup(row_width=2)
-    # Row 1: Status | Wallet
-    markup.add(
-        InlineKeyboardButton("📊 Estado", callback_data="CMD|/status"),
-        InlineKeyboardButton("💰 Cartera", callback_data="CMD|/wallet")
-    )
-    # Row 2: Modes
-    markup.add(
-        InlineKeyboardButton("🦅 Pilot", callback_data="CMD|/pilot"),
-        InlineKeyboardButton("🤝 Copilot", callback_data="CMD|/copilot"),
-        InlineKeyboardButton("👀 Watcher", callback_data="CMD|/watcher")
-    )
-    # Row 3: Config / Personality
-    markup.add(
-        InlineKeyboardButton("🧠 Persona", callback_data="CMD|/personality"),
-        InlineKeyboardButton("⚙️ Config", callback_data="CMD|/config")
-    )
-    # Row 4: Help
-    markup.add(InlineKeyboardButton("❓ Ayuda (Comandos)", callback_data="CMD|/help"))
-
-    bot.edit_message_text(welcome, chat_id=chat_id, message_id=msg_load.message_id, parse_mode='Markdown', reply_markup=markup)
 
 def get_fear_and_greed_index():
     """Fetch Fear and Greed Index from alternative.me"""
@@ -1565,6 +1463,7 @@ def handle_start(message):
     bot.edit_message_text(welcome, chat_id=chat_id, message_id=msg_load.message_id, parse_mode='Markdown', reply_markup=markup)
 
 # --- CALLBACK QUERY HANDLER ---
+@threaded_handler
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     chat_id = str(call.message.chat.id)
@@ -1676,10 +1575,17 @@ def handle_query(call):
         
         bot.answer_callback_query(call.id, f"🚀 Ejecutando {side} en {asset}...")
         
+        ok = False
+        msg = "Error desconocido"
+
         if side == "LONG":
             ok, msg = session.execute_long_position(asset, atr=0) 
         elif side == "SHORT":
             ok, msg = session.execute_short_position(asset, atr=0)
+        elif side == "SPOT":
+             ok, msg = session.execute_spot_buy(asset)
+        else:
+             msg = f"Tipo de orden desconocido: {side}"
             
         bot.send_message(chat_id, f"RESULTADO: {msg}", parse_mode='Markdown')
         
