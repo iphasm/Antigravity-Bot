@@ -1554,54 +1554,24 @@ def handle_query(call):
             return
 
         # --- GROUP TOGGLES ---
-@bot.message_handler(commands=['togglegroup', 'toggle'])
-def handle_toggle_group(message):
-    """
-    Selector Interactivo de Grupos
-    Uso: /toggle (Menu) o /toggle <GRUPO> (Directo)
-    """
-    try:
-        args = message.text.split()
-        chat_id = str(message.chat.id)
-        session = session_manager.get_session(chat_id)
-
-        # 1. DIRECT TOGGLE (Text Argument)
-        if len(args) > 1:
-            # Normalize user input
-            target_group = args[1].upper()
-            
-            # Map aliases if needed (e.g. STOCKS -> STOCK)
-            # For now, simplistic matching against GROUP_CONFIG keys
-            matched_key = None
-            for key in GROUP_CONFIG.keys():
-                if key.upper() == target_group:
-                    matched_key = key
-                    break
-            
-            if matched_key:
-                # Toggle
-                current_val = GROUP_CONFIG[matched_key]
-                GROUP_CONFIG[matched_key] = not current_val
-                
-                # Save
-                state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session)
-                
-                new_status = "✅ ACTIVADO" if GROUP_CONFIG[matched_key] else "❌ DESACTIVADO"
-                bot.reply_to(message, f"⚙️ *GRUPO {matched_key}:* {new_status}", parse_mode='Markdown')
-            else:
-                bot.reply_to(message, f"⚠️ Grupo '{target_group}' no encontrado.\nGrupos: {', '.join(GROUP_CONFIG.keys())}")
+        if cmd == "TOGGLEGRP":
+            try:
+                group = parts[1]
+                if group in GROUP_CONFIG:
+                    GROUP_CONFIG[group] = not GROUP_CONFIG[group]
+                    state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session) # SAVE
+                    bot.answer_callback_query(call.id, f"{group}: {'✅' if GROUP_CONFIG[group] else '❌'}")
+                    
+                    # Re-render
+                    markup = InlineKeyboardMarkup()
+                    for g, enabled in GROUP_CONFIG.items():
+                        state = "✅" if enabled else "❌"
+                        markup.add(InlineKeyboardButton(f"{state} {g}", callback_data=f"TOGGLEGRP|{g}"))
+                    bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=markup)
+            except Exception as e:
+                 print(f"Error in TOGGLEGRP: {e}")
+                 bot.answer_callback_query(call.id, "❌ Error al cambiar grupo.")
             return
-
-        # 2. INTERACTIVE MENU (No Args)
-        markup = InlineKeyboardMarkup()
-        for group, enabled in GROUP_CONFIG.items():
-            state = "✅" if enabled else "❌"
-            markup.add(InlineKeyboardButton(f"{state} {group}", callback_data=f"TOGGLEGRP|{group}"))
-            
-        bot.reply_to(message, "📡 **CONFIGURACIÓN DE RADARES**\nActiva/Desactiva grupos de mercado:\n(O usa `/toggle <NOMBRE>` para hacerlo rápido)", reply_markup=markup, parse_mode='Markdown')
-
-    except Exception as e:
-        bot.reply_to(message, f"❌ Error: {e}")
 
         if cmd == "TOGGLEASSET":
             try:
@@ -1724,6 +1694,55 @@ def handle_toggle_group(message):
         try:
             bot.answer_callback_query(call.id, "❌ Error Interno")
         except: pass
+
+@bot.message_handler(commands=['togglegroup', 'toggle'])
+def handle_toggle_group(message):
+    """
+    Selector Interactivo de Grupos
+    Uso: /toggle (Menu) o /toggle <GRUPO> (Directo)
+    """
+    try:
+        args = message.text.split()
+        chat_id = str(message.chat.id)
+        session = session_manager.get_session(chat_id)
+
+        # 1. DIRECT TOGGLE (Text Argument)
+        if len(args) > 1:
+            # Normalize user input
+            target_group = args[1].upper()
+            
+            # Map aliases if needed (e.g. STOCKS -> STOCK)
+            # For now, simplistic matching against GROUP_CONFIG keys
+            matched_key = None
+            for key in GROUP_CONFIG.keys():
+                if key.upper() == target_group:
+                    matched_key = key
+                    break
+            
+            if matched_key:
+                # Toggle
+                current_val = GROUP_CONFIG[matched_key]
+                GROUP_CONFIG[matched_key] = not current_val
+                
+                # Save
+                state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session)
+                
+                new_status = "✅ ACTIVADO" if GROUP_CONFIG[matched_key] else "❌ DESACTIVADO"
+                bot.reply_to(message, f"⚙️ *GRUPO {matched_key}:* {new_status}", parse_mode='Markdown')
+            else:
+                bot.reply_to(message, f"⚠️ Grupo '{target_group}' no encontrado.\nGrupos: {', '.join(GROUP_CONFIG.keys())}")
+            return
+
+        # 2. INTERACTIVE MENU (No Args)
+        markup = InlineKeyboardMarkup()
+        for group, enabled in GROUP_CONFIG.items():
+            state = "✅" if enabled else "❌"
+            markup.add(InlineKeyboardButton(f"{state} {group}", callback_data=f"TOGGLEGRP|{group}"))
+            
+        bot.reply_to(message, "📡 **CONFIGURACIÓN DE RADARES**\nActiva/Desactiva grupos de mercado:\n(O usa `/toggle <NOMBRE>` para hacerlo rápido)", reply_markup=markup, parse_mode='Markdown')
+
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error: {e}")
 
 # --- PERSONALITY COMMAND ---
 @threaded_handler
