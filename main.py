@@ -493,11 +493,12 @@ def handle_risk(message):
     )
     bot.reply_to(message, msg, parse_mode='Markdown')
 
+@bot.message_handler(commands=['strategy'])
 def handle_strategy(message):
     """Explicación de la estrategia según personalidad"""
     chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
-    p_key = session.config.get('personality', 'STANDARD_ES')
+    p_key = session.config.get('personality', 'STANDARD_ES') if session else 'STANDARD_ES'
     
     msg = personality_manager.get_message(p_key, 'STRATEGY_MSG')
     bot.reply_to(message, msg, parse_mode='Markdown')
@@ -507,7 +508,7 @@ def handle_about(message):
     """Resumen del bot según personalidad"""
     chat_id = str(message.chat.id)
     session = session_manager.get_session(chat_id)
-    p_key = session.config.get('personality', 'STANDARD_ES')
+    p_key = session.config.get('personality', 'STANDARD_ES') if session else 'STANDARD_ES'
     
     msg = personality_manager.get_message(p_key, 'ABOUT_MSG')
     bot.reply_to(message, msg, parse_mode='Markdown')
@@ -1478,105 +1479,111 @@ def handle_query(call):
     session = session_manager.get_session(chat_id)
     
     # Allow interaction even without session (for creating one or help)
-    # if not session:
-    #      bot.answer_callback_query(call.id, "⚠️ Sesión no encontrada.")
-    #      return
+    # Strict check removed, but ensure handlers are robust below.
 
 
     data = call.data
     parts = data.split('|')
     cmd = parts[0]
 
-    # --- MENU COMMANDS ---
-    if cmd == 'CMD':
-        # Command Routing from Buttons
-        sub_cmd = parts[1]
-        bot.answer_callback_query(call.id) # Silence loading state
+    try:
+        # --- MENU COMMANDS ---
+        if cmd == 'CMD':
+            # Command Routing from Buttons
+            sub_cmd = parts[1]
+            bot.answer_callback_query(call.id) # Silence loading state
+            
+            # Dispatch
+            if sub_cmd == '/status': handle_status(call.message)
+            elif sub_cmd == '/wallet': handle_wallet(call.message)
+            elif sub_cmd == '/pilot': handle_mode_switch(call.message, 'PILOT')
+            elif sub_cmd == '/copilot': handle_mode_switch(call.message, 'COPILOT')
+            elif sub_cmd == '/watcher': handle_mode_switch(call.message, 'WATCHER')
+            elif sub_cmd == '/personality': handle_personality(call.message)
+            elif sub_cmd == '/config': handle_config(call.message)
+            elif sub_cmd == '/help': send_welcome(call.message)
+            elif sub_cmd == '/about': handle_about(call.message)
+            elif sub_cmd == '/strategy': handle_strategy(call.message)
+            elif sub_cmd == '/price': handle_price(call.message)
+            elif sub_cmd == '/strategies': handle_strategies(call.message)
+            elif sub_cmd == '/contracts': handle_strategies(call.message)
+            elif sub_cmd == '/togglegroup': handle_toggle_group(call.message)
+            elif sub_cmd == '/assets': handle_assets(call.message)
+            return
         
-        # Dispatch
-        if sub_cmd == '/status': handle_status(call.message)
-        elif sub_cmd == '/wallet': handle_wallet(call.message)
-        elif sub_cmd == '/pilot': handle_mode_switch(call.message, 'PILOT')
-        elif sub_cmd == '/copilot': handle_mode_switch(call.message, 'COPILOT')
-        elif sub_cmd == '/watcher': handle_mode_switch(call.message, 'WATCHER')
-        elif sub_cmd == '/personality': handle_personality(call.message)
-        elif sub_cmd == '/config': handle_config(call.message)
-        elif sub_cmd == '/help': send_welcome(call.message)
-        elif sub_cmd == '/about': handle_about(call.message)
-        elif sub_cmd == '/strategy': handle_strategy(call.message)
-        elif sub_cmd == '/price': handle_price(call.message)
-        elif sub_cmd == '/strategies': handle_strategies(call.message)
-        elif sub_cmd == '/contracts': handle_strategies(call.message)
-        elif sub_cmd == '/togglegroup': handle_toggle_group(call.message)
-        elif sub_cmd == '/assets': handle_assets(call.message)
-        return
-    
-    # --- STRATEGY TOGGLES ---
-    if cmd == "TOGGLE":
-        strat = parts[1] # SCALPING or GRID
-        current = ENABLED_STRATEGIES.get(strat, False)
-        ENABLED_STRATEGIES[strat] = not current # Flip
-        state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session) # SAVE
-        
-        # Refresh Menu
-        new_state = "✅ ACTIVADO" if ENABLED_STRATEGIES[strat] else "❌ DESACTIVADO"
-        bot.answer_callback_query(call.id, f"{strat} ahora: {new_state}")
-        
-        # Re-render menu
-        markup = InlineKeyboardMarkup()
-        s_state = "✅ ACTIVADO" if ENABLED_STRATEGIES['SCALPING'] else "❌ DESACTIVADO"
-        g_state = "✅ ACTIVADO" if ENABLED_STRATEGIES['GRID'] else "❌ DESACTIVADO"
-        m_state = "✅ ACTIVADO" if ENABLED_STRATEGIES.get('MEAN_REVERSION', True) else "❌ DESACTIVADO"
-        
-        markup.add(InlineKeyboardButton(f"⚡ Scalping: {s_state}", callback_data="TOGGLE|SCALPING"))
-        markup.add(InlineKeyboardButton(f"🕸️ Grid: {g_state}", callback_data="TOGGLE|GRID"))
-        markup.add(InlineKeyboardButton(f"📉 Mean Rev: {m_state}", callback_data="TOGGLE|MEAN_REVERSION"))
-        
-        bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=markup)
-        return
-
-    # --- GROUP TOGGLES ---
-    if cmd == "TOGGLEGRP":
-        group = parts[1]
-        if group in GROUP_CONFIG:
-            GROUP_CONFIG[group] = not GROUP_CONFIG[group]
+        # --- STRATEGY TOGGLES ---
+        if cmd == "TOGGLE":
+            strat = parts[1] # SCALPING or GRID
+            current = ENABLED_STRATEGIES.get(strat, False)
+            ENABLED_STRATEGIES[strat] = not current # Flip
             state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session) # SAVE
-            bot.answer_callback_query(call.id, f"{group}: {'✅' if GROUP_CONFIG[group] else '❌'}")
             
-            # Re-render
+            # Refresh Menu
+            new_state = "✅ ACTIVADO" if ENABLED_STRATEGIES[strat] else "❌ DESACTIVADO"
+            bot.answer_callback_query(call.id, f"{strat} ahora: {new_state}")
+            
+            # Re-render menu
             markup = InlineKeyboardMarkup()
-            for g, enabled in GROUP_CONFIG.items():
-                state = "✅" if enabled else "❌"
-                markup.add(InlineKeyboardButton(f"{state} {g}", callback_data=f"TOGGLEGRP|{g}"))
-            bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=markup)
-        return
-
-    # --- ASSET TOGGLES ---
-    if cmd == "TOGGLEASSET":
-        asset = parts[1]
-        if asset in DISABLED_ASSETS:
-            DISABLED_ASSETS.remove(asset)
-            bot.answer_callback_query(call.id, f"✅ {asset} ACTIVADO")
-        else:
-            DISABLED_ASSETS.add(asset)
-            bot.answer_callback_query(call.id, f"❌ {asset} BLOQUEADO")
-        
-        state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session) # SAVE
-        
-        # Re-render (Limit 50 hack)
-        markup = InlineKeyboardMarkup(row_width=3)
-        buttons = []
-        active_assets = []
-        for g, enabled in GROUP_CONFIG.items():
-            if enabled: active_assets.extend(ASSET_GROUPS.get(g, []))
+            s_state = "✅ ACTIVADO" if ENABLED_STRATEGIES['SCALPING'] else "❌ DESACTIVADO"
+            g_state = "✅ ACTIVADO" if ENABLED_STRATEGIES['GRID'] else "❌ DESACTIVADO"
+            m_state = "✅ ACTIVADO" if ENABLED_STRATEGIES.get('MEAN_REVERSION', True) else "❌ DESACTIVADO"
             
-        for a in active_assets[:50]:
-            is_disabled = a in DISABLED_ASSETS
-            icon = "❌" if is_disabled else "✅"
-            buttons.append(InlineKeyboardButton(f"{icon} {a}", callback_data=f"TOGGLEASSET|{a}"))
-        markup.add(*buttons)
-        bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=markup)
-        return
+            markup.add(InlineKeyboardButton(f"⚡ Scalping: {s_state}", callback_data="TOGGLE|SCALPING"))
+            markup.add(InlineKeyboardButton(f"🕸️ Grid: {g_state}", callback_data="TOGGLE|GRID"))
+            markup.add(InlineKeyboardButton(f"📉 Mean Rev: {m_state}", callback_data="TOGGLE|MEAN_REVERSION"))
+            
+            bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=markup)
+            return
+
+        # --- GROUP TOGGLES ---
+        if cmd == "TOGGLEGRP":
+            group = parts[1]
+            if group in GROUP_CONFIG:
+                GROUP_CONFIG[group] = not GROUP_CONFIG[group]
+                state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session) # SAVE
+                bot.answer_callback_query(call.id, f"{group}: {'✅' if GROUP_CONFIG[group] else '❌'}")
+                
+                # Re-render
+                markup = InlineKeyboardMarkup()
+                for g, enabled in GROUP_CONFIG.items():
+                    state = "✅" if enabled else "❌"
+                    markup.add(InlineKeyboardButton(f"{state} {g}", callback_data=f"TOGGLEGRP|{g}"))
+                bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=markup)
+            return
+
+        # --- ASSET TOGGLES ---
+        if cmd == "TOGGLEASSET":
+            asset = parts[1]
+            if asset in DISABLED_ASSETS:
+                DISABLED_ASSETS.remove(asset)
+                bot.answer_callback_query(call.id, f"✅ {asset} ACTIVADO")
+            else:
+                DISABLED_ASSETS.add(asset)
+                bot.answer_callback_query(call.id, f"❌ {asset} BLOQUEADO")
+            
+            state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session) # SAVE
+            
+            # Re-render (Limit 50 hack)
+            markup = InlineKeyboardMarkup(row_width=3)
+            buttons = []
+            active_assets = []
+            for g, enabled in GROUP_CONFIG.items():
+                if enabled: active_assets.extend(ASSET_GROUPS.get(g, []))
+                
+            for a in active_assets[:50]:
+                is_disabled = a in DISABLED_ASSETS
+                icon = "❌" if is_disabled else "✅"
+                buttons.append(InlineKeyboardButton(f"{icon} {a}", callback_data=f"TOGGLEASSET|{a}"))
+            markup.add(*buttons)
+            bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=markup)
+            return
+
+    except Exception as e:
+        print(f"Callback Error: {e}")
+        try:
+            bot.send_message(chat_id, f"❌ Error interno en botón: {str(e)}", parse_mode='Markdown')
+        except:
+            pass
 
     # --- TRADING COMMANDS ---
     if cmd == "BUY":
