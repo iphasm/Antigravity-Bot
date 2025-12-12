@@ -3,250 +3,112 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Antigravity Bot v3.2 - Documentation</title>
-    <!-- Load Mermaid (Specific Stable Version) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            mermaid.initialize({
-                startOnLoad: true,
-                theme: 'dark',
-                securityLevel: 'loose',
-                flowchart: { curve: 'basis' }
-            });
-        });
-    </script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=JetBrains+Mono:wght@400;700&display=swap"
-        rel="stylesheet">
+    <title>Antigravity Quantum - Presentación Ejecutiva</title>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent: #38bdf8;
-            --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --success: #4ade80;
-            --danger: #f87171;
-            --warning: #fbbf24;
+        @page {
+            size: A4;
+            margin: 2cm;
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 40px;
-            line-height: 1.7;
-        }
-
-        .container {
-            max-width: 1200px;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            color: #1a1a1a;
+            line-height: 1.5;
+            max-width: 210mm;
             margin: 0 auto;
+            background: white;
         }
 
-        /* HEADER */
-        header {
+        .header {
             text-align: center;
-            margin-bottom: 60px;
-            padding: 40px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
         }
 
         h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             margin: 0;
-            background: var(--accent-gradient);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            color: #111;
         }
 
         .subtitle {
-            color: var(--text-muted);
-            font-size: 1.1em;
+            font-size: 1.2rem;
+            color: #555;
             margin-top: 10px;
         }
 
-        /* SECTIONS */
-        section {
-            margin-bottom: 60px;
-            animation: fadeIn 0.8s ease-in-out;
+        .section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
         }
 
         h2 {
-            font-size: 1.8em;
-            color: var(--text-main);
-            border-left: 4px solid #38bdf8;
-            padding-left: 15px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            color: #2563eb;
+            font-size: 1.5rem;
         }
 
-        .shiny-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            margin-bottom: 25px;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease;
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
         }
 
-        .shiny-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(56, 189, 248, 0.1);
+        .feature-item {
+            background: #f8fafc;
+            padding: 15px;
+            border-left: 4px solid #2563eb;
         }
 
-        /* DIAGRAMS */
-        .diagram-container {
-            background: #0b1120;
+        .feature-item h3 {
+            margin-top: 0;
+            font-size: 1.1rem;
+        }
+
+        .highlight-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
             padding: 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            justify-content: center;
-            margin: 25px 0;
-        }
-
-        /* Mermaid styling */
-        .label {
-            color: #fff !important;
-        }
-
-        .node circle,
-        .node rect,
-        .node polygon {
-            stroke: #38bdf8 !important;
-            stroke-width: 2px;
-        }
-
-        .edgePath .path {
-            stroke: #94a3b8 !important;
-            stroke-width: 2px;
-        }
-
-        .arrowheadPath {
-            fill: #94a3b8 !important;
-        }
-
-        /* TYPOGRAPHY & ELEMENTS */
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        li {
-            margin-bottom: 15px;
-            padding-left: 20px;
-            position: relative;
-        }
-
-        li::before {
-            content: "►";
-            color: var(--accent);
-            position: absolute;
-            left: 0;
-            font-size: 0.8em;
-        }
-
-        code {
-            font-family: 'JetBrains Mono', monospace;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 4px 8px;
-            border-radius: 4px;
-            color: #e2e8f0;
-            font-size: 0.9em;
+            border-radius: 8px;
+            margin: 20px 0;
         }
 
         table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin: 20px 0;
+            border-collapse: collapse;
+            margin-top: 15px;
         }
 
         th,
         td {
-            padding: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         th {
-            color: var(--accent);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85em;
+            background-color: #f1f5f9;
         }
 
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .metric-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .metric-box {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 20px;
-            border-radius: 12px;
-        }
-
-        .metric-title {
-            color: var(--text-muted);
-            font-size: 0.9em;
-            text-transform: uppercase;
-        }
-
-        .metric-value {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: var(--text-main);
-            margin-top: 5px;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
         }
 
         @media print {
             body {
                 background: white;
-                color: black;
             }
 
-            .shiny-card {
-                box-shadow: none;
-                border: 1px solid #ddd;
-                background: white;
-                color: black;
-            }
-
-            .diagram-container {
-                background: white;
-                border: 1px solid #ddd;
-            }
-
-            h1 {
-                -webkit-text-fill-color: black;
+            .no-print {
+                display: none;
             }
         }
     </style>
@@ -254,223 +116,99 @@
 
 <body>
 
-    <div class="container">
+    <div class="header">
+        <h1>ANTIGRAVITY QUANTUM 3.3</h1>
+        <div class="subtitle">Sistema de Trading Algorítmico Asíncrono Multi-Mercado</div>
+    </div>
 
-        <header>
-            <h1>Antigravity v3.2</h1>
-            <div class="subtitle">Arquitectura de Trading Algorítmico Híbrido</div>
-            <div style="margin-top:20px">
-                <span
-                    style="border: 1px solid var(--accent); padding: 5px 15px; border-radius: 20px; font-size: 0.9em; color: var(--accent);">
-                    Estado: ONLINE
-                </span>
+    <div class="section">
+        <h2>Visión General del Producto</h2>
+        <p><strong>Antigravity Quantum</strong> es una solución de trading automatizada diseñada para operar en los
+            mercados de criptomonedas y futuros con precisión institucional. A diferencia de los bots tradicionales
+            lineales, utiliza una arquitectura asíncrona basada en eventos (Quantum Engine) que le permite analizar
+            múltiples activos y estrategias simultáneamente sin latencia.</p>
+
+        <div class="highlight-box">
+            <strong>Filosofía Core:</strong> Preservación de Capital > Crecimiento Agresivo. El sistema prioriza la
+            gestión de riesgo dinámica sobre la búsqueda de beneficios rápidos.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Arquitectura Tecnológica</h2>
+        <div class="feature-grid">
+            <div class="feature-item">
+                <h3>🌩️ Quantum Engine</h3>
+                <p>Núcleo de procesamiento paralelo que evalúa condiciones de mercado (Micro y Macro) en tiempo real
+                    para 20+ activos.</p>
             </div>
-        </header>
-
-        <!-- 1. ARQUITECTURA -->
-        <section>
-            <h2>1. Arquitectura del Sistema</h2>
-            <div class="shiny-card">
-                <p>El bot funciona como un cerebro centralizado que conecta el análisis de mercado con la ejecución de
-                    órdenes. Su diseño es <strong>asíncrono</strong>.</p>
-
-                <div class="diagram-container">
-                    <div class="mermaid">
-                        graph LR
-                        subgraph Core["Lógica Principal"]
-                        Loop["Infinite Loop"] --> Scanner["Data Fetcher"]
-                        Scanner --> Engine["Strategy Engine"]
-                        Engine --> SmartFilter{"Smart Filter"}
-                        end
-
-                        subgraph UI["Interfaz Usuario"]
-                        Telegram --> Dispatcher
-                        Dispatcher --> SessionMgr["Session Manager"]
-                        end
-
-                        SmartFilter -->|Approved| Router{"Router"}
-                        Router -->|Pilot| Exec["Binance Auto"]
-                        Router -->|Copilot| Alert["Telegram Button"]
-                        Router -->|Watcher| Notify["Text Alert"]
-
-                        Dispatcher -.->|Control| Loop
-                    </div>
-                </div>
+            <div class="feature-item">
+                <h3>🧠 Personality Layer</h3>
+                <p>Capa de interacción humana que adapta el tono de comunicación (Profesional, Agresivo, Sarcástico)
+                    según la preferencia del usuario.</p>
             </div>
-        </section>
-
-        <!-- 2. ESTRATEGIA -->
-        <section>
-            <h2>2. Lógica de Estrategia</h2>
-
-            <div class="metric-grid">
-                <div class="shiny-card">
-                    <h3>A. SPOT: Mean Reversion</h3>
-                    <p>Compra en caídas sobrevendidas.</p>
-                    <div class="diagram-container">
-                        <div class="mermaid">
-                            graph TD
-                            Start(("Inicio")) --> BB{"Precio Menor a Banda Inf?"}
-                            BB -->|No| Next["Esperar"]
-                            BB -->|Si| RSI{"RSI Menor 40?"}
-                            RSI -->|Si| Stoch{"StochRSI Menor 20?"}
-                            Stoch -->|Si| Buy["💎 BUY SIGNAL"]
-                            Stoch -->|No| Next
-                        </div>
-                    </div>
-                </div>
-
-                <div class="shiny-card">
-                    <h3>B. FUTUROS: Squeeze & Velocity</h3>
-                    <p>Detecta explosiones de volatilidad.</p>
-                    <div class="diagram-container">
-                        <div class="mermaid">
-                            graph TD
-                            Start(("Scan")) --> Zone{"Estado?"}
-
-                            Zone -->|Neutral| EntryLogic["Lógica de Entrada"]
-                            Zone -->|In Position| ExitLogic["Lógica de Salida"]
-
-                            subgraph Entry["Entrada"]
-                            EntryLogic --> dir{"Dirección?"}
-                            dir -->|Long| L1{"Cl Mayor BB Upper?"}
-                            dir -->|Short| S1{"Cl Menor BB Lower?"}
-
-                            L1 -->|Yes| L2{"ADX Mayor 20?"}
-                            L2 -->|Rising| LONG["🚀 GO LONG"]
-
-                            S1 -->|Yes| S2{"ADX Mayor 20?"}
-                            S2 -->|Rising| SHORT["📉 GO SHORT"]
-                            end
-
-                            subgraph Exit["Salida"]
-                            ExitLogic --> Check{"Tendencia?"}
-                            Check -->|Price Menor HMA| ExitL["Close Long"]
-                            Check -->|Price Mayor HMA| ExitS["Close Short"]
-                            end
-                        </div>
-                    </div>
-                </div>
+            <div class="feature-item">
+                <h3>🛡️ Dynamic Risk Protocol</h3>
+                <p>Cálculo automático del tamaño de posición basado en ATR (Volatilidad) para asegurar que ninguna
+                    operación arriesgue más del % definido.</p>
             </div>
-        </section>
-
-        <!-- 3. INDICADORES -->
-        <section>
-            <h2>3. Glosario de Indicadores</h2>
-            <div class="shiny-card">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Indicador</th>
-                            <th>Función en el Bot</th>
-                            <th>Configuración</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Bollinger Bands (BB)</strong></td>
-                            <td>Define la volatilidad. Rupturas de bandas indican inicio de tendencia o sobre-venta.
-                            </td>
-                            <td>Periodo: 20, Desviación: 2.0</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Keltner Channels (KC)</strong></td>
-                            <td>Se usa junto a las BB. Si las BB entran dentro de los KC, hay un "Squeeze" (Compresión).
-                            </td>
-                            <td>Periodo: 20, Multiplicador: 1.5</td>
-                        </tr>
-                        <tr>
-                            <td><strong>RSI</strong></td>
-                            <td>Mide la fuerza. >50 es Alcista, <50 es Bajista.</td>
-                            <td>Periodo: 14</td>
-                        </tr>
-                        <tr>
-                            <td><strong>ADX</strong></td>
-                            <td>Mide la potencia de la tendencia (sin dirección).</td>
-                            <td>Periodo: 14</td>
-                        </tr>
-                        <tr>
-                            <td><strong>HMA (Hull Moving Avg)</strong></td>
-                            <td>Filtro de tendencia ultra-rápido.</td>
-                            <td>Periodo: 55</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="feature-item">
+                <h3>🎮 Interactive Interface</h3>
+                <p>Control total vía Telegram con botones interactivos para gestión de activos, grupos de mercado y
+                    configuración.</p>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <!-- 4. GESTIÓN DE RIESGO -->
-        <section>
-            <h2>4. Gestión de Riesgo (Risk Engine)</h2>
-            <div class="shiny-card">
-                <p>La supervivencia es la prioridad #1. El motor de riesgo rechaza cualquier operación que viole estas
-                    reglas:</p>
+    <div class="section">
+        <h2>Estrategias Integradas</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Estrategia</th>
+                    <th>Perfil de Riesgo</th>
+                    <th>Activos Objetivo</th>
+                    <th>Mecánica</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Mean Reversion</strong></td>
+                    <td>Bajo / Moderado</td>
+                    <td>BTC, ETH, Top 10</td>
+                    <td>RSI + Bandas de Bollinger. Busca correcciones en tendencias sobreextendidas.</td>
+                </tr>
+                <tr>
+                    <td><strong>Scalping Quantum</strong></td>
+                    <td>Alto (High Vol)</td>
+                    <td>ZEC, SOL, SUI</td>
+                    <td>Captura de impulsos rápidos de ruptura con toma de beneficios corta.</td>
+                </tr>
+                <tr>
+                    <td><strong>Grid Accumulation</strong></td>
+                    <td>Medio</td>
+                    <td>ADA, XRP</td>
+                    <td>Operación en rangos laterales para acumulación de beneficios constantes.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-                <div class="metric-grid">
-                    <div class="metric-box">
-                        <div class="metric-title">Stop Loss Dinámico</div>
-                        <div class="metric-value">2x ATR</div>
-                        <p style="font-size:0.9em; color:var(--text-muted)">Se adapta a la volatilidad. Si el mercado
-                            está loco, el SL es más amplio.</p>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-title">Riesgo por Trade</div>
-                        <div class="metric-value">2% Equity</div>
-                        <p style="font-size:0.9em; color:var(--text-muted)">Nunca arriesgas más del 2% de tu cuenta en
-                            una operación.</p>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-title">Margen Máximo</div>
-                        <div class="metric-value">Configurable</div>
-                        <p style="font-size:0.9em; color:var(--text-muted)">Límite duro de capital total usado (ej.
-                            10%).</p>
-                    </div>
-                    <div class="metric-box" style="border-color: #ef4444;">
-                        <div class="metric-title">Circuit Breaker 🚨</div>
-                        <div class="metric-value">5 Losses</div>
-                        <p style="font-size:0.9em; color:var(--text-muted)">Pilot -> Copilot automático tras 5 pérdidas
-                            consecutivas.</p>
-                    </div>
-                </div>
+    <div class="section">
+        <h2>Protocolos de Seguridad</h2>
+        <ul>
+            <li><strong>Filtro de Tendencia Macro (EMA 200):</strong> Bloquea operaciones LONG en mercados bajistas
+                confirmados.</li>
+            <li><strong>Circuit Breaker:</strong> Detiene automáticamente el motor tras 3 pérdidas consecutivas para
+                evitar "Overtrading" emocional o algorítmico.</li>
+            <li><strong>Lista Negra Dinámica:</strong> Capacidad de desactivar activos específicos instantáneamente ante
+                noticias fundamentales adversas.</li>
+        </ul>
+    </div>
 
-                <div style="margin-top:20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
-                    <code style="display:block; color: #4ade80;">
-                    Pos Size = (Cuenta Total * 0.02) / (Distancia al Stop Loss)
-                </code>
-                    <p style="font-size:0.85em; margin-top:5px; color:#94a3b8;">Garantiza una pérdida máxima del 2%.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 5. SMART FILTER -->
-        <section>
-            <h2>5. Filtro Dinámico (Anti-Spam)</h2>
-            <div class="shiny-card">
-                <div class="diagram-container">
-                    <div class="mermaid">
-                        graph TD
-                        Start(("Señal")) --> Analisis["Análisis"]
-                        Analisis --> Detected{"DETECTADA"}
-
-                        subgraph Filter["Validación Inteligente"]
-                        Detected --> Checks{"Checks"}
-                        Checks -->|OK| C1["Cooldown Mayor 15m?"]
-                        Checks -->|OK| C2["Flip de Señal?"]
-                        Checks -->|OK| C3["Movimiento Mayor 0.8%?"]
-                        end
-
-                        C1 -->|No| CheckFlip{"Check Flip"}
-                        CheckFlip -->|No| CheckVol{"Check Vol"}
-                        CheckVol -->|No| Ignorar["🤫 SILENCIO"]
-
-                        C1 -->|Si| Enviar["🔔 ENVIAR"]
-                        CheckFlip -->|Si| Enviar
-                        CheckVol -->|Si| Enviar
-                    </div>
-                </div>
-            </div>
-        </section>
-
+    <div class="footer">
+        <p>Desarrollado para la Excelencia Operativa • Antigravity Systems © 2025</p>
+        <p>Este documento es para fines informativos y no constituye asesoramiento financiero.</p>
     </div>
 
 </body>

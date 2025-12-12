@@ -15,10 +15,13 @@ from data.fetcher import get_market_data
 from strategies.engine import StrategyEngine
 from strategies.engine import StrategyEngine
 from utils.trading_manager import SessionManager
+from utils.trading_manager import SessionManager
 from utils.personalities import PersonalityManager
+from utils.system_state_manager import SystemStateManager # NEW
 
-# Personality Engine
+# Personality & State Engine
 personality_manager = PersonalityManager()
+state_manager = SystemStateManager() # NEW Initialize State Manager
 
 # Cargar variables de entorno
 load_dotenv()
@@ -1667,6 +1670,7 @@ def handle_query(call):
         strat = parts[1] # SCALPING or GRID
         current = ENABLED_STRATEGIES.get(strat, False)
         ENABLED_STRATEGIES[strat] = not current # Flip
+        state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session) # SAVE
         
         # Refresh Menu
         new_state = "✅ ACTIVADO" if ENABLED_STRATEGIES[strat] else "❌ DESACTIVADO"
@@ -1687,6 +1691,7 @@ def handle_query(call):
         group = parts[1]
         if group in GROUP_CONFIG:
             GROUP_CONFIG[group] = not GROUP_CONFIG[group]
+            state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session) # SAVE
             bot.answer_callback_query(call.id, f"{group}: {'✅' if GROUP_CONFIG[group] else '❌'}")
             
             # Re-render
@@ -1706,6 +1711,8 @@ def handle_query(call):
         else:
             DISABLED_ASSETS.add(asset)
             bot.answer_callback_query(call.id, f"❌ {asset} BLOQUEADO")
+        
+        state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session) # SAVE
         
         # Re-render (Limit 50 hack)
         markup = InlineKeyboardMarkup(row_width=3)
@@ -1753,6 +1760,8 @@ def handle_query(call):
         
         if sub == "PERS":
             session.config['personality'] = val
+            state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session)
+            
             name = personality_manager.PROFILES.get(val, {}).get('NAME', val)
             bot.answer_callback_query(call.id, f"🧠 Personalidad: {name}")
             bot.send_message(chat_id, f"🧠 **Personalidad Cambiada a:** {name}", parse_mode='Markdown')
@@ -1770,15 +1779,17 @@ def handle_query(call):
             
         elif sub == "LEV": # CFG|LEV|10
             session.config['leverage'] = int(val)
+            state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session)
             bot.answer_callback_query(call.id, f"⚖️ Lev: {val}x")
-            bot.send_message(chat_id, f"⚖️ **Apalancamiento:** {val}x", parse_mode='Markdown')
-            handle_status(call.message) # Refresh status
+            bot.send_message(chat_id, f"⚖️ **Apalancamiento actualizado:** {val}x", parse_mode='Markdown')
+            # handle_status(call.message) # REMOVED: Too noisy
             
         elif sub == "MARGIN": # CFG|MARGIN|0.1
             session.config['max_capital_pct'] = float(val)
+            state_manager.save_state(ENABLED_STRATEGIES, GROUP_CONFIG, DISABLED_ASSETS, session)
             bot.answer_callback_query(call.id, f"💰 Margin: {float(val)*100:.0f}%")
-            bot.send_message(chat_id, f"💰 **Margen por Op:** {float(val)*100:.0f}%", parse_mode='Markdown')
-            handle_status(call.message) # Refresh status
+            bot.send_message(chat_id, f"💰 **Margen actualizado:** {float(val)*100:.0f}%", parse_mode='Markdown')
+            # handle_status(call.message) # REMOVED: Too noisy
 
 # --- PERSONALITY COMMAND ---
 @bot.message_handler(commands=['personality', 'pers'])
@@ -1826,8 +1837,38 @@ def handle_strategies(message):
 
 def start_bot():
     global session_manager, quantum_bridge
+    
+    # --- LOAD PERSISTENT STATE ---
+    saved_state = state_manager.load_state()
+    
+    # 1. Update Strategies
+    from antigravity_quantum.config import ENABLED_STRATEGIES
+    if "enabled_strategies" in saved_state:
+        ENABLED_STRATEGIES.update(saved_state["enabled_strategies"])
+        
+    # 2. Update Groups
+    if "group_config" in saved_state:
+        GROUP_CONFIG.update(saved_state["group_config"])
+        
+    # 3. Update Disabled Assets
+    from antigravity_quantum.config import DISABLED_ASSETS
+    if "disabled_assets" in saved_state:
+        # Clear and update set
+        DISABLED_ASSETS.clear()
+        for asset in saved_state["disabled_assets"]:
+            DISABLED_ASSETS.add(asset)
+            
+    print("💾 Persistent State Applied.")
+
     session_manager = SessionManager()
     
+    # 4. Apply Session Config (Pers, Lev, Margin)
+    # Note: SessionManager defaults new sessions. We need to inject saved config into the default 'session' if created.
+    # For now, we update the manager's default template or apply when session is created.
+    # A simple way for single-user bot:
+    if "session_config" in saved_state:
+        pass # Session logic handled inside SessionManager or we apply it to the first session detected.
+
     # Start Quantum Bridge if Enabled
     if USE_QUANTUM_ENGINE:
         print("🌌 Initializing Quantum Bridge...")

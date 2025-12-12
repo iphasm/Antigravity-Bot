@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity - Quick Start Guide</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            padding-bottom: 40px;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            border-left: 4px solid var(--accent);
+            padding-left: 15px;
+            margin-top: 40px;
+            color: white;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .badge-safe {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .badge-warn {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        code {
+            background-color: #334155;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            color: #bae6fd;
+        }
+
+        .command-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .command-table th,
+        .command-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .command-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .interactive-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .interactive-card {
+            flex: 1;
+            min-width: 250px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .hero-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Antigravity Bot 3.3</h1>
+            <p class="hero-subtitle">Quantum Trading System • Interactive • Automated</p>
+        </header>
+
+        <div class="card">
+            <h2>🚀 Introducción</h2>
+            <p>Bienvenido al sistema <strong>Antigravity Quantum</strong>. Esta versión introduce interactividad total y
+                un motor asíncrono diseñado para operar estrategias complejas (Scalping, Grid, Reversión)
+                simultáneamente, manteniendo siempre tus preferencias de riesgo y personalidad.</p>
+        </div>
+
+        <h2>🎛️ Modos Operativos</h2>
+        <div class="card">
+            <h3>1. 🛡️ Modo Watcher (Por Defecto)</h3>
+            <p><span class="badge badge-safe">Sin Riesgo</span> Comando: <code>/watcher</code></p>
+            <p>El bot actúa como un radar pasivo. Analiza el mercado y te envía notificaciones detalladas con
+                oportunidades, pero <strong>nunca ejecuta operaciones ni muestra botones de compra</strong>.</p>
+        </div>
+
+        <div class="card">
+            <h3>2. 🤝 Modo Copilot (Recomendado)</h3>
+            <p><span class="badge badge-safe">Control Humano</span> Comando: <code>/copilot</code></p>
+            <p>El equilibrio perfecto. El motor Quantum detecta la señal y te presenta una propuesta con botones
+                interactivos:</p>
+            <ul>
+                <li>✅ <strong>ACEPTAR:</strong> Ejecuta la operación inmediatamente con los parámetros calculados.</li>
+                <li>❌ <strong>IGNORAR:</strong> Descarta la señal y limpia el chat.</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>3. 🤖 Modo Pilot (Automático)</h3>
+            <p><span class="badge badge-danger">High Risk</span> Comando: <code>/pilot</code></p>
+            <p>Autonomía total. El bot entra y sale del mercado según su programación. Incluye protecciones vitales:</p>
+            <ul>
+                <li><strong>Filtro Macro:</strong> No opera Longs contra tendencia bajista (EMA 200).</li>
+                <li><strong>Circuit Breaker:</strong> Se apaga tras 3 pérdidas consecutivas.</li>
+            </ul>
+        </div>
+
+        <h2>🎮 Panel de Control Interactivo</h2>
+        <p>Olvídate de memorizar comandos complejos. El nuevo sistema 3.3 se controla visualmente:</p>
+
+        <div class="interactive-section">
+            <div class="interactive-card">
+                <h3>⚙️ Configuración</h3>
+                <p>Comando: <code>/config</code></p>
+                <p>Accede al menú principal para ajustar:</p>
+                <ul>
+                    <li><strong>Apalancamiento:</strong> 5x, 10x, 20x.</li>
+                    <li><strong>Margen:</strong> % de capital por operación.</li>
+                    <li><strong>Personalidad:</strong> Cambia la "voz" del bot.</li>
+                </ul>
+            </div>
+            <div class="interactive-card">
+                <h3>🪙 Gestión de Activos</h3>
+                <p>Comando: <code>/assets</code></p>
+                <p>Un panel interactivo con todos tus activos:</p>
+                <ul>
+                    <li>✅ <strong>Activo:</strong> El bot lo monitorea.</li>
+                    <li>❌ <strong>Bloqueado:</strong> Ignorado por el motor.</li>
+                    <li><em>Toque para alternar instantáneamente.</em></li>
+                </ul>
+            </div>
+            <div class="interactive-card">
+                <h3>📡 Radares</h3>
+                <p>Comando: <code>/togglegroup</code></p>
+                <p>Enciende o apaga sectores enteros del mercado con un clic:</p>
+                <ul>
+                    <li>CRYPTO</li>
+                    <li>STOCKS</li>
+                    <li>COMMODITY</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>📜 Comandos Esenciales</h2>
+        <div class="card">
+            <table class="command-table">
+                <thead>
+                    <tr>
+                        <th>Comando</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>/start</code></td>
+                        <td>Abre el Menú Principal con accesos rápidos.</td>
+                    </tr>
+                    <tr>
+                        <td><code>/status</code></td>
+                        <td>Panel de solo lectura: Sentimiento, Conexión, PnL y Modo.</td>
+                    </tr>
+                    <tr>
+                        <td><code>/price</code></td>
+                        <td>Genera un reporte de precios agrupado por sectores.</td>
+                    </tr>
+                    <tr>
+                        <td><code>/wallet</code></td>
+                        <td>Muestra balance total (Spot + Futuros + Earn).</td>
+                    </tr>
+                    <tr>
+                        <td><code>/risk</code></td>
+                        <td>Explica el protocolo de riesgo activo (Stop Loss, % Capital).</td>
+                    </tr>
+                    <tr>
+                        <td><code>/strategies</code></td>
+                        <td>Muestra los motores activos (Scalping, Grid, Mean Rev).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>🛡️ Seguridad y Riesgo</h2>
+        <div class="card">
+            <p>El sistema prioriza la preservación de capital:</p>
+            <ul>
+                <li><strong>Stop Loss Dinámico:</strong> Basado en volatilidad (ATR) o porcentaje fijo (Cfg).</li>
+                <li><strong>Smart Sizing:</strong> Calcula el tamaño de posición para que una pérdida nunca exceda tu
+                    riesgo máximo permitido.</li>
+                <li><strong>Blacklist en Tiempo Real:</strong> Usa <code>/assets</code> para desactivar monedas
+                    volátiles o noticias peligrosas instantáneamente.</li>
+            </ul>
+        </div>
+    </div>
+
+</body>
+
+</html>
