@@ -1105,6 +1105,8 @@ def master_listener(message):
                 handle_manual_closeall(message)
             elif cmd_part in ['/reset_pilot', '/resetpilot']:
                  handle_reset_pilot(message)
+            elif cmd_part in ['/personality', '/pers']:
+                handle_personality(message)
             else:
                bot.reply_to(message, f"🤷‍♂️ Comando desconocido: {cmd_part}")
 
