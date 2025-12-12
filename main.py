@@ -1021,18 +1021,17 @@ def handle_wallet(message):
             bot.reply_to(message, "❌ Error obteniendo datos de cartera.")
             return
             
-        # Unpack
-        spot_bal = details['spot_balance']
-        spot_val = details['spot_value']
-        fut_bal = details['futures_balance']
-        fut_pnl = details['futures_unrealized_pnl']
-        fut_total= details['futures_total_equity']
+        # Unpack (Correct Keys)
+        spot_bal = details.get('spot_usdt', 0.0)
+        earn_bal = details.get('earn_usdt', 0.0)
+        spot_total = spot_bal + earn_bal # Total Spot Value
+        
+        fut_bal = details.get('futures_balance', 0.0)
+        fut_pnl = details.get('futures_pnl', 0.0)
+        fut_total= details.get('futures_total', 0.0)
         alpaca_native = details.get('alpaca_equity', 0.0)
         
-        # Earn Logic (Simplified)
-        earn_bal = 0.0 # TODO: Add Earn Fetcher if needed
-        
-        net_worth = spot_val + fut_total + earn_bal + alpaca_native
+        net_worth = spot_total + fut_total + alpaca_native
         
         pnl_icon = "🟢" if fut_pnl >= 0 else "🔴"
         
@@ -1043,8 +1042,8 @@ def handle_wallet(message):
         msg = (
             f"{wallet_header}\n"
             "〰️〰️〰️〰️〰️〰️\n"
-            f"🏦 *SPOT Balance:* `${spot_bal:,.2f}`\n"
-            f"💎 *SPOT Valor:* `${spot_val:,.2f}`\n"
+            f"🏦 *SPOT (USDT):* `${spot_bal:,.2f}`\n"
+            f"🐷 *EARN (Ahorros):* `${earn_bal:,.2f}`\n"
             "〰️〰️〰️〰️〰️〰️\n"
             f"🚀 *FUTUROS Balance:* `${fut_bal:,.2f}`\n"
             f"📊 *FUTUROS PnL:* {pnl_icon} `${fut_pnl:,.2f}`\n"
