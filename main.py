@@ -1651,6 +1651,8 @@ def handle_query(call):
         elif sub_cmd == '/price': handle_price(call.message)
         elif sub_cmd == '/strategies': handle_strategies(call.message)
         elif sub_cmd == '/contracts': handle_strategies(call.message)
+        elif sub_cmd == '/togglegroup': handle_toggle_group(call.message)
+        elif sub_cmd == '/assets': handle_assets(call.message)
         return
     
     # --- STRATEGY TOGGLES ---
@@ -1739,14 +1741,37 @@ def handle_query(call):
 
     elif cmd == "CFG":
         # Personality Config
-        sub = parts[1] # PERS
-        val = parts[2] # KEY (e.g. DOMINICAN)
+        sub = parts[1] # PERS, LEV_MENU, MARGIN_MENU, LEV, MARGIN
+        val = parts[2] if len(parts) > 2 else None
         
         if sub == "PERS":
             session.config['personality'] = val
             name = personality_manager.PROFILES.get(val, {}).get('NAME', val)
             bot.answer_callback_query(call.id, f"🧠 Personalidad: {name}")
             bot.send_message(chat_id, f"🧠 **Personalidad Cambiada a:** {name}", parse_mode='Markdown')
+            # AUTO START
+            time.sleep(0.5)
+            handle_start(call.message)
+            
+        elif sub == "LEV_MENU":
+            handle_set_leverage(call.message)
+            bot.answer_callback_query(call.id)
+            
+        elif sub == "MARGIN_MENU":
+            handle_set_margin(call.message)
+            bot.answer_callback_query(call.id)
+            
+        elif sub == "LEV": # CFG|LEV|10
+            session.config['leverage'] = int(val)
+            bot.answer_callback_query(call.id, f"⚖️ Lev: {val}x")
+            bot.send_message(chat_id, f"⚖️ **Apalancamiento:** {val}x", parse_mode='Markdown')
+            handle_status(call.message) # Refresh status
+            
+        elif sub == "MARGIN": # CFG|MARGIN|0.1
+            session.config['max_capital_pct'] = float(val)
+            bot.answer_callback_query(call.id, f"💰 Margin: {float(val)*100:.0f}%")
+            bot.send_message(chat_id, f"💰 **Margen por Op:** {float(val)*100:.0f}%", parse_mode='Markdown')
+            handle_status(call.message) # Refresh status
 
 # --- PERSONALITY COMMAND ---
 @bot.message_handler(commands=['personality', 'pers'])
