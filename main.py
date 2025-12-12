@@ -633,7 +633,14 @@ def handle_start(message):
         cfg = session.get_configuration()
         mode = cfg.get('mode', 'WATCHER')
         if session.client:
-            auth = "🔑 Binance Vinculado"
+            auth = "🔑 Binance"
+        
+        # Check Alpaca
+        import os
+        if os.getenv('APCA_API_KEY_ID'):
+            auth += " | 🦙 Alpaca"
+        
+        if auth == "🔑 Binance": auth += " (Solo Crypto)"
     
     # Get Personality
     p_key = session.config.get('personality', 'STANDARD_ES')
