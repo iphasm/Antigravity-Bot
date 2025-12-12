@@ -938,7 +938,7 @@ def master_listener(message):
             
             # 2. SYSTEM COMMANDS (Admin Only)
             # /toggle_group, /set_interval, /debug
-            SYSTEM_CMDS = ['/toggle_group', '/togglegroup', '/set_interval', '/setinterval', '/debug']
+            SYSTEM_CMDS = ['/toggle_group', '/togglegroup', '/toggle', '/set_interval', '/setinterval', '/debug']
             if cmd_part in SYSTEM_CMDS and role != 'ADMIN':
                 bot.reply_to(message, "🛡️ Comando reservado para Administrador.")
                 return
@@ -959,7 +959,7 @@ def master_listener(message):
                 handle_status(message)
             
             # System (System Only - Filtered above)
-            elif cmd_part in ['/toggle_group', '/togglegroup']:
+            elif cmd_part in ['/toggle_group', '/togglegroup', '/toggle']:
                 handle_toggle_group(message)
             elif cmd_part in ['/set_interval', '/setinterval', '/set_cooldown']:
                 handle_set_interval(message)
