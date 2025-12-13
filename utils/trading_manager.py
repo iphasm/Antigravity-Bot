@@ -379,12 +379,12 @@ class TradingSession:
 
                     success_msg = f"Long {symbol} (x{leverage})\nEntry: {entry_price}\nQty: {quantity}\nSL: {sl_price}\nTP1: {tp1_price} (50%)\nTP2: Trailing 1.5%"
 
-            # Optional: Add Macro Warning to message
-            if 'vol_risk' in locals() and vol_risk in ['HIGH', 'EXTREME']:
-                success_msg += f"\n⚠️ **MACRO SHIELD**: Apalancamiento limitado a 3x por Volatilidad ({vol_risk})."
+                # Optional: Add Macro Warning to message
+                if 'vol_risk' in locals() and vol_risk in ['HIGH', 'EXTREME']:
+                    success_msg += f"\n⚠️ **MACRO SHIELD**: Apalancamiento limitado a 3x por Volatilidad ({vol_risk})."
 
-            self._log_trade(symbol, entry_price, quantity, sl_price, tp1_price)
-            return True, success_msg
+                self._log_trade(symbol, entry_price, quantity, sl_price, tp1_price)
+                return True, success_msg
 
             except Exception as e:
                 # 🚨 CRITICAL: ROLLBACK (Close Position)
