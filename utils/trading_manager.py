@@ -653,6 +653,7 @@ class TradingSession:
             
             return True, f"✅ Closed {symbol} ({qty}). PnL pending update."
             
+        except Exception as e:
             return False, f"Error: {str(e)}"
 
     def execute_update_sltp(self, symbol, side, atr=None):
