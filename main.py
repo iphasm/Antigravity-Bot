@@ -807,18 +807,22 @@ def handle_debug(message):
         ai_status = "❌ Error"
             
     # Report Build
+    # Report Build
     report = (
-        "🕵️ *DIAGNÓSTICO INTEGRAL DEL SISTEMA*\\n"
-        "〰️〰️〰️〰️〰️〰️\\n"
-        f"🖥️ *Host:* {os_plat} | Python {py_ver}\\n"
-        f"🌍 *Network:* `{eff_ip}` ({loc}) {loc_check}\\n"
-        f"🔌 *Proxy:* {proxy_conf}\\n\\n"
+        "🕵️ *DIAGNÓSTICO QUANTUM*\n"
+        "━━━━━━━━━━━━━━━━━━━━━\n"
+        "💻 *INFRAESTRUCTURA*\n"
+        f"`Host :` {os_plat} / Py {py_ver}\n"
+        f"`Red  :` {eff_ip} ({loc}) {loc_check}\n"
+        f"`Proxy:` {proxy_conf}\n\n"
         
-        "🧠 *MÓDULOS COGNITIVOS*\\n"
-        f"📡 *Data Feed:* {pub_status}\\n"
-        f"⚙️ *Strategy Engine:* {strat_status}\\n"
-        f"🤖 *AI Analyst:* {ai_status}\\n"
-        f"🔑 *API Keys:* {has_key}/{has_sec}"
+        "🧠 *COGNICIÓN*\n"
+        f"`Feed :` {pub_status}\n"
+        f"`Motor:` {strat_status}\n"
+        f"`IA   :` {ai_status}\n\n"
+        
+        "🔑 *CREDENCIALES*\n"
+        f"`Api  :` {has_key}  `Sec:` {has_sec}"
     )
     
     bot.edit_message_text(report, chat_id=sent.chat.id, message_id=sent.message_id, parse_mode='Markdown')
