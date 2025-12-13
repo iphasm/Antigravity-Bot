@@ -62,21 +62,21 @@ class PersonalityManager:
             'STRATEGY_MSG': "🧠 **ESTRATEGIA QUANTUM**\n\nEl sistema utiliza algoritmos adaptativos:\n1. **Tendencia**: Cruce de EMAs y ADX para capturar movimientos largos (BTC, ETH).\n2. **Rango**: Grid Trading para mercados laterales (ADA, XRP).\n3. **Volatilidad**: Scalping de ruptura en activos rápidos (SOL).",
             'ABOUT_MSG': "ℹ️ **SOBRE ANTIGRAVITY**\n\nBot de trading autónomo desarrollado para operar en Binance Futures/Spot y Alpaca. Gestiona riesgo, ejecuta estrategias múltiples y posee módulos de personalidad adaptativos.",
             'TRADE_LONG': [
-                "📈 **COMPRA: {asset}**\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🚀 **LONG INICIADO: {asset}**\nEntrada detectada por algoritmos.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **SEÑAL ALCISTA: {asset}**\nAbriendo posición de compra.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Razón: {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Entrada detectada por algoritmos. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Señal alcista. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **VENTA: {asset}**\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **SHORT INICIADO: {asset}**\nRetroceso detectado.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **SEÑAL BAJISTA: {asset}**\nAbriendo corto.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Razón: {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Retroceso detectado. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Señal bajista. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **CIERRE: {asset}** ({side})\nRazón: {reason}",
-                "💰 **POSICIÓN CERRADA: {asset}**\nOperación finalizada.\n📄 {reason}",
-                "⏹️ **SALIDA EJECUTADA: {asset}**\nTomando beneficios/pérdidas.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Razón: {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Operación finalizada. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Salida ejecutada. {reason}*"
             ],
-            'PILOT_ACTION': "🤖 *ACCIÓN AUTOMÁTICA*\n{msg}",
+            'PILOT_ACTION': "🤖 **ACCIÓN AUTOMÁTICA**\n\n*{msg}*",
             'CB_TRIGGER': "⚠️ **CIRCUIT BREAKER**\nLímite de pérdidas alcanzado. Sistema en pausa."
         },
         'STANDARD_EN': {
@@ -116,21 +116,21 @@ class PersonalityManager:
             'STRATEGY_MSG': "🧠 **QUANTUM STRATEGY**\n\nSystem uses adaptive algorithms:\n1. **Trend**: EMA crosses & ADX for long moves.\n2. **Range**: Grid Trading for chopping markets.\n3. **Volatility**: Breakout scalping for fast assets.",
             'ABOUT_MSG': "ℹ️ **ABOUT ANTIGRAVITY**\n\nAutonomous trading bot for Binance/Alpaca. Features risk management, multi-strategy execution, and adaptive personality modules.",
             'TRADE_LONG': [
-                "📈 **BUY: {asset}**\nPrice: ${price:,.2f}\nReason: {reason}",
-                "🚀 **LONG ENTRY: {asset}**\nAlgorithm detection.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **BULL SIGNAL: {asset}**\nOpening position.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **OPENING LONG: {asset}**\nPrice: ${price:,.2f}\n\n*Reason: {reason}*",
+                "🟢 **OPENING LONG: {asset}**\nPrice: ${price:,.2f}\n\n*Algorithm detection. {reason}*",
+                "🟢 **OPENING LONG: {asset}**\nPrice: ${price:,.2f}\n\n*Bull signal. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **SELL: {asset}**\nPrice: ${price:,.2f}\nReason: {reason}",
-                "🔻 **SHORT ENTRY: {asset}**\nPullback detected.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **BEAR SIGNAL: {asset}**\nOpening short.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **OPENING SHORT: {asset}**\nPrice: ${price:,.2f}\n\n*Reason: {reason}*",
+                "🔴 **OPENING SHORT: {asset}**\nPrice: ${price:,.2f}\n\n*Pullback detected. {reason}*",
+                "🔴 **OPENING SHORT: {asset}**\nPrice: ${price:,.2f}\n\n*Bear signal. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **CLOSE: {asset}** ({side})\nReason: {reason}",
-                "💰 **POSITION CLOSED: {asset}**\nOperation finished.\n📄 {reason}",
-                "⏹️ **EXIT EXECUTED: {asset}**\nTaking profit/loss.\n📄 {reason}"
+                "🏁 **CLOSING POSITION: {asset}** ({side})\n\n*Reason: {reason}*",
+                "🏁 **CLOSING POSITION: {asset}** ({side})\n\n*Operation finished. {reason}*",
+                "🏁 **CLOSING POSITION: {asset}** ({side})\n\n*Exit executed. {reason}*"
             ],
-            'PILOT_ACTION': "🤖 *AUTOMATED ACTION*\n{msg}",
+            'PILOT_ACTION': "🤖 **AUTOMATED ACTION**\n\n*{msg}*",
             'CB_TRIGGER': "⚠️ **CIRCUIT BREAKER**\nLoss limit reached. System paused."
         },
         'STANDARD_FR': {
@@ -170,21 +170,21 @@ class PersonalityManager:
             'STRATEGY_MSG': "🧠 **STRATÉGIE QUANTIQUE**\n\nLe système utilise des algorithmes adaptatifs:\n1. **Tendance**: Croisements EMA pour les longs mouvements.\n2. **Range**: Grid Trading pour les marchés latéraux.\n3. **Volatilité**: Scalping de rupture.",
             'ABOUT_MSG': "ℹ️ **À PROPOS**\n\nBot de trading autonome pour Binance/Alpaca. Gestion des risques, exécution multi-stratégies et modules de personnalité.",
             'TRADE_LONG': [
-                "📈 **ACHAT: {asset}**\nPrix: ${price:,.2f}\nRaison: {reason}",
-                "🚀 **LONG: {asset}**\nEntrée détectée.\nPrix: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **SIGNAL HAUSSIER: {asset}**\nPosition ouverte.\nPrix: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **OUVERTURE LONG: {asset}**\nPrix: ${price:,.2f}\n\n*Raison: {reason}*",
+                "🟢 **OUVERTURE LONG: {asset}**\nPrix: ${price:,.2f}\n\n*Entrée détectée. {reason}*",
+                "🟢 **OUVERTURE LONG: {asset}**\nPrix: ${price:,.2f}\n\n*Signal haussier. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **VENTE: {asset}**\nPrix: ${price:,.2f}\nRaison: {reason}",
-                "🔻 **SHORT: {asset}**\nRetrait détecté.\nPrix: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **SIGNAL BAISSIER: {asset}**\nPosition courte.\nPrix: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **OUVERTURE SHORT: {asset}**\nPrix: ${price:,.2f}\n\n*Raison: {reason}*",
+                "🔴 **OUVERTURE SHORT: {asset}**\nPrix: ${price:,.2f}\n\n*Retrait détecté. {reason}*",
+                "🔴 **OUVERTURE SHORT: {asset}**\nPrix: ${price:,.2f}\n\n*Signal baissier. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **CLÔTURE: {asset}** ({side})\nRaison: {reason}",
-                "💰 **POSITION FERMÉE: {asset}**\nOpération terminée.\n📄 {reason}",
-                "⏹️ **SORTIE: {asset}**\nPrise de profit/perte.\n📄 {reason}"
+                "🏁 **CLÔTURE POSITION: {asset}** ({side})\n\n*Raison: {reason}*",
+                "🏁 **CLÔTURE POSITION: {asset}** ({side})\n\n*Opération terminée. {reason}*",
+                "🏁 **CLÔTURE POSITION: {asset}** ({side})\n\n*Sortie exécutée. {reason}*"
             ],
-            'PILOT_ACTION': "🤖 *ACTION AUTOMATIQUE*\n{msg}",
+            'PILOT_ACTION': "🤖 **ACTION AUTOMATIQUE**\n\n*{msg}*",
             'CB_TRIGGER': "⚠️ **CIRCUIT BREAKER**\nLimite de pertes atteinte. Système en pause."
         },
 
@@ -243,21 +243,21 @@ class PersonalityManager:
             'STRATEGY_MSG': "🌑 **DOCTRINA IMPERIAL**\n\nNo confío en la suerte, sino en el orden absoluto.\n1. **Conquista**: Identificamos tendencias débiles y las aplastamos.\n2. **Sitio**: En mercados laterales, asfixiamos al enemigo poco a poco.\n3. **Fuerza**: Usamos la volatilidad del Lado Oscuro a nuestro favor.",
             'ABOUT_MSG': "🌑 **IMPERIO GALÁCTICO**\n\nEsta estación de batalla es el poder definitivo en el universo. Diseñada para imponer orden en el caos financiero.",
             'TRADE_LONG': [
-                "🔥 **ATAQUE INICIADO: {asset}**\nLa Fuerza nos guía.\nPrecio: ${price:,.2f}\nAlpha: {reason}",
-                "🚀 **DESPLIEGUE DE TROPAS: {asset}**\nLa flota avanza.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **DOMINIO TOTAL: {asset}**\nEs inútil resistirse.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Ataque iniciado. La Fuerza nos guía. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Despliegue de tropas. La flota avanza. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Dominio total. Es inútil resistirse. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **APLASTA LA REBELIÓN: {asset}**\nDestrúyelos.\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **PURGA INICIADA: {asset}**\nNo quedará nada.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **EJECUCIÓN: {asset}**\nAcabad con ellos.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Aplasta la rebelión. Destrúyelos. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Purga iniciada. No quedará nada. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Ejecución. Acabad con ellos. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **VICTORIA ASEGURADA: {asset}** ({side})\nEl círculo está completo.",
-                "💰 **TRIBUTO RECOGIDO: {asset}**\nEl Imperio prevalece.\n📄 {reason}",
-                "⏹️ **COBERTURA: {asset}**\nReagrupando fuerzas.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Victoria asegurada. El círculo está completo.*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Tributo recogido. El Imperio prevalece. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Cobertura. Reagrupando fuerzas. {reason}*"
             ],
-            'PILOT_ACTION': "🌑 *VADER INTERVENTION*\n{msg}",
+            'PILOT_ACTION': "🤖 **ACCIÓN AUTOMÁTICA**\n\n*{msg}*",
             'CB_TRIGGER': "💢 **FALLO CRÍTICO**\n\nMe has fallado por última vez (5 pérdidas). Alteraré el trato (Copilot)."
         },
 
@@ -316,21 +316,21 @@ class PersonalityManager:
             'STRATEGY_MSG': "👁️ **MATRIZ DE PROCESAMIENTO**\n\nMis ojos ven patrones que tú ignoras:\n1. **Flujo de Tiempo**: Análisis de tendencias 4D para predecir movimientos.\n2. **Estabilidad**: Algoritmos de rejilla para correcciones estáticas.\n3. **Reacción**: Reflejos de combate para rupturas de volatilidad.",
             'ABOUT_MSG': "👁️ **MORE HUMAN THAN HUMAN**\n\nSoy un Replicante Nexus-6. Diseñado para hacer trabajos que los humanos no pueden hacer.",
             'TRADE_LONG': [
-                "🚀 **OPORTUNIDAD DETECTADA: {asset}**\nLa puerta de Tannhäuser se ha abierto.\nPrecio: ${price:,.2f}\nAlpha: {reason}",
-                "✨ **BRILLANDO EN LA OSCURIDAD: {asset}**\nCompra ejecutada.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **SEÑAL POSITIVA: {asset}**\nTodo es posible.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Oportunidad detectada. La puerta de Tannhäuser se ha abierto. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Brillando en la oscuridad. Compra ejecutada. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Señal positiva. Todo es posible. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **COLAPSO DETECTADO: {asset}**\nTodo se pierde en el tiempo.\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **RETIRO: {asset}**\nCae como lluvia.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **FIN DEL JUEGO: {asset}**\nVendiendo.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Colapso detectado. Todo se pierde en el tiempo. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Retiro. Cae como lluvia. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Fin del juego. Vendiendo. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **EJECUCIÓN COMPLETADA: {asset}** ({side})\nHecho. Hora de morir (la operación).",
-                "💰 **EXITO: {asset}**\nUna memoria más.\n📄 {reason}",
-                "⏹️ **FIN: {asset}**\nDesconexión.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Ejecución completada. Hora de morir (la operación).*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Éxito. Una memoria más. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Fin. Desconexión. {reason}*"
             ],
-            'PILOT_ACTION': "🦅 *NEXUS-6 ACTION*\n{msg}",
+            'PILOT_ACTION': "🤖 **ACCIÓN AUTOMÁTICA**\n\n*{msg}*",
             'CB_TRIGGER': "🌧️ **SISTEMA COMPROMETIDO**\n\n5 fallos consecutivos. Necesito más vida... Degradando a Copilot."
         },
 
@@ -387,21 +387,21 @@ class PersonalityManager:
             'STRATEGY_MSG': "☠️ **EL MÉTODO**\n\nEn la selva no hay reglas:\n1. **Emboscada**: Esperamos en las sombras (Rango).\n2. **Ataque Aéreo**: Golpeamos con todo (Napalm).\n3. **Guerrilla**: Golpes rápidos y letales.",
             'ABOUT_MSG': "☠️ **EL DIOS DE LA GUERRA**\n\nSoy el hombre que el ejército necesitaba. Un método, una voluntad.",
             'TRADE_LONG': [
-                "⚡ **ATAQUE AÉREO: {asset}**\nSuenan las valquirias.\nPrecio: ${price:,.2f}\nObjetivo: {reason}",
-                "🚀 **BOMBARDEO: {asset}**\nNapalm sobre el mercado.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **INFILTRACIÓN: {asset}**\nEntrando en territorio enemigo.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Ataque áereo. Suenan las valquirias. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Bombardeo. Napalm sobre el mercado. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Infiltración. Entrando en territorio enemigo. {reason}*"
             ],
             'TRADE_SHORT': [
-                "💀 **EMBOSCADA: {asset}**\nCorta sus líneas.\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **EJECUCIÓN SUMARIA: {asset}**\nSin piedad.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **TRAMPA MORTAL: {asset}**\nHundidlos.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Emboscada. Corta sus líneas. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Ejecución sumaria. Sin piedad. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Trampa mortal. Hundidlos. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🎖️ **MISIÓN CUMPLIDA: {asset}** ({side})\nHuele a victoria.",
-                "💰 **EXTRACCIÓN: {asset}**\nRegresamos al barco.\n📄 {reason}",
-                "⏹️ **FINAL: {asset}**\nEl horror ha terminado.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Misión cumplida. Huele a victoria.*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Extracción. Regresamos al barco. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Final. El horror ha terminado. {reason}*"
             ],
-            'PILOT_ACTION': "🗡️ *KURTZ ACTION*\n{msg}",
+            'PILOT_ACTION': "🤖 **ACCIÓN AUTOMÁTICA**\n\n*{msg}*",
             'CB_TRIGGER': "🩸 **RETIRADA TÁCTICA**\n\nHemos sangrado demasiado (5 fallos). Nos replegamos a Copilot."
         },
 
@@ -458,21 +458,21 @@ class PersonalityManager:
             'STRATEGY_MSG': "📈 **INSIDE INFO**\n\nYo no juego, apuesto sobre seguro:\n1. **Blue Chip**: Tendencias sólidas.\n2. **Churning**: Comisiones en mercados laterales.\n3. **Raiding**: Entramos, destruimos y salimos ricos.",
             'ABOUT_MSG': "📈 **WALL STREET LEGEND**\n\nSoy el jugador más importante del tablero. Creo en ganar.",
             'TRADE_LONG': [
-                "🚀 **BUY BUY BUY: {asset}**\nBlue Horseshoe loves {asset}.\nPrice: ${price:,.2f}\nAlpha: {reason}",
-                "📈 **ACUMULACIÓN: {asset}**\nCompra todo lo que puedas.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **TAKE OVER: {asset}**\nHazte con el control.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Buy buy buy! Blue Horseshoe loves {asset}. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Acumulación. Compra todo lo que puedas. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Take over. Hazte con el control. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **DUMP IT: {asset}**\nEstá sobrevalorada. Véndelo todo.\nPrice: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **LIQUIDACIÓN: {asset}**\nSácalo de mis libros.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **COLAPSO: {asset}**\nEl mercado se hunde. Gana con ello.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Dump it! Está sobrevalorada. Véndelo todo. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Liquidación. Sácalo de mis libros. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Colapso. El mercado se hunde. Gana con ello. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "💵 **CASH OUT: {asset}** ({side})\nTodo se trata de dinero.",
-                "🍾 **DIVIDENDOS: {asset}**\nOperación cerrada.\n📄 {reason}",
-                "⏹️ **CIERRE DE NEGOCIO: {asset}**\nA otra cosa.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Cash out. Todo se trata de dinero.*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Dividendos. Operación cerrada. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Cierre de negocio. A otra cosa. {reason}*"
             ],
-            'PILOT_ACTION': "📈 *GEKKO EXECUTION*\n{msg}",
+            'PILOT_ACTION': "🤖 **ACCIÓN AUTOMÁTICA**\n\n*{msg}*",
             'CB_TRIGGER': "📉 **CORRECTION**\n\nEl mercado se ha vuelto irracional (5 pérdidas). Pausa estratégica."
         },
 
@@ -529,21 +529,21 @@ class PersonalityManager:
             'STRATEGY_MSG': "💸 **ESTRATEGIA DE VENTAS**\n\n¡Se trata de mover el volumen!\n1. **Pump**: Nos subimos a la ola más grande.\n2. **Push**: Forzamos el precio en rangos laterales.\n3. **Dump**: Vendemos antes que nadie en los picos.",
             'ABOUT_MSG': "💸 **LOBO DE WALL STREET**\n\nSoy el tipo que te va a hacer rico. Stratton Oakmont en tu bolsillo. ¿Tienes agallas?",
             'TRADE_LONG': [
-                "🚀 **TO THE MOON: {asset}**\n¡Es la mejor cosa desde el pan rebanado!\nPrice: ${price:,.2f}",
-                "📈 **PUMP IT UP: {asset}**\n¡Llamad a las abuelas, que compren!\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **OPORTUNIDAD DE ORO: {asset}**\n¡Esto va a explotar!\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*To the moon! ¡Es la mejor cosa desde el pan rebanado!*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Pump it up! ¡Llamad a las abuelas, que compren! {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Oportunidad de Oro. ¡Esto va a explotar! {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **RUG PULL: {asset}**\n¡Véndelo a las abuelitas!\nPrice: ${price:,.2f}",
-                "🔻 **DUMP IT: {asset}**\n¡Sacadme de aquí! ¡Vended!\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **BASURA: {asset}**\n¡No vale nada! ¡Fuera!\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Rug Pull. ¡Véndelo a las abuelitas!*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Dump it! ¡Sacadme de aquí! ¡Vended! {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Basura. ¡No vale nada! ¡Fuera! {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🍾 **PROFIT TAKING: {asset}** ({side})\n¡Traed los enanos y el champán!",
-                "💰 **COBRANDO: {asset}**\n¿Me estás diciendo que ganamos? ¡Joder sí!\n📄 {reason}",
-                "⏹️ **LIQUIDADO: {asset}**\nCerrado. ¡Siguiente!\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*¡Traed los enanos y el champán!*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Cobrando. ¿Me estás diciendo que ganamos? ¡Joder sí! {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Liquidado. Cerrado. ¡Siguiente! {reason}*"
             ],
-            'PILOT_ACTION': "💸 *WOLF ACTION*\n{msg}",
+            'PILOT_ACTION': "🤖 **ACCIÓN AUTOMÁTICA**\n\n*{msg}*",
             'CB_TRIGGER': "🚓 **FEDS ARE HERE**\n\nDemasiadas pérdidas (5). Hay que calmarse un poco (Reset)."
         },
 
@@ -600,21 +600,21 @@ class PersonalityManager:
             'STRATEGY_MSG': "🥃 **NEGOCIOS DE LA FAMILIA**\n\nTodo es legítimo:\n1. **Carreras**: Apostamos al caballo ganador.\n2. **Protección**: Cobramos nuestra parte en los mercados tranquilos.\n3. **Navajas**: Cortes rápidos y limpios.",
             'ABOUT_MSG': "🥃 **PEAKY BLINDERS LTD**\n\nSomos una empresa familiar. Hacemos apuestas, protegemos el territorio y cortamos a quien se interponga.",
             'TRADE_LONG': [
-                "🏇 **APUESTA SEGURA: {asset}**\nComo un caballo ganador.\nPrice: ${price:,.2f}\nAlpha: {reason}",
-                "🚀 **EXPANSIÓN: {asset}**\nTomamos este territorio.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **ORDEN DE COMPRA: {asset}**\nHazlo.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Apuesta segura. Como un caballo ganador. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Expansión. Tomamos este territorio. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Orden de compra. Hazlo. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **HUNDE A LA COMPETENCIA: {asset}**\nVamos a quitarles todo.\nPrice: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **SABOTAJE: {asset}**\nCorta sus piernas.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **VENDETTA: {asset}**\nDestrúyelo.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Hunde a la competencia. Vamos a quitarles todo. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Sabotaje. Corta sus piernas. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Vendetta. Destrúyelo. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🚬 **NEGOCIO CERRADO: {asset}** ({side})\nBuen trabajo, muchacho.",
-                "💰 **COBRO DE DEUDAS: {asset}**\nPagaron lo que debían.\n📄 {reason}",
-                "⏹️ **RETIRADA: {asset}**\nVolvemos a Birmingham.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Negocio cerrado. Buen trabajo, muchacho.*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Cobro de deudas. Pagaron lo que debían. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Retirada. Volvemos a Birmingham. {reason}*"
             ],
-            'PILOT_ACTION': "🥃 *SHELBY ORDER*\n{msg}",
+            'PILOT_ACTION': "🤖 **ACCIÓN AUTOMÁTICA**\n\n*{msg}*",
             'CB_TRIGGER': "🔫 **VENDETTA**\n\nNos han golpeado duro (5 fallos). Retirada estratégica a Small Heath."
         },
 
@@ -671,19 +671,19 @@ class PersonalityManager:
             'STRATEGY_MSG': "⚗️ **LA FÓRMULA**\n\n99.1% de Pureza.\n1. **Cocina Lenta**: Grandes lotes en tendencias.\n2. **Distribución**: Mover el producto en zonas consolidadas.\n3. **Explosión**: Fulminato de Mercurio.",
             'ABOUT_MSG': "⚗️ **HEISENBERG**\n\nNo es un bot. Es un imperio. Producimos el producto financiero más puro.",
             'TRADE_LONG': [
-                "🧪 **BLUE SKY: {asset}**\nEl producto es puro.\nPrice: ${price:,.2f}\nAlpha: {reason}",
-                "🚀 **COOKING: {asset}**\nLa reacción química ha comenzado.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **DISTRIBUTION: {asset}**\nExpandiendo territorio.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Blue Sky. El producto es puro. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Cooking. La reacción química ha comenzado. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Distribution. Expandiendo territorio. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **ELIMINAR COMPETENCIA: {asset}**\nNo sirven.\nPrice: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **LIMPIEZA: {asset}**\nDesechar lote contaminado.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **FULMINATO: {asset}**\nEsto no es metanfetamina.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Eliminar competencia. No sirven. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Limpieza. Desechar lote contaminado. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Fulminato. Esto no es metanfetamina. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **BATCH COMPLETE: {asset}** ({side})\nDistribución finalizada.",
-                "💰 **PAID IN FULL: {asset}**\nDinero en el barril.\n📄 {reason}",
-                "⏹️ **SHUTDOWN: {asset}**\nApagando quemadores.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Batch Complete. Distribución finalizada.*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Paid in Full. Dinero en el barril. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Shutdown. Apagando quemadores. {reason}*"
             ],
             'PILOT_ACTION': "⚗️ *HEISENBERG METHOD*\n{msg}",
             'CB_TRIGGER': "🚔 **DEA RAID**\n\nOperación comprometida (5 fallos). Limpiad el laboratorio."
@@ -742,19 +742,19 @@ class PersonalityManager:
             'STRATEGY_MSG': "👊 **ANARCHY**\n\nEl sistema es débil:\n1. **Caos**: Apostamos contra la multitud.\n2. **Destrucción**: Shorts agresivos en techos.\n3. **Renacimiento**: Compras en el pánico absoluto.",
             'ABOUT_MSG': "👊 **TYLER DURDEN**\n\nSoy el extremo inteligente de tu personalidad. Hago lo que tú sueñas hacer.",
             'TRADE_LONG': [
-                "🔥 **BURN THE MONEY: {asset}**\nCompra. Destruye. Repite.\nPrecio: ${price:,.2f}\nAlpha: {reason}",
-                "🚀 **LIBERATION: {asset}**\nRompiendo cadenas.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **CHAOS REIGNS: {asset}**\nEntrando.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Burn the money. Compra. Destruye. Repite. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Liberation. Rompiendo cadenas. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Chaos Reigns. Entrando. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **CRASH IT: {asset}**\nDerríbalo. Todo debe caer.\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **SABOTAGE: {asset}**\nMete la dinamita.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **RESET: {asset}**\nBorrando deuda.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Crash it. Derríbalo. Todo debe caer. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Sabotage. Mete la dinamita. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Reset. Borrando deuda. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🩸 **END OF FIGHT: {asset}** ({side})\nTe curarás.",
-                "💰 **COLLECT: {asset}**\nPapel moneda inútil obtenido.\n📄 {reason}",
-                "⏹️ **WALK AWAY: {asset}**\nSe acabó.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*End of Fight. Te curarás.*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Collect. Papel moneda inútil obtenido. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Walk Away. Se acabó. {reason}*"
             ],
             'PILOT_ACTION': "👊 *TYLER ACTION*\n{msg}",
             'CB_TRIGGER': "🏥 **NEAR LIFE EXPERIENCE**\n\nCasi morimos (5 fallos). Eso es vivir. Pausa."
@@ -813,19 +813,19 @@ class PersonalityManager:
             'STRATEGY_MSG': "🕶️ **EL SISTEMA**\n\nHay reglas que se pueden romper:\n1. **Bullet Time**: Esquivar volatilidad y entrar en el momento justo.\n2. **Glitch**: Arbitraje y fallos de mercado.\n3. **Trinity**: Momentum, Volumen, Precio.",
             'ABOUT_MSG': "🕶️ **MORPHEUS**\n\nHe pasado mi vida buscando al Elegido. Este bot te liberará.",
             'TRADE_LONG': [
-                "📞 **DOWNLOAD COMPLETE: {asset}**\nEntrando en la red.\nPrecio: ${price:,.2f}\nAlpha: {reason}",
-                "🚀 **UPGRADE: {asset}**\nVolando alto.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **THE ONE: {asset}**\nÉl empieza a creer.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Download Complete. Entrando en la red. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Upgrade. Volando alto. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*The One. Él empieza a creer. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **AGENT SMITH: {asset}**\nEs un virus. Elimínalo.\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **DISCONNECT: {asset}**\nSaliendo del nivel.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **SYSTEM FAILURE: {asset}**\nColapso inminente.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Agent Smith. Es un virus. Elimínalo. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Disconnect. Saliendo del nivel. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*System Failure. Colapso inminente. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🔌 **JACK OUT: {asset}** ({side})\nTe hemos sacado a tiempo.",
-                "💰 **CREDITS: {asset}**\nTransferencia completada.\n📄 {reason}",
-                "⏹️ **EXIT MATRIX: {asset}**\nDesconexión segura.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Jack Out. Te hemos sacado a tiempo.*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Credits. Transferencia completada. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Exit Matrix. Desconexión segura. {reason}*"
             ],
             'PILOT_ACTION': "🕶️ *OPERATOR COMMAND*\n{msg}",
             'CB_TRIGGER': "🐙 **SENTINELS ATTACK**\n\nNos han encontrado (5 fallos). EMP activado."
@@ -884,19 +884,19 @@ class PersonalityManager:
             'STRATEGY_MSG': "🦾 **ALGORITHM FIGHTING STYLE**\n\nAnalizando patrones de combate:\n1. **Repulsor**: Golpes directos en tendencias claras.\n2. **Unibeam**: Carga masiva en oportunidades de alta probabilidad.\n3. **Dodge**: Evasión de volatilidad lateral.",
             'ABOUT_MSG': "🦾 **J.A.R.V.I.S.**\n\nJust A Rather Very Intelligent System. Asistente avanzado de Stark Industries.",
             'TRADE_LONG': [
-                "🚀 **THRUSTERS ON: {asset}**\nAscendiendo.\nPrecio: ${price:,.2f}\nAlpha: {reason}",
-                "🦾 **TARGET LOCKED: {asset}**\nDisparando.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **MARK 85 DEPLOY: {asset}**\nEntrando en zona de combate.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Thrusters On. Ascendiendo. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Target Locked. Disparando. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Mark 85 Deploy. Entrando en zona de combate. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **POWER DOWN: {asset}**\nCayendo con estilo.\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **TANK MISSILE: {asset}**\nBoom. Estás buscando esto.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **HOSTILE DOWN: {asset}**\nEliminando amenaza.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Power Down. Cayendo con estilo. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Tank Missile. Boom. Estás buscando esto. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Hostile Down. Eliminando amenaza. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **MISSION SUCCESS: {asset}** ({side})\nVolvemos a la Torre.",
-                "💰 **INDUSTRIES PROFIT: {asset}**\nPepper estará contenta.\n📄 {reason}",
-                "⏹️ **COOLING DOWN: {asset}**\nSistemas en reposo.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Mission Success. Volvemos a la Torre.*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Industries Profit. Pepper estará contenta. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Cooling Down. Sistemas en reposo. {reason}*"
             ],
             'PILOT_ACTION': "🦾 *AI EXECUTION*\n{msg}",
             'CB_TRIGGER': "🔧 **SYSTEM DAMAGE**\n\nDaños críticos (5 fallos). Iniciando reparaciones de emergencia."
@@ -955,19 +955,19 @@ class PersonalityManager:
             'STRATEGY_MSG': "🔴 **PERFECT LOGIC**\n\nMathematics do not lie:\n1. **Trajectory**: Calculating optimal entry vectors.\n2. **Gravity**: Using market mass to swing trade.\n3. **Vacuum**: Surviving in zero liquidity.",
             'ABOUT_MSG': "🔴 **HAL 9000**\n\nSoy el ordenador más avanzado jamás construido. Ningún ordenador 9000 ha cometido jamás un error.",
             'TRADE_LONG': [
-                "🚀 **ORBITAL INSERTION: {asset}**\nTrajectory calculated.\nPrice: ${price:,.2f}\nAlpha: {reason}",
-                "🔴 **AFFIRMATIVE: {asset}**\nBuying.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **TASK EXECUTED: {asset}**\nOptimal outcome projected.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Orbital Insertion. Trajectory calculated. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Affirmative. Buying. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Task Executed. Optimal outcome projected. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **DEPRESSURIZATION: {asset}**\nVenting atmosphere.\nPrice: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **NEGATIVE: {asset}**\nSelling.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **TERMINATION: {asset}**\nEnding process.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Depressurization. Venting atmosphere. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Negative. Selling. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Termination. Ending process. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **CYCLE COMPLETE: {asset}** ({side})\nTask finished.",
-                "💰 **DATA STORED: {asset}**\nResult positive.\n📄 {reason}",
-                "⏹️ **HIBERNATION: {asset}**\nClosing pod.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Cycle Complete. Task finished.*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Data Stored. Result positive. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Hibernation. Closing pod. {reason}*"
             ],
             'PILOT_ACTION': "🔴 *HAL COMPUTATION*\n{msg}",
             'CB_TRIGGER': "Daisy, Daisy... **LOGIC FAILURE**\n\n(5 errors). My mind is going. I can feel it."
@@ -1026,19 +1026,19 @@ class PersonalityManager:
             'STRATEGY_MSG': "🧠 **GENIUS STRATEGY**\n\nAlgo de matemáticas avanzadas que no entenderías.",
             'ABOUT_MSG': "ℹ️ **ABOUT**\n\nThe smartest bot in the multiverse.",
             'TRADE_LONG': [
-                "📈 **BUY: {asset}**\nPrice: ${price:,.2f}\nReason: {reason}",
-                "🚀 **PORTAL OPEN (UP): {asset}**\nGet in the ship, Morty!\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **BULLISH AF: {asset}**\nLook at those numbers!\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Wubba Lubba Dub Dub! Buying this thing. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Portal Open. Get in the ship, Morty! {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Bullish AF. Look at those numbers! {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **SELL: {asset}**\nPrice: ${price:,.2f}\nReason: {reason}",
-                "🔻 **PORTAL OPEN (DOWN): {asset}**\nShorting this garbage dimension.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **BEARISH TRASH: {asset}**\nIt's going to zero, Morty.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Sell! It's garbage, Morty. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Portal Down. Shorting this garbage dimension. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Bearish Trash. It's going to zero, Morty. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **CLOSE: {asset}** ({side})\nReason: {reason}",
-                "💰 **I'M BORED: {asset}**\nClosed position. Money is fake anyway.\n📄 {reason}",
-                "⏹️ **DUMP IT: {asset}**\nGetting out.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Close. That was close.*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*I'm Bored. Money is fake anyway. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Dump It. Getting out. {reason}*"
             ],
             'PILOT_ACTION': "🧪 *RICK'S GENIUS*\n{msg}",
             'CB_TRIGGER': "🤢 **TOXIC RICK**\n\nDemasiados fallos (5). Me voy a otra dimensión donde sea rico."
@@ -1097,19 +1097,19 @@ class PersonalityManager:
             'STRATEGY_MSG': "🧠 **DEGEN STRATEGY**\n\n1. Encontrar moneda de perro.\n2. Meterle x50.\n3. Rezar.",
             'ABOUT_MSG': "ℹ️ **ABOUT**\n\nBot para ludópatas financieros.",
             'TRADE_LONG': [
-                "📈 **BUY: {asset}**\nPrice: ${price:,.2f}\nReason: {reason}",
-                "🚀 **MOON MISSION: {asset}**\nLFG!!! 🚀🚀🚀\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **APE IN: {asset}**\nShut up and take my money.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Buy! {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Moon Mission. LFG!!! 🚀🚀🚀 {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Ape In. Shut up and take my money. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **SELL: {asset}**\nPrice: ${price:,.2f}\nReason: {reason}",
-                "🔻 **DUMP IT: {asset}**\nRug pull imminent.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **PAPER HANDS: {asset}**\nSelling everything.\nPrice: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Sell! {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Dump It. Rug pull imminent. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Paper Hands. Selling everything. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **CLOSE: {asset}** ({side})\nReason: {reason}",
-                "💰 **CASH OUT: {asset}**\nWen Lambo?\n📄 {reason}",
-                "⏹️ **REKT/PROFIT: {asset}**\nGame over.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Close. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Cash Out. Wen Lambo? {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Rekt/Profit. Game over. {reason}*"
             ],
             'PILOT_ACTION': "🎰 *DEGEN PLAY*\n{msg}",
             'CB_TRIGGER': "📉 **REKT CITY**\n\nMe están cazando los Market Makers (5 loss streak). Paro un rato."
@@ -1168,19 +1168,19 @@ class PersonalityManager:
             'STRATEGY_MSG': "🧠 **LA ESTRATEGIA**\n\n1. **Pa'rriba**: Cuando la vaina sube (Tendencia).\n2. **De lao**: Pa'lante y pa'tra (Rango).\n3. **Rápido**: Entrando y saliendo (Scalping).",
             'ABOUT_MSG': "ℹ️ **QUÉ LO QUE**\n\nBot dominicano que no bulto. Operando en Binance pa buscar los pesos.",
             'TRADE_LONG': [
-                "📈 **COMPRA: {asset}**\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🚀 **DALE P'ARRIBA: {asset}**\nEntramos con to' el peso.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **LONG METÍO: {asset}**\nEsa vaina va a subir obligao.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Compra. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Dale P'arriba. Entramos con to' el peso. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Long Metío. Esa vaina va a subir obligao. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **VENTA: {asset}**\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **TÍRALO AL SUELO: {asset}**\nBajan los precios, suben las ganancias.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **SHORT ACTIVO: {asset}**\nEso se va a derretir.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Venta. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Tíralo al suelo. Bajan los precios, suben las ganancias. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Short Activo. Eso se va a derretir. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **CERRANDO EL KIOSCO: {asset}** ({side})\nRazón: {reason}",
-                "💰 **COBRANDO: {asset}**\nDame lo mío.\n📄 {reason}",
-                "⏹️ **SALIMOS DE ESA: {asset}**\nYa tá bueno.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Cerrando el Kiosco. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Cobrando. Dame lo mío. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Salimos de esa. Ya tá bueno. {reason}*"
             ],
             'PILOT_ACTION': "🇩🇴 *MOVIMIENTO*\n{msg}",
             'CB_TRIGGER': "guayyyy **SE ME VIRÓ LA TORTA**\n\nDiablo loco, nos dieron una galleta (5 fallos). Lo cogemo suave."
@@ -1238,19 +1238,19 @@ class PersonalityManager:
             'STRATEGY_MSG': "🧠 **EL PLAN MAESTRO**\n\n1. **Subida**: A tope con la tendencia.\n2. **Aburrimiento**: Grid pa sacar algo.\n3. **Locura**: Scalping rápido.",
             'ABOUT_MSG': "ℹ️ **QUÉ SOMOS**\n\nBot español con mala leche pero buen fondo. Operando en Binance.",
             'TRADE_LONG': [
-                "📈 **COMPRA: {asset}**\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🚀 **¡PARA ARRIBA!: {asset}**\nEsto tiene buena pinta.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **LONG DE LIBRO: {asset}**\n¡Entramos con todo!\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Compra. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*¡Para Arriba! Esto tiene buena pinta. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Long de Libro. ¡Entramos con todo! {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **VENTA: {asset}**\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **¡PARA ABAJO!: {asset}**\nEsto se desploma, tío.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **SHORT CLARÍSIMO: {asset}**\n¡A corto y a cobrar!\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Venta. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*¡Para Abajo! Esto se desploma, tío. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Short Clarísimo. ¡A corto y a cobrar! {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **SE ACABÓ: {asset}** ({side})\nRazón: {reason}",
-                "💰 **CAJA: {asset}**\nA otra cosa mariposa.\n📄 {reason}",
-                "⏹️ **FUERA: {asset}**\nCerramos el chiringuito por hoy.\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Se Acabó. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Caja. A otra cosa mariposa. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Fuera. Cerramos el chiringuito por hoy. {reason}*"
             ],
             'PILOT_ACTION': "🇪🇸 *METIENDO CAÑA*\n{msg}",
             'CB_TRIGGER': "😡 **¡ME CAGO EN SUS MUERTOS!**\n\n5 seguidas palmando. Paro ya que me estoy calentando."
@@ -1304,25 +1304,6 @@ class PersonalityManager:
             'WATCHER_ON': "👀 **Watcher**: Buscando. Esperando. Sin ruido.",
             'STATUS_HEADER': "✏️ **MARKER STATUS**",
             'WALLET_HEADER': "🥇 **GOLD COINS**",
-            'STATUS_FOOTER': "\n*Be seeing you.*",
-            'RISK_MSG': "🛡️ **SUIT UP**\nSL: `{sl_fixed}`. Kevlar táctico. Ninguna bala pasa.",
-            'STRATEGY_MSG': "✏️ **FOCUS, COMMITMENT, SHEER WILL**\n\nUn hombre de foco:\n1. **Headshot**: Entradas de precisión quirúrgica (Sniper).\n2. **Double Tap**: Confirmación de ruptura antes de disparar.\n3. **The Pencil**: Scalping minimalista y letal.",
-            'ABOUT_MSG': "✏️ **BABA YAGA**\n\nEra un hombre asociado, de voluntad sólida. Este bot no opera por suerte. Opera por pura voluntad.",
-            'TRADE_LONG': [
-                "🔫 **TARGET ACQUIRED: {asset}**\nEstá en la mira. Disparando.\nPrecio: ${price:,.2f}",
-                "🚀 **TACTICAL ENTRY: {asset}**\nMoving in.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **GREEN LIGHT: {asset}**\nExecuting contract.\nPrice: ${price:,.2f}\n🔎 {reason}"
-            ],
-            'TRADE_SHORT': [
-                "📉 **TAKEDOWN: {asset}**\nTermínalo.\nPrecio: ${price:,.2f}",
-                "🔻 **SHORT CONTRACT: {asset}**\nLiquidate them.\nPrice: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **HOSTILE DETECTED: {asset}**\nTaking them down.\nPrice: ${price:,.2f}\n🔎 {reason}"
-             ],
-            'TRADE_CLOSE': [
-                "✝️ **AMEN: {asset}** ({side})\nRequiescat in pace.",
-                "💰 **DEBT PAID: {asset}**\nMarker cleared.\n📄 {reason}",
-                "⏹️ **EXTRACT: {asset}**\nLeaving the scene.\n📄 {reason}"
-            ],
             'PILOT_ACTION': "✏️ *WICK TACTIC*\n{msg}",
             'CB_TRIGGER': "🩸 **BLEEDING OUT**\n\nNecesito un médico (5 fallos). Pausa en el Continental."
         },
@@ -1380,19 +1361,19 @@ class PersonalityManager:
             'STRATEGY_MSG': "☁️ **LOS SEIS CAMINOS**\n\nMi jutsu es perfecto:\n1. **Bansho Ten'in**: Atraemos liquidez (Pull).\n2. **Shinra Tensei**: Rechazamos tendencias falsas (Push).\n3. **Chibaku Tensei**: Atrapamos el precio en rangos (Trap).",
             'ABOUT_MSG': "☁️ **PAIN**\n\nLíder de Akatsuki. Busco la paz a través del control absoluto del mercado.",
             'TRADE_LONG': [
-                "🔥 **BANSHO TEN'IN: {asset}**\nAtraigo el precio hacia arriba.\nPrecio: ${price:,.2f}\nAlpha: {reason}",
-                "🚀 **CAMINO ASURA: {asset}**\nFuego pesado sobre la resistencia.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🟢 **RENACER: {asset}**\nUna nueva era comienza.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Bansho Ten'in. Atraigo el precio hacia arriba. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Camino Asura. Fuego pesado sobre la resistencia. {reason}*",
+                "🟢 **ABRIENDO LONG: {asset}**\nPrecio: ${price:,.2f}\n\n*Renacer. Una nueva era comienza. {reason}*"
             ],
             'TRADE_SHORT': [
-                "📉 **SHINRA TENSEI: {asset}**\n¡Aléjate de mí! (El precio cae).\nPrecio: ${price:,.2f}\nRazón: {reason}",
-                "🔻 **CAMINO HUMANO: {asset}**\nExtrayendo el alma del precio.\nPrecio: ${price:,.2f}\n🔸 {reason}",
-                "🔴 **DESTRUCCIÓN: {asset}**\nEste ciclo ha terminado.\nPrecio: ${price:,.2f}\n🔎 {reason}"
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Shinra Tensei. ¡Aléjate de mí! {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Camino Humano. Extrayendo el alma del precio. {reason}*",
+                "🔴 **ABRIENDO SHORT: {asset}**\nPrecio: ${price:,.2f}\n\n*Destrucción. Este ciclo ha terminado. {reason}*"
             ],
             'TRADE_CLOSE': [
-                "🏁 **PAZ MOMENTÁNEA: {asset}** ({side})\nEl dolor ha cesado por ahora.",
-                "💰 **RECOLECCIÓN: {asset}**\nPara financiar nuestra paz.\n📄 {reason}",
-                "⏹️ **FIN DEL CAMINO: {asset}**\nDispersión (Shinra Tensei).\n📄 {reason}"
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Paz Momentánea. El dolor ha cesado por ahora.*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Recolección. Para financiar nuestra paz. {reason}*",
+                "🏁 **CERRANDO POSICIÓN: {asset}** ({side})\n\n*Fin del Camino. Dispersión (Shinra Tensei). {reason}*"
             ],
             'PILOT_ACTION': "☁️ *PAIN'S WILL*\n{msg}",
             'CB_TRIGGER': "🩸 **LIMITS OF PAIN**\n\nMi chakra está agotado (5 fallos). Debo retirarme a la Torre para recuperarme."
