@@ -2169,14 +2169,12 @@ def start_bot():
     saved_state = state_manager.load_state()
     
     # 1. Update Strategies
-    # (Disabled by user request: Always start with ALL ON)
-    # if "enabled_strategies" in saved_state:
-    #     ENABLED_STRATEGIES.update(saved_state["enabled_strategies"])
+    if "enabled_strategies" in saved_state:
+        ENABLED_STRATEGIES.update(saved_state["enabled_strategies"])
         
     # 2. Update Groups
-    # (Disabled by user request: Always start with ALL ON)
-    # if "group_config" in saved_state:
-    #     GROUP_CONFIG.update(saved_state["group_config"])
+    if "group_config" in saved_state:
+        GROUP_CONFIG.update(saved_state["group_config"])
         
     # 3. Update Disabled Assets
     # 3. Update Disabled Assets
@@ -2195,7 +2193,21 @@ def start_bot():
     # For now, we update the manager's default template or apply when session is created.
     # A simple way for single-user bot:
     if "session_config" in saved_state:
-        pass # Session logic handled inside SessionManager or we apply it to the first session detected.
+        # Pre-load config for known chat IDs or update default template
+        # Assuming single user usage primarily
+        cfg = saved_state["session_config"]
+        # Iterate known chats and update/create
+        for cid in TELEGRAM_CHAT_IDS:
+             sess = session_manager.get_session(cid)
+             if sess:
+                 sess.update_config('leverage', cfg.get('leverage', 5))
+                 sess.update_config('max_capital_pct', cfg.get('max_capital_pct', 0.1))
+                 sess.update_config('personality', cfg.get('personality', 'STANDARD_ES'))
+                 sess.update_config('mode', cfg.get('mode', 'WATCHER'))
+                 # Ensure keys are loaded if not already (safeguard)
+                 # sess.load_keys() # Done inside get_session usually
+        
+        print(f"🔧 Session Config Restored: {cfg}")
 
     # Start Quantum Bridge if Enabled
     if USE_QUANTUM_ENGINE:
