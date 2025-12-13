@@ -1034,8 +1034,18 @@ def master_listener(message):
                  handle_reset_pilot(message)
             elif cmd_part in ['/personality', '/pers']:
                 handle_personality(message)
+            
+            # AI & Special Commands
+            elif cmd_part in ['/news', '/noti']:
+                handle_news(message)
+            elif cmd_part == '/sentiment':
+                handle_sentiment(message)
+            elif cmd_part == '/sniper':
+                handle_sniper(message)
+            elif cmd_part == '/fomc':
+                handle_fomc(message)
             else:
-               bot.reply_to(message, f"🤷‍♂️ Comando desconocido: {cmd_part}")
+                bot.reply_to(message, f"🤷‍♂️ Comando desconocido: {cmd_part}")
 
     except Exception as e:
         print(f"❌ Error en dispatcher: {e}")
