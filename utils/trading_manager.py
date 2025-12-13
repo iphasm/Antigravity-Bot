@@ -264,20 +264,38 @@ class TradingSession:
             max_capital_pct = self.config['max_capital_pct']
             stop_loss_pct = self.config['stop_loss_pct']
 
-            # 0. Safety Check: Existing Position
-            # We fetch position info to ensure we don't double-buy
-            positions = self.client.futures_position_information(symbol=symbol)
-            # In One-Way Mode, len is 1. In Hedge Mode, len is 2 (Long/Short).
-            # We assume we only want ONE net exposure per symbol.
+            # 0. Safety Check: Existing Position (ROBUST)
+            has_position = False
             net_qty = 0.0
-            for p in positions:
-                net_qty += float(p['positionAmt'])
-            
+
+            try:
+                # Check 1: Specific Symbol
+                positions = self.client.futures_position_information(symbol=symbol)
+                for p in positions:
+                    net_qty += float(p['positionAmt'])
+                
+                # Check 2: Fallback to Account Snapshot if Check 1 says 0 but we want to be SURE
+                if net_qty == 0:
+                    acc_pos = self.client.futures_account()['positions']
+                    for p in acc_pos:
+                        if p['symbol'] == symbol and float(p['positionAmt']) != 0:
+                            net_qty = float(p['positionAmt'])
+                            print(f"⚠️ [Safety] Position found via Account Fallback for {symbol}: {net_qty}")
+                            break
+
+            except Exception as e:
+                return False, f"⚠️ Error checking positions ({e}). Aborted."
+
             if net_qty != 0:
                 return False, f"⚠️ Position already open ({net_qty} {symbol})."
 
             # 1. Update Leverage
             self.client.futures_change_leverage(symbol=symbol, leverage=leverage)
+            
+            # Pre-flight Clean (Just in case)
+            try:
+                 self.client.futures_cancel_all_open_orders(symbol=symbol)
+            except: pass
 
             # 2. Calculate Position Size
             # Use futures_account for unified balance view
@@ -430,8 +448,20 @@ class TradingSession:
             stop_loss_pct = self.config['stop_loss_pct']
 
             # 0. Safety Check
-            positions = self.client.futures_position_information(symbol=symbol)
-            net_qty = sum(float(p['positionAmt']) for p in positions)
+            net_qty = 0.0
+            try:
+                positions = self.client.futures_position_information(symbol=symbol)
+                net_qty = sum(float(p['positionAmt']) for p in positions)
+                
+                if net_qty == 0:
+                     acc_pos = self.client.futures_account()['positions']
+                     for p in acc_pos:
+                        if p['symbol'] == symbol and float(p['positionAmt']) != 0:
+                            net_qty = float(p['positionAmt'])
+                            break
+            except Exception as e:
+                return False, f"Check Error: {e}"
+
             if net_qty != 0:
                 return False, f"⚠️ Position already open ({net_qty} {symbol})."
 
@@ -623,10 +653,132 @@ class TradingSession:
             
             return True, f"✅ Closed {symbol} ({qty}). PnL pending update."
             
-        except BinanceAPIException as e:
-            return False, f"Binance Error: {e.message}"
-        except Exception as e:
             return False, f"Error: {str(e)}"
+
+    def execute_update_sltp(self, symbol, side, atr=None):
+        """
+        Updates SL/TP for an EXISTING position.
+        1. Cancels old orders.
+        2. Recalculates based on CURRENT price/ATR.
+        3. Places new orders.
+        """
+        if not self.client: return False, "No session."
+        
+        try:
+            # 1. Verify Position & Get Size
+            positions = self.client.futures_position_information(symbol=symbol)
+            qty = 0.0
+            entry_price = 0.0
+            for p in positions:
+                amt = float(p['positionAmt'])
+                if amt != 0:
+                    qty = amt
+                    entry_price = float(p['entryPrice'])
+                    break
+            
+            if qty == 0: return False, "No position found to update."
+            
+            # Verify Side Match
+            curr_side = 'LONG' if qty > 0 else 'SHORT'
+            if curr_side != side:
+                return False, f"Side mismatch (Req: {side}, Has: {curr_side})."
+
+            # 2. Cancel Old Orders
+            self.client.futures_cancel_all_open_orders(symbol=symbol)
+            
+            # 3. New Params
+            ticker = self.client.futures_symbol_ticker(symbol=symbol)
+            current_price = float(ticker['price'])
+            qty_precision, price_precision = self.get_symbol_precision(symbol)
+            
+            abs_qty = abs(qty)
+            
+            stop_loss_pct = self.config['stop_loss_pct']
+            
+            if atr and atr > 0:
+                mult = self.config.get('atr_multiplier', 2.0)
+                sl_dist = mult * atr
+                
+                if side == 'LONG':
+                    sl_price = round(current_price - sl_dist, price_precision)
+                    tp1_price = round(current_price + (1.5 * sl_dist), price_precision)
+                else:
+                    sl_price = round(current_price + sl_dist, price_precision)
+                    tp1_price = round(current_price - (1.5 * sl_dist), price_precision)
+            else:
+                # Fallback
+                if side == 'LONG':
+                    sl_price = round(current_price * (1 - stop_loss_pct), price_precision)
+                    tp1_price = round(current_price * (1 + (stop_loss_pct * 3)), price_precision)
+                else: 
+                    sl_price = round(current_price * (1 + stop_loss_pct), price_precision)
+                    tp1_price = round(current_price * (1 - (stop_loss_pct * 3)), price_precision)
+                    
+            # 4. Place Orders
+            success_msg = ""
+            
+            if side == 'LONG':
+                # SL
+                self.client.futures_create_order(
+                    symbol=symbol, side='SELL', type='STOP_MARKET', stopPrice=sl_price, closePosition=True
+                )
+                
+                # TP
+                qty_tp1 = float(round(abs_qty / 2, qty_precision))
+                tp_notional = qty_tp1 * entry_price
+                
+                if tp_notional < 5.5:
+                     self.client.futures_create_order(
+                       symbol=symbol, side='SELL', type='TAKE_PROFIT_MARKET', stopPrice=tp1_price, closePosition=True
+                    )
+                     success_msg = f"🔄 Updated LONG {symbol}\nSL: {sl_price}\nTP: {tp1_price} (100%)"
+                else:
+                    # Split
+                    if qty_tp1 > 0:
+                        self.client.futures_create_order(
+                           symbol=symbol, side='SELL', type='TAKE_PROFIT_MARKET', stopPrice=tp1_price, quantity=qty_tp1, reduceOnly=True
+                        )
+                    
+                    qty_tp2 = float(round(abs_qty - qty_tp1, qty_precision))
+                    if qty_tp2 > 0:
+                         self.client.futures_create_order(
+                            symbol=symbol, side='SELL', type='TRAILING_STOP_MARKET', callbackRate=1.5, quantity=qty_tp2, reduceOnly=True
+                        )
+                    success_msg = f"🔄 Updated LONG {symbol}\nSL: {sl_price}\nTP1: {tp1_price}\nTP2: Trailing 1.5%"
+                    
+            else: # SHORT
+                # SL
+                self.client.futures_create_order(
+                    symbol=symbol, side='BUY', type='STOP_MARKET', stopPrice=sl_price, closePosition=True
+                )
+                
+                # TP
+                qty_tp1 = float(round(abs_qty / 2, qty_precision))
+                tp_notional = qty_tp1 * entry_price
+                
+                if tp_notional < 5.5:
+                     self.client.futures_create_order(
+                       symbol=symbol, side='BUY', type='TAKE_PROFIT_MARKET', stopPrice=tp1_price, closePosition=True
+                    )
+                     success_msg = f"🔄 Updated SHORT {symbol}\nSL: {sl_price}\nTP: {tp1_price} (100%)"
+                else:
+                    # Split
+                    if qty_tp1 > 0:
+                        self.client.futures_create_order(
+                           symbol=symbol, side='BUY', type='TAKE_PROFIT_MARKET', stopPrice=tp1_price, quantity=qty_tp1, reduceOnly=True
+                        )
+                    
+                    qty_tp2 = float(round(abs_qty - qty_tp1, qty_precision))
+                    if qty_tp2 > 0:
+                         self.client.futures_create_order(
+                            symbol=symbol, side='BUY', type='TRAILING_STOP_MARKET', callbackRate=1.5, quantity=qty_tp2, reduceOnly=True
+                        )
+                    success_msg = f"🔄 Updated SHORT {symbol}\nSL: {sl_price}\nTP1: {tp1_price}\nTP2: Trailing 1.5%"
+            
+            return True, success_msg
+            
+        except Exception as e:
+            return False, f"Update Error: {str(e)}"
 
     def execute_spot_buy(self, symbol):
         """Ejecuta compra de mercado SPOT (Binance)"""
