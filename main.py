@@ -1564,6 +1564,50 @@ def handle_sniper(message):
         bot.edit_message_text(f"❌ Error Sniper: {e}", chat_id=sent.chat.id, message_id=sent.message_id)
 
 @threaded_handler
+@bot.message_handler(commands=['mode'])
+def handle_mode(message):
+    """ Cambia el perfil de riesgo: /mode <RONIN|GUARDIAN|QUANTUM> """
+    chat_id = str(message.chat.id)
+    session = session_manager.get_session(chat_id)
+    if not session:
+        bot.reply_to(message, "⚠️ Sin sesión activa. Usa /set_keys.")
+        return
+
+    args = message.text.upper().split()
+    if len(args) < 2:
+        bot.reply_to(message, "⚠️ Uso: `/mode <RONIN | GUARDIAN | QUANTUM>`", parse_mode='Markdown')
+        return
+        
+    profile = args[1]
+    
+    if profile == 'RONIN':
+        # Aggressive
+        session.update_config('leverage', 20)
+        session.update_config('stop_loss_pct', 0.015) # Fallback
+        session.update_config('atr_multiplier', 1.5)
+        session.update_config('sentiment_threshold', -0.8)
+        bot.reply_to(message, "⚔️ **MODO RONIN ACTIVADO**\n- Apalancamiento: 20x\n- Stop Loss: Apretado (1.5 ATR)\n- Filtro IA: Laxo (-0.8)\n_Ojo: Alto Riesgo._", parse_mode='Markdown')
+        
+    elif profile == 'GUARDIAN':
+        # Conservative
+        session.update_config('leverage', 3)
+        session.update_config('stop_loss_pct', 0.03)
+        session.update_config('atr_multiplier', 3.0)
+        session.update_config('sentiment_threshold', -0.3)
+        bot.reply_to(message, "🛡️ **MODO GUARDIAN ACTIVADO**\n- Apalancamiento: 3x\n- Stop Loss: Amplio (3.0 ATR)\n- Filtro IA: Estricto (-0.3)\n_Prioridad: Protección de Capital._", parse_mode='Markdown')
+        
+    elif profile == 'QUANTUM':
+        # Balanced
+        session.update_config('leverage', 5)
+        session.update_config('stop_loss_pct', 0.02)
+        session.update_config('atr_multiplier', 2.0)
+        session.update_config('sentiment_threshold', -0.6)
+        bot.reply_to(message, "🌌 **MODO QUANTUM ACTIVADO**\n- Apalancamiento: 5x\n- Stop Loss: Estándar (2.0 ATR)\n- Filtro IA: Balanceado (-0.6)\n_Equilibrio Matemático._", parse_mode='Markdown')
+        
+    else:
+        bot.reply_to(message, "⚠️ Perfil desconocido. Usa: RONIN, GUARDIAN, QUANTUM.")
+
+@threaded_handler
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     """ Bienvenida Profesional con Efecto de Carga """
@@ -1613,42 +1657,45 @@ def handle_start(message):
     
     # Interactive Menu (Buttons)
     markup = InlineKeyboardMarkup(row_width=2)
+    
     # Row 1: Status | Wallet
     markup.add(
         InlineKeyboardButton("📊 Estado", callback_data="CMD|/status"),
         InlineKeyboardButton("💰 Cartera", callback_data="CMD|/wallet")
     )
-    # Row 2: Modes
+    
+    # Row 2: Watcher (Left) | Copilot (Right)
     markup.add(
-        InlineKeyboardButton("🤖 Pilot", callback_data="CMD|/pilot"),
-        InlineKeyboardButton("🤝 Copilot", callback_data="CMD|/copilot"),
-        InlineKeyboardButton("👀 Watcher", callback_data="CMD|/watcher")
+        InlineKeyboardButton("🔎 Watcher", callback_data="CMD|/watcher"),
+        InlineKeyboardButton("🦾 Copilot", callback_data="CMD|/copilot")
     )
-    # Row 2.5: AI Special Commands
+    
+    # Row 3: Pilot (Big - Center)
+    markup.add(
+        InlineKeyboardButton("🤖 Pilot Mode", callback_data="CMD|/pilot")
+    )
+
+    # Row 4: AI Special Commands
     markup.add(
         InlineKeyboardButton("📰 News", callback_data="CMD|/news"),
         InlineKeyboardButton("🧠 Sentiment", callback_data="CMD|/sentiment"),
         InlineKeyboardButton("🎯 Sniper", callback_data="CMD|/sniper")
     )
-    # Row 3: Config / Personality
+    
+    # Row 5: Presets (New!) & Config
     markup.add(
-        InlineKeyboardButton("🧠 Persona", callback_data="CMD|/personality"),
-        InlineKeyboardButton("⚙️ Config", callback_data="CMD|/config")
-    )
-    # Row 4: Info (About / Strategy)
-    markup.add(
-        InlineKeyboardButton("ℹ️ Sobre el Bot", callback_data="CMD|/about"),
-        InlineKeyboardButton("🧠 Info Strategy", callback_data="CMD|/strategy")
-    )
-    # Row 5: Price & Strategies
-    markup.add(
-        InlineKeyboardButton("📈 Precios", callback_data="CMD|/price"),
-        InlineKeyboardButton("🎛️ Motores", callback_data="CMD|/strategies")
+        InlineKeyboardButton("⚔️ Ronin", callback_data="CMD|/mode RONIN"),
+        InlineKeyboardButton("🛡️ Guardian", callback_data="CMD|/mode GUARDIAN"),
+        InlineKeyboardButton("🌌 Quantum", callback_data="CMD|/mode QUANTUM")
     )
     
-    # Row 6: Help
-    markup.add(InlineKeyboardButton("❓ Ayuda", callback_data="CMD|/help"))
-
+    # Row 6: Config / Personality / Help
+    markup.add(
+        InlineKeyboardButton("🧠 Persona", callback_data="CMD|/personality"),
+        InlineKeyboardButton("⚙️ Config", callback_data="CMD|/config"),
+        InlineKeyboardButton("❓ Ayuda", callback_data="CMD|/help")
+    )
+    
     bot.edit_message_text(welcome, chat_id=chat_id, message_id=msg_load.message_id, parse_mode='Markdown', reply_markup=markup)
 
 # --- CALLBACK QUERY HANDLER ---

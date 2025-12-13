@@ -29,7 +29,9 @@ class TradingSession:
             "stop_loss_pct": 0.02,
             "spot_allocation_pct": 0.20, # Default 20% for Spot Buys
             "personality": "STANDARD_ES", # Default: Standard Spanish
-            "sentiment_filter": True # ENABLED BY DEFAULT
+            "sentiment_filter": True, # ENABLED BY DEFAULT
+            "sentiment_threshold": -0.6, # Default Quantum
+            "atr_multiplier": 2.0 # Default Standard SL
         }
         
         if config:
@@ -162,7 +164,8 @@ class TradingSession:
             
             # SL / TP
             if atr and atr > 0:
-                sl_dist = 2.0 * atr
+                mult = self.config.get('atr_multiplier', 2.0)
+                sl_dist = mult * atr
                 if side == 'LONG':
                     sl_price = current_price - sl_dist
                     tp_price = current_price + (1.5 * sl_dist)
@@ -235,8 +238,9 @@ class TradingSession:
             vol_risk = sent.get('volatility_risk', 'LOW')
             
             # 1. Filter: BAD Sentiment
-            if score < -0.6:
-                return False, f"⛔ **IA FILTER**: Mercado muy negativo ({score}).\nMotivo: {sent.get('reason', 'N/A')}"
+            thresh = self.config.get('sentiment_threshold', -0.6)
+            if score < thresh:
+                return False, f"⛔ **IA FILTER**: Mercado muy negativo ({score} < {thresh}).\nMotivo: {sent.get('reason', 'N/A')}"
             
             # 2. Filter: MACRO SHIELD (Reduce Leverage)
             if vol_risk in ['HIGH', 'EXTREME']:
@@ -291,8 +295,9 @@ class TradingSession:
 
             # --- DYNAMIC CALCULATION ---
             if atr and atr > 0:
-                # Rule: SL = 2.0 * ATR
-                sl_dist = 2.0 * atr
+                # Rule: SL = Mult * ATR
+                mult = self.config.get('atr_multiplier', 2.0)
+                sl_dist = mult * atr
                 sl_price = round(current_price - sl_dist, price_precision)
                 
                 # Rule: Risk Amount = 2% of Equity
