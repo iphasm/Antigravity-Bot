@@ -10,19 +10,6 @@ import requests
 from dotenv import load_dotenv
 
 # Importar módulos internos
-from data.fetcher import get_market_data
-
-# Global Config Imports (Fix for Handlers)
-from antigravity_quantum.config import ENABLED_STRATEGIES, DISABLED_ASSETS
-
-from strategies.engine import StrategyEngine
-from utils.trading_manager import SessionManager
-from utils.personalities import PersonalityManager
-from utils.system_state_manager import SystemStateManager 
-from utils.ai_analyst import QuantumAnalyst # NEW AI
-
-# Personality & State Engine
-# Personality & State Engine
 personality_manager = PersonalityManager()
 state_manager = SystemStateManager()
 quantum_analyst = QuantumAnalyst() # NEW Init AI
@@ -1331,8 +1318,7 @@ def run_trading_loop():
                                             InlineKeyboardButton("✅ Entrar SHORT", callback_data=f"BUY|{asset}|SHORT"),
                                             InlineKeyboardButton("❌ Ignorar", callback_data=f"IGNORE|{asset}|SHORT")
                                         )
-                                            InlineKeyboardButton("❌ Ignorar", callback_data=f"IGNORE|{asset}|SHORT")
-                                        )
+
                                     elif action_needed == 'UPDATE_SLTP_LONG':
                                          markup.add(
                                             InlineKeyboardButton("🔄 Actualizar SL/TP", callback_data=f"UPDATE|{asset}|LONG"),
@@ -2230,6 +2216,19 @@ def start_bot():
             assets=all_assets
         )
         quantum_bridge.start()
+
+    # --- SHARK MODE ACTIVATION ---
+    def shark_callback(msg):
+        # Broadcast to ALL active sessions
+        sessions = session_manager.get_all_sessions()
+        for chat_id, sess in sessions.items():
+            try:
+                bot.send_message(chat_id, msg, parse_mode='Markdown')
+            except: pass
+            
+    print("🦈 Initializing Shark Sentinel...")
+    shark = SharkSentinel(session_manager, shark_callback, crash_threshold_pct=3.0)
+    shark.start()
     
     # Iniciar Trading Thread
     t_trading = threading.Thread(target=run_trading_loop)
