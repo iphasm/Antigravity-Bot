@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity Brain | Pilot Logic</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            flowchart: { curve: 'basis' }
+        });
+    </script>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: #1f2833;
+            --accent: #66fcf1;
+            --text-main: #c5c6c7;
+            --text-header: #fff;
+            --success: #45a29e;
+            --danger: #ff4d4d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: var(--text-header);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .diagram-container {
+            text-align: center;
+            overflow-x: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            color: var(--accent);
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .tag-high {
+            background: rgba(255, 77, 77, 0.2);
+            color: #ff4d4d;
+        }
+
+        .tag-med {
+            background: rgba(255, 165, 0, 0.2);
+            color: orange;
+        }
+
+        .tag-low {
+            background: rgba(102, 252, 241, 0.2);
+            color: var(--accent);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-left: 3px solid var(--accent);
+            border-radius: 4px;
+        }
+
+        .feature-title {
+            color: var(--accent);
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🧠 Antigravity Pilot Logic</h1>
+
+    <div class="container">
+
+        <!-- DIAGRAM SECTION -->
+        <div class="card">
+            <h2>🌊 Flujo de Decisiones (Deep Dive)</h2>
+            <div class="diagram-container">
+                <pre class="mermaid">
+graph TD
+    %% Estilos
+    classDef input fill:#2d2d2d,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef tech fill:#005f99,stroke:#00aaff,stroke-width:2px,color:#fff;
+    classDef ai fill:#6600cc,stroke:#cc00ff,stroke-width:2px,color:#fff;
+    classDef risk fill:#990000,stroke:#ff3333,stroke-width:2px,color:#fff;
+    classDef action fill:#006600,stroke:#00cc00,stroke-width:2px,color:#fff;
+
+    Start((📡 Market Data)):::input --> TechEngine[⚙️ Strategy Engine]:::tech
+    
+    %% Technical Analysis
+    subgraph Technical["1. Análisis Técnico (Quant)"]
+        TechEngine --> |Calcula| Indicators[RSI, Bands, Keltner, ADX, ATR]
+        Indicators --> Strategy{Estrategia?}
+        Strategy -- "Squeeze" --> SignalLong[🟢 Signal LONG]
+        Strategy -- "Mean Rev" --> SignalSpot[🔵 Signal SPOT]
+        Strategy -- "Velocity" --> SignalShort[🔴 Signal SHORT]
+        Strategy -- "Exhaustion" --> SignalClose[⚠️ Signal CLOSE]
+    end
+
+    %% Filters (AI & Macro)
+    subgraph Filters["2. Filtros Inteligentes (AI & Macro)"]
+        SignalLong --> AIGuard{🧠 AI Analyst}:::ai
+        SignalShort --> AIGuard
+        
+        AIGuard -- "Score < -0.6" --> Block[🚫 BLOQUEAR]:::risk
+        AIGuard -- "News: FOMC/WAR" --> MacroShield[🛡️ MACRO SHIELD]:::risk
+        AIGuard -- "OK Sentimiento" --> Pass[✅ APROBADO]
+    end
+
+    %% Execution & Risk
+    subgraph Execution["3. Ejecución & Riesgo"]
+        Pass --> Sizing[📐 Position Sizing]:::risk
+        MacroShield --> LevRed[📉 Leverage 3x]:::risk
+        LevRed --> Sizing
+        
+        Sizing -- "Risk 2%" --> VolCalcs[Calc. Lotes]
+        VolCalcs -- "ATR * 2.0" --> SL_TP[SL & TP Dinámicos]
+        
+        SL_TP --> Validate{Validar}
+        Validate -- "Margin OK" --> ExeBinance[🚀 EJECUTAR]:::action
+        Validate -- "Duplicado" --> Reject[❌ Rechazar]
+    end
+
+    %% Routes
+    SignalSpot --> AutoBuy[🛒 Compra Spot]:::action
+    SignalClose --> ClosePos[📉 Cerrar Futuros]:::action
+                </pre>
+            </div>
+        </div>
+
+        <!-- PRESETS SECTION -->
+        <div class="card">
+            <h2>🧪 Presets Estratégicos (Perfiles)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Perfil</th>
+                        <th>Objetivo</th>
+                        <th>Filtro IA</th>
+                        <th>Stop Loss</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>⚔️ <strong>RONIN</strong></td>
+                        <td>Scalping / Sniper</td>
+                        <td><span class="tag tag-high">Laxo (-0.8)</span></td>
+                        <td>Apretado (1.5 ATR)</td>
+                        <td>Alta rotación. Toma casi todo. Riesgo alto.</td>
+                    </tr>
+                    <tr>
+                        <td>🛡️ <strong>GUARDIAN</strong></td>
+                        <td>Protección / Swing</td>
+                        <td><span class="tag tag-med">Estricto (-0.3)</span></td>
+                        <td>Amplio (3.0 ATR)</td>
+                        <td>Solo setups perfectos. Evita ruido.</td>
+                    </tr>
+                    <tr>
+                        <td>🌌 <strong>QUANTUM</strong></td>
+                        <td>Equilibrio (Default)</td>
+                        <td><span class="tag tag-low">Normal (-0.6)</span></td>
+                        <td>Estándar (2.0 ATR)</td>
+                        <td>Reduce riesgo en eventos macro automáticamente.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SYNERGIES SECTION -->
+        <div class="card">
+            <h2>🤝 Sinergias Clave</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <span class="feature-title">The Veto (Tech + AI)</span>
+                    La matemática encuentra la entrada, pero la IA actúa como "Oficial de Riesgo", vetando si las
+                    noticias son peligrosas.
+                </div>
+                <div class="feature-item">
+                    <span class="feature-title">Dynamic Risk (ATR)</span>
+                    No usamos lotes fijos. Si la volatilidad sube, el tamaño de la posición baja para mantener el riesgo
+                    en dólares constante.
+                </div>
+                <div class="feature-item">
+                    <span class="feature-title">Macro Shield</span>
+                    Detecta palabras clave como "Powell", "CPI" o "War" y fuerza el apalancamiento al mínimo (3x) para
+                    sobrevivir latigazos.
+                </div>
+                <div class="feature-item">
+                    <span class="feature-title">Circuit Breaker</span>
+                    Anti-Tilt: Si el sistema pierde 3 veces seguidas, se apaga automáticamente para evitar la
+                    autodestrucción de la cuenta.
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

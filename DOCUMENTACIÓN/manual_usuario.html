@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual de Usuario - Antigravity Bot</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <nav class="nav-bar">
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="manual_usuario.html" class="active">Manual de Usuario</a></li>
+            <li><a href="manual_tecnico.html">Documentación Técnica</a></li>
+            <li><a href="pilot_logic_visualization.html" target="_blank">Diagrama Lógico</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>Manual de Usuario</h1>
+
+        <section>
+            <h2>🚀 Inicio Rápido</h2>
+            <p>Para comenzar a operar con Antigravity Bot, sigue estos 3 pasos básicos:</p>
+            <ol style="margin-left: 1.5rem; color: var(--text-secondary);">
+                <li>Inicia el bot con <code>/start</code>.</li>
+                <li>Si es tu primera vez, configura tus llaves con <code>/set_keys</code> (o usa las variables de
+                    entorno).</li>
+                <li>Selecciona un modo de operación (por defecto: <strong>Watcher</strong>).</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>🕹️ Comandos Principales</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Comando</th>
+                        <th>Descripción</th>
+                        <th>Ejemplo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>/start</code></td>
+                        <td>Inicia el bot y muestra el panel de control interactivo.</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td><code>/status</code></td>
+                        <td>Muestra el estado actual, PnL (Ganancias/Pérdidas), y exposición.</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td><code>/mode [PERFIL]</code></td>
+                        <td>Cambia el modo de operación y gestión de riesgo.</td>
+                        <td><code>/mode RONIN</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>/wallet</code></td>
+                        <td>Muestra el balance detallado de tus cuentas (Spot, Futuros, Earn).</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td><code>/price [TICKER]</code></td>
+                        <td>Consulta el precio en tiempo real de un activo.</td>
+                        <td><code>/price BTC</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>/sniper [TICKER]</code></td>
+                        <td>Análisis técnico rápido para buscar entradas (Scalping).</td>
+                        <td><code>/sniper ETH</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>🛡️ Perfiles Estratégicos (Presets)</h2>
+            <p>El bot cuenta con perfiles predefinidos que ajustan automáticamente el riesgo y la agresividad.</p>
+
+            <div class="card-grid">
+                <article class="card">
+                    <h3>⚔️ RONIN</h3>
+                    <p><strong>Estilo:</strong> Agresivo / Scalping</p>
+                    <ul style="font-size: 0.9rem; color: var(--text-secondary);">
+                        <li>Apalancamiento: <strong>20x</strong></li>
+                        <li>Stop Loss: Ajustado (1.5 ATR)</li>
+                        <li>Filtro IA: Permisivo (-0.8)</li>
+                    </ul>
+                </article>
+
+                <article class="card">
+                    <h3>🌌 QUANTUM</h3>
+                    <p><strong>Estilo:</strong> Balanceado (Recomendado)</p>
+                    <ul style="font-size: 0.9rem; color: var(--text-secondary);">
+                        <li>Apalancamiento: <strong>5x</strong></li>
+                        <li>Stop Loss: Estándar (2.0 ATR)</li>
+                        <li>Filtro IA: Moderado (-0.6)</li>
+                    </ul>
+                </article>
+
+                <article class="card">
+                    <h3>🛡️ GUARDIAN</h3>
+                    <p><strong>Estilo:</strong> Conservador / Swing</p>
+                    <ul style="font-size: 0.9rem; color: var(--text-secondary);">
+                        <li>Apalancamiento: <strong>3x</strong></li>
+                        <li>Stop Loss: Amplio (3.0 ATR)</li>
+                        <li>Filtro IA: Estricto (-0.3)</li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <section>
+            <h2>Modos de Operación</h2>
+
+            <h3>👀 Watcher Mode</h3>
+            <p>Es el modo por defecto. El bot analiza el mercado 24/7 y te envía una notificación cuando encuentra una
+                oportunidad. <strong>No abre operaciones por su cuenta.</strong></p>
+
+            <h3>🤝 Copilot Mode</h3>
+            <p>El bot analiza y te propone una operación con un botón de [✅ Aceptar] o [❌ Rechazar]. Si aceptas, el bot
+                ejecuta la orden y gestiona el Stop Loss y Take Profit automáticamente.</p>
+
+            <h3>🤖 Pilot Mode</h3>
+            <p>Automatización total. El bot decide cuándo entrar y salir basándose en análisis técnico y fundamental
+                (IA). Ideal para dejarlo correr en segundo plano (VPS).</p>
+        </section>
+
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity Bot - Manual de Sistema</title>
+    <style>
+        :root {
+            --bg: #0f111a;
+            --card: #1a1d2d;
+            --text: #e2e8f0;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            color: #fff;
+        }
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+        }
+        .badge {
+            background: #2d3748;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+        .section {
+            margin-bottom: 3rem;
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #2d3748;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .cmd-group {
+            display: grid;
+            gap: 1.5rem;
+        }
+        .cmd {
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+        }
+        .cmd-name {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+        .feature-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .feature {
+            background: #242940;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .danger { color: var(--danger); }
+        .success { color: var(--success); }
+        .warning { color: var(--warning); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🌌 Antigravity Bot <span style="font-size: 1rem; color: #fff;">v3.3</span></h1>
+        <p>Sistema de Trading Cuántico Autónomo con Inteligencia Artificial. Manual de Operaciones 2025.</p>
+
+        <div class="section">
+            <h2>🧠 Módulos de Inteligencia Artificial</h2>
+            <p>El núcleo del sistema ha sido actualizado con capacidades cognitivas avanzadas.</p>
+            
+            <div class="feature-box">
+                <div class="feature">
+                    <h3>🦅 The Trump Factor</h3>
+                    <p>Detecta automáticamente menciones de <strong>Donald Trump</strong>, <strong>Aranceles</strong> y <strong>Regulaciones</strong>. Ajusta el sentimiento del mercado en milisegundos.</p>
+                </div>
+                <div class="feature">
+                    <h3>🛡️ Macro Shield (FOMC)</h3>
+                    <p>Protección automática contra la Volatilidad. Si hay reunión de la <strong>FED</strong> o datos de <strong>IPC</strong>, reduce el apalancamiento a 3x.</p>
+                </div>
+                <div class="feature">
+                    <h3>📰 News Briefing</h3>
+                    <p>Genera resúmenes ejecutivos del mercado Crypto, S&P 500 y Política usando <strong>GPT-4o</strong>.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎮 Modos de Operación</h2>
+            <div class="cmd-group">
+                <div class="cmd" style="border-color: var(--success)">
+                    <div class="cmd-name">/watcher (Modo Manual)</div>
+                    <p>El bot solo envía alertas y señales. Tú decides si operar. Ideal para supervisión pasiva.</p>
+                </div>
+                <div class="cmd" style="border-color: var(--warning)">
+                    <div class="cmd-name">/copilot (Modo Asistido)</div>
+                    <p>El bot detecta la señal y te propone la operación con un botón. Tú confirmas con un clic.</p>
+                </div>
+                <div class="cmd" style="border-color: var(--danger)">
+                    <div class="cmd-name">/pilot (Modo Autónomo)</div>
+                    <p>El bot opera 100% solo. Abre, gestiona y cierra posiciones. Incluye <strong>Circuit Breaker</strong> (se apaga tras 5 pérdidas).</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🛠️ Comandos Principales</h2>
+            
+            <h3>🧠 AI & Análisis</h3>
+            <div class="cmd-group">
+                <div class="cmd">
+                    <div class="cmd-name">/news</div>
+                    <p>Genera un boletín de noticias urgente (Crypto + Macro + Política).</p>
+                </div>
+                <div class="cmd">
+                    <div class="cmd-name">/sentiment</div>
+                    <p>Muestra el "termómetro" del mercado. Incluye Riesgo de Volatilidad (Low/High/Extreme).</p>
+                </div>
+                <div class="cmd">
+                    <div class="cmd-name">/sniper <span class="badge">NUEVO</span></div>
+                    <p>Escanea BTC, ETH, SOL, BNB y DOGE. Combina Análisis Técnico + Sentimiento IA para buscar una entrada inmediata.</p>
+                </div>
+                 <div class="cmd">
+                    <div class="cmd-name">/price</div>
+                    <p>Reporte clásico de precios e indicadores técnicos (RSI, Tendencias).</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 2rem;">⚙️ Configuración</h3>
+            <div class="cmd-group">
+                <div class="cmd">
+                    <div class="cmd-name">/status</div>
+                    <p>Verifica el estado de conexión, API Keys y modo actual.</p>
+                </div>
+                <div class="cmd">
+                    <div class="cmd-name">/config</div>
+                    <p>Panel interactivo para ajustar Apalancamiento, Margen y Personalidad.</p>
+                </div>
+                <div class="cmd">
+                    <div class="cmd-name">/set_keys &lt;KEY&gt; &lt;SECRET&gt;</div>
+                    <p>Configura tus claves API de Binance Futuros de forma segura.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚠️ Gestión de Riesgos</h2>
+            <ul>
+                <li><strong>Circuit Breaker:</strong> Se activa tras 5 pérdidas consecutivas en modo Pilot. Resetea con <code>/resetpilot</code>.</li>
+                <li><strong>Macro Shield:</strong> Fuerza el apalancamiento a <strong>3x</strong> automáticamente si detecta "High Volatility" (Eventos FED/CPI).</li>
+                <li><strong>Stop Loss Dinámico:</strong> Ajustado por ATR (Volatilidad) o % Fijo (Default 2%).</li>
+            </ul>
+        </div>
+        
+        <footer style="text-align: center; color: #64748b; margin-top: 4rem;">
+            <p>Antigravity Bot &copy; 2025 | Powered by OpenAI & Binance API</p>
+        </footer>
+    </div>
+
+</body>
+</html>

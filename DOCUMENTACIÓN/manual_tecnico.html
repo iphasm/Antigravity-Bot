@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación Técnica - Antigravity Bot</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <nav class="nav-bar">
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="manual_usuario.html">Manual de Usuario</a></li>
+            <li><a href="manual_tecnico.html" class="active">Documentación Técnica</a></li>
+            <li><a href="pilot_logic_visualization.html" target="_blank">Diagrama Lógico</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>Documentación Técnica</h1>
+
+        <section>
+            <h2>🏗️ Arquitectura del Sistema</h2>
+            <p>Antigravity Bot utiliza una arquitectura asíncrona basada en eventos, orquestada por el núcleo
+                <strong>QuantumBridge</strong>.
+            </p>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <h3>Diagrama de Flujo Simplificado</h3>
+                <pre>
+[Market Data] --> [Strategy Engine] --> [Signal Generation]
+                                              |
+[News/RSS] -----> [AI Analyst] --------> [Signal Filter]
+                                              |
+                                              v
+                                       [Quantum Decision]
+                                       /       |        \
+                                  (Auto)    (Propose)  (Alert)
+                                    |          |          |
+                                  Pilot     Copilot    Watcher
+                </pre>
+            </div>
+
+            <h3>Componentes Clave</h3>
+            <ul>
+                <li><strong>main.py</strong>: Punto de entrada, bucle de eventos y handlers de Telegram.</li>
+                <li><strong>utils/trading_manager.py</strong>: Gestión de sesiones, ejecución de órdenes, cálculo de
+                    posición (Kelly/ATR) y conexión con APIs.</li>
+                <li><strong>strategies/engine.py</strong>: Motores de cálculo técnico (RSI, Bollinger, ATR, HMA). Genera
+                    señales 'raw'.</li>
+                <li><strong>utils/ai_analyst.py</strong>: Integración con OpenAI para análisis de sentimiento de
+                    noticias financieras.</li>
+                <li><strong>data/fetcher.py</strong>: Abstracción para obtención de datos de mercado (Binance,
+                    YFinance).</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>⚙️ Instalación y Requisitos</h2>
+
+            <h3>Prerrequisitos</h3>
+            <ul>
+                <li>Python 3.9+</li>
+                <li>Cuenta en Binance (API Key + Secret)</li>
+                <li>Cuenta en OpenAI (API Key)</li>
+                <li>Bot de Telegram (Token)</li>
+            </ul>
+
+            <h3>Variables de Entorno (.env)</h3>
+            <pre>
+TELEGRAM_BOT_TOKEN=tu_token
+OPENAI_API_KEY=sk-...
+BINANCE_API_KEY=...
+BINANCE_SECRET_KEY=...
+ALPACA_API_KEY=... (Opcional)
+ALPACA_SECRET_KEY=... (Opcional)
+            </pre>
+        </section>
+
+        <section>
+            <h2>🔧 Configuración Avanzada</h2>
+            <p>La clase <code>TradingSession</code> en <code>trading_manager.py</code> maneja la configuración dinámica.
+            </p>
+
+            <h3>Parámetros de Riesgo</h3>
+            <table>
+                <tr>
+                    <th>Parámetro</th>
+                    <th>Descripción</th>
+                    <th>Default</th>
+                </tr>
+                <tr>
+                    <td><code>max_capital_pct</code></td>
+                    <td>% máximo de la cuenta por operación.</td>
+                    <td>10% (0.10)</td>
+                </tr>
+                <tr>
+                    <td><code>leverage</code></td>
+                    <td>Apalancamiento en Futuros.</td>
+                    <td>5x</td>
+                </tr>
+                <tr>
+                    <td><code>sentiment_threshold</code></td>
+                    <td>Puntuación mínima (-1 a 1) para operar.</td>
+                    <td>-0.6</td>
+                </tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>🐛 Solución de Problemas</h2>
+            <div class="card non-hover">
+                <h4>Error: "Binance API Exception"</h4>
+                <p>Verifica que tus llaves API tengan permisos de "Futures Trading" habilitados y que tu IP esté en la
+                    lista blanca si es necesario.</p>
+            </div>
+            <br>
+            <div class="card non-hover">
+                <h4>El bot no responde a botones</h4>
+                <p>Asegúrate de que no haya otro proceso del bot corriendo con el mismo Token (conflicto de
+                    <code>getUpdates</code>).
+                </p>
+            </div>
+        </section>
+
+    </div>
+</body>
+
+</html>
