@@ -766,25 +766,59 @@ def handle_debug(message):
     
     # Build
     pub_status = "Unknown"
+    strat_status = "Unknown"
+    ai_status = "Unknown"
+    
     try:
         t0 = time.time()
-        btc_data = get_market_data('BTCUSDT', limit=1)
+        # 1. Fetch Data
+        btc_data = get_market_data('BTCUSDT', limit=50) # Need enough for indicators
         ping_ms = int((time.time() - t0) * 1000)
-        if not btc_data.empty: pub_status = f"✅ Success ({ping_ms}ms)"
-        else: pub_status = "⚠️ Data Empty"
+        
+        if not btc_data.empty: 
+            pub_status = f"✅ Success ({ping_ms}ms)"
+            
+            # 2. Test Strategy Engine
+            try:
+                engine = StrategyEngine(btc_data)
+                res = engine.analyze()
+                if 'metrics' in res and 'rsi' in res['metrics']:
+                    strat_status = f"✅ OK (RSI: {res['metrics']['rsi']:.1f})"
+                else:
+                    strat_status = "⚠️ Engine Fail"
+            except Exception as e:
+                strat_status = f"❌ Error: {str(e)}"
+                
+        else: 
+            pub_status = "⚠️ Data Empty"
+            strat_status = "⚠️ No Data"
+            
     except Exception as e:
         pub_status = f"❌ Failed: {str(e)}"
+    
+    # 3. Test AI
+    try:
+        if quantum_analyst.client: # Check if client exists
+            # Lightweight check - just verify key presence or simple structure
+            ai_status = "✅ Configured"
+        else:
+            ai_status = "❌ Missing Key"
+    except:
+        ai_status = "❌ Error"
             
     # Report Build
     report = (
-        "🕵️ *DIAGNÓSTICO DEL SISTEMA*\n"
-        "〰️〰️〰️〰️〰️〰️\n"
-        f"🖥️ *OS:* {os_plat} | *Python:* {py_ver}\n"
-        f"🌍 *IP Efectiva:* `{eff_ip}`\n"
-        f"📍 *Ubicación:* `{loc}` {loc_check}\n"
-        f"🔌 *Proxy Configurado:* {proxy_conf}\n\n"
-        f"📊 *Data Fetch:* {pub_status}\n"
-        f"🔑 *Keys:* {has_key}/{has_sec}"
+        "🕵️ *DIAGNÓSTICO INTEGRAL DEL SISTEMA*\\n"
+        "〰️〰️〰️〰️〰️〰️\\n"
+        f"🖥️ *Host:* {os_plat} | Python {py_ver}\\n"
+        f"🌍 *Network:* `{eff_ip}` ({loc}) {loc_check}\\n"
+        f"🔌 *Proxy:* {proxy_conf}\\n\\n"
+        
+        "🧠 *MÓDULOS COGNITIVOS*\\n"
+        f"📡 *Data Feed:* {pub_status}\\n"
+        f"⚙️ *Strategy Engine:* {strat_status}\\n"
+        f"🤖 *AI Analyst:* {ai_status}\\n"
+        f"🔑 *API Keys:* {has_key}/{has_sec}"
     )
     
     bot.edit_message_text(report, chat_id=sent.chat.id, message_id=sent.message_id, parse_mode='Markdown')
