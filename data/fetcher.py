@@ -97,8 +97,14 @@ def get_market_data(symbol: str, timeframe: str = '15m', limit: int = 100) -> pd
     expected_cols = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
     
     try:
+        # --- ROUTING LOGIC ---
+        is_crypto = 'USDT' in symbol.upper() or 'BUSD' in symbol.upper()
+        # Explicit check for Stocks/Commodities to be safe
+        if symbol in ASSET_GROUPS.get('STOCKS', []) or symbol in ASSET_GROUPS.get('COMMODITY', []):
+            is_crypto = False
+
         # --- CRYPTO (Binance) ---
-        if 'USDT' in symbol.upper() or 'BUSD' in symbol.upper():
+        if is_crypto:
             # print(f"DEBUG: Fetching crypto for {symbol}...") # Reduced noise
             if not client:
                 return pd.DataFrame(columns=expected_cols)

@@ -1391,6 +1391,23 @@ def dispatch_quantum_signal(signal):
             cid = session.chat_id
             p_key = session.config.get('personality', 'NEXUS')
             
+            # --- PHANTOM CHECK (Crucial fix) ---
+            # If ACTION is CLOSE, verify we actually have a position (or active trade)
+            has_pos = False
+            active_positions = session.get_active_positions()
+            for p in active_positions:
+                if p['symbol'] == asset:
+                    has_pos = True
+                    break
+            
+            if action_needed == 'CLOSE' and not has_pos:
+                # If WATCHER, we might still want to know, but phrased differently?
+                # User Feedback: "No tenía ninguna posición... favor de revisar."
+                # Decision: SUPPRESS "Closing Position" message if no position exists.
+                # Maybe send a generic "Sell Signal" instead? 
+                # For now, let's suppress to avoid confusion as requested.
+                continue 
+
             # Prepare Message
             msg_text = ""
             if action_needed == 'OPEN_LONG':
