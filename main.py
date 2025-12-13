@@ -748,7 +748,7 @@ def handle_debug(message):
     
     # 2. Credentials
     has_bin = "✅" if session and session.api_key else "❌"
-    has_alp = "✅" if session and getattr(session, 'alpaca_key', None) else "❌"
+    has_alp = "✅" if session and session.alpaca_client else "❌"
     
     # 3. Network / IP
     proxy_conf = "Yes" if os.getenv('PROXY_URL') else "No"
@@ -829,7 +829,7 @@ def handle_debug(message):
         f"`IA   :` {ai_status}\n\n"
         
         "🔑 *CREDENCIALES*\n"
-        f"`Binan:` {has_bin}  `Alpaca:` {has_alp}"
+        f"`🔶 Binan:` {has_bin}  `🦙 Alpaca:` {has_alp}"
     )
     
     bot.edit_message_text(report, chat_id=sent.chat.id, message_id=sent.message_id, parse_mode='Markdown')

@@ -574,7 +574,21 @@ class TradingSession:
         return True, "Batch Close:\n" + "\n".join(results)
 
     def execute_close_position(self, symbol):
-        """Cierra posiciones y órdenes abiertas para un símbolo"""
+        """Cierra posiciones y órdenes abiertas para un símbolo (Binance o Alpaca)"""
+        
+        # 1. ALPACA ROUTING (Stocks/ETFs or non-USDT symbols)
+        if "USDT" not in symbol and self.alpaca_client:
+            try:
+                # Cancel Open Orders
+                self.alpaca_client.cancel_orders(symbols=[symbol])
+                
+                # Close Position
+                self.alpaca_client.close_position(symbol)
+                return True, f"✅ (Alpaca) Closed position for {symbol}."
+            except Exception as e:
+                return False, f"Alpaca Error closing {symbol}: {str(e)}"
+        
+        # 2. BINANCE ROUTING
         if not self.client: return False, "No valid session."
         
         try:
@@ -585,7 +599,6 @@ class TradingSession:
             try:
                 positions = self.client.futures_position_information(symbol=symbol)
             except:
-                # Fallback for some library versions that return list
                 positions = self.client.futures_position_information()
                 
             qty = 0.0
