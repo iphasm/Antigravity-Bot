@@ -563,14 +563,14 @@ def handle_status(message):
         active_radars += f"{icon} {name} {count_str}\n"
 
     status = (
-        "🛡️ **Estado de Antigravity**\n\n"
+        "🤖 **Estado de Antigravity**\n\n"
         
         "**Modo de Operación**\n"
         f"👉 `{mode_display}`\n\n"
         
         "**Entorno de Mercado**\n"
-        f"🧠 Sentimiento: **{fg_text}**\n"
-        f"🔌 Conexión: **{'Estable' if has_keys else 'Desconectado'}**\n\n"
+        f"🌡️ Sentimiento: **{fg_text}**\n"
+        f"💻 Conexión: **{'Estable' if has_keys else 'Desconectado'}**\n\n"
         
         "**Escáneres Activos**\n"
         f"{active_radars}\n"
