@@ -1584,7 +1584,7 @@ def handle_start(message):
     )
     # Row 2: Modes
     markup.add(
-        InlineKeyboardButton("🦅 Pilot", callback_data="CMD|/pilot"),
+        InlineKeyboardButton("🤖 Pilot", callback_data="CMD|/pilot"),
         InlineKeyboardButton("🤝 Copilot", callback_data="CMD|/copilot"),
         InlineKeyboardButton("👀 Watcher", callback_data="CMD|/watcher")
     )
@@ -1664,6 +1664,10 @@ def handle_query(call):
             elif sub_cmd == '/contracts': handle_strategies(call.message)
             elif sub_cmd == '/togglegroup': handle_toggle_group(call.message)
             elif sub_cmd == '/assets': handle_assets(call.message)
+            # AI Commands
+            elif sub_cmd == '/news': handle_news(call.message)
+            elif sub_cmd == '/sentiment': handle_sentiment(call.message)
+            elif sub_cmd == '/sniper': handle_sniper(call.message)
             return
         
         # --- REQUIRES SESSION (Write Actions) ---
